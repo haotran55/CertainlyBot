@@ -90,7 +90,9 @@ def welcome_new_member(message):
     for new_member in message.new_chat_members:
         uid = new_member.id
         username = new_member.username if new_member.username else "Unknown"
-        members_count = message.chat.members_count
+        
+        # Lấy số lượng thành viên hiện tại trong nhóm
+        members_count = bot.get_chat_members_count(message.chat.id)
         current_time = datetime.now().strftime("%H:%M:%S | %d/%m/%Y")
         
         # Chào mừng người mới tham gia
@@ -118,6 +120,7 @@ def welcome_new_member(message):
                 bot.send_message(message.chat.id, "Không lấy được video, thử lại sau nhé!")
         except Exception as e:
             bot.send_message(message.chat.id, "Đã xảy ra lỗi khi gửi video.")
+
 
 # Tạo thread riêng để chạy bot polling
 def run_bot():
