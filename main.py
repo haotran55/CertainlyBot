@@ -1,14 +1,15 @@
 import requests
 import html
+import threading
 from telebot import TeleBot
 from flask import Flask
 from keep_alive import keep_alive
-keep_alive()
+
 bot = TeleBot("7379468791:AAFjogvlg3b_isuNyGBUYePw9uQ54-xAjms")
 
 # ID nhóm được phép sử dụng bot
 ALLOWED_GROUP_ID = -1002639856138
-GROUP_LINK = "https://t.me/HaoEsport01"  # Thay bằng link box chat của bạn
+GROUP_LINK = "https://t.me/HaoEsport01"  # Link nhóm
 
 def group_only(func):
     def wrapper(message):
@@ -39,4 +40,10 @@ def random_video(message):
     except Exception as e:
         bot.send_message(message.chat.id, "Đã xảy ra lỗi khi lấy video.")
 
-bot.polling()
+# Tạo thread riêng để chạy bot polling
+def run_bot():
+    bot.infinity_polling()
+
+# Gọi keep_alive() và khởi động bot
+keep_alive()
+threading.Thread(target=run_bot).start()
