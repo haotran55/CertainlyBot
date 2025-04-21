@@ -3,10 +3,13 @@ import time
 import threading
 from telebot import TeleBot
 from flask import Flask
-from keep_alive import keep_alive
 from datetime import datetime
+from keep_alive import keep_alive
+keep_alive()
+BOT_TOKEN = os.environ.get('BOT_TOKEN')  # <- thêm dòng này
+bot = telebot.TeleBot(BOT_TOKEN)         # <- bot dùng biến này
 
-bot = TeleBot("7379468791:AAFjogvlg3b_isuNyGBUYePw9uQ54-xAjms")
+print(BOT_TOKEN)
 
 # ID nhóm được phép sử dụng bot
 ALLOWED_GROUP_ID = -1002639856138
