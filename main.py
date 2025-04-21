@@ -1,15 +1,17 @@
-import requests
-import time
+import os
 import threading
+import requests
 from telebot import TeleBot
 from flask import Flask
 from datetime import datetime
 from keep_alive import keep_alive
-keep_alive()
-BOT_TOKEN = os.environ.get('BOT_TOKEN')  # <- thêm dòng này
-bot = telebot.TeleBot(BOT_TOKEN)         # <- bot dùng biến này
 
-print(BOT_TOKEN)
+# Giữ server Flask hoạt động
+keep_alive()
+
+# Khởi tạo bot với token
+BOT_TOKEN = os.environ.get('BOT_TOKEN')  # <- Thêm dòng này
+bot = TeleBot(BOT_TOKEN)
 
 # ID nhóm được phép sử dụng bot
 ALLOWED_GROUP_ID = -1002639856138
@@ -28,7 +30,6 @@ def group_only(func):
                 disable_web_page_preview=True
             )
     return wrapper
-    
 
 @bot.message_handler(commands=['video'])
 @group_only
@@ -47,78 +48,24 @@ def random_video(message):
     except Exception as e:
         bot.send_message(message.chat.id, "Đã xảy ra lỗi khi lấy video.")
 
-@bot.message_handler(content_types=['new_chat_members'])
-@group_only
-def welcome_new_member(message):
-    """Chào người mới tham gia nhóm và gửi video."""
-    for new_member in message.new_chat_members:
-        uid = new_member.id
-        username = new_member.username if new_member.username else "Unknown"
-        members_count = bot.get_chat_members_count(message.chat.id)
-        current_time = datetime.now().strftime("%H:%M:%S | %d/%m/%Y")
-        
-        welcome_text = f"""
-🧤 Hello {new_member.first_name}
-┌ UID: {uid}
-├ Username: @{username}
-├ Thành Viên: {members_count}
-├ Thời Gian: {current_time}
-├ Chào Mừng Bạn Đã Tham Gia Nhóm @HaoEsports05
-✅ Gõ /bot Để Xem Lệnh Bot Hỗ Trợ Nhé!
-"""
-        bot.send_message(message.chat.id, welcome_text, parse_mode="Markdown")
+# Khởi tạo và chạy Flask trong một thread riêng
+def run_flask():
+    app = Flask(__name__)
 
-        try:
-            res = requests.get("https://api.ffcommunity.site/randomvideo.php")
-            data = res.json()
-            video_url = data.get("url")
+    @app.route('/')
+    def home():
+        return "Bot đang chạy!"
 
-            if video_url:
-                bot.send_chat_action(message.chat.id, "upload_video")
-                bot.send_video(message.chat.id, video=video_url, caption="Chúc mừng bạn tham gia nhóm! 🎥")
-            else:
-                bot.send_message(message.chat.id, "Không lấy được video, thử lại sau nhé!")
-        except Exception as e:
-            bot.send_message(message.chat.id, "Đã xảy ra lỗi khi gửi video.")
+    app.run(host="0.0.0.0", port=8080)  # Cổng phải là 8080 nếu chạy trên Heroku
 
-import html
-@bot.message_handler(commands=['fl'])
-def get_tiktok_fl(message):
-    try:
-        args = message.text.split()
-        if len(args) != 2:
-            bot.reply_to(message, "❗ Vui lòng dùng đúng cú pháp:\n<b>/fl &lt;username&gt;</b>", parse_mode="HTML")
-            return
+# Chạy Flask trên một thread riêng
+flask_thread = threading.Thread(target=run_flask)
+flask_thread.start()
 
-        username = args[1]
-        url = f"http://145.223.80.56:5009/info_tiktok?username={username}"
-        response = requests.get(url)
+# Chạy bot trong một thread riêng để không bị gián đoạn khi Flask đang chạy
+def run_bot():
+    bot.polling(none_stop=True)
 
-        if response.status_code != 200:
-            bot.reply_to(message, "Không thể tăng Follow từ API.", parse_mode="HTML")
-            return
-
-        data = response.json()
-
-        # Escape toàn bộ để an toàn
-        name = html.escape(data.get('name', 'Không rõ'))
-        followers = f"{data.get('followers', 0):,}"
-        blockquote = (
-            f" Đã Tăng Follow Thành Công\n\n"
-            f" Follow Trước: {followers}\n"
-            f" Follow Sau: {followers}\n"
-            f" Đã Cộng: 0\n"
-            f" Tên: {name}\n"
-        )
-
-        caption = f"<blockquote>{blockquote}</blockquote>"
-
-        bot.reply_to(message, caption, parse_mode="HTML")
-
-    except Exception as e:
-        bot.reply_to(message, f"❗ Đã xảy ra lỗi: {str(e)}", parse_mode="HTML")
-
-
-if __name__ == "__main__":
-    bot_active = True
-    bot.polling()  #
+# Chạy bot
+bot_thread = threading.Thread(target=run_bot)
+bot_thread.start()
