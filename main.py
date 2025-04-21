@@ -1,6 +1,7 @@
 import requests
 import html
 import threading
+import time
 from telebot import TeleBot
 from flask import Flask
 from keep_alive import keep_alive
@@ -23,6 +24,49 @@ def group_only(func):
                 disable_web_page_preview=True
             )
     return wrapper
+
+# Kiểm tra xem người gửi có phải là admin không
+def is_admin(chat_id, user_id):
+    try:
+        chat_member = bot.get_chat_member(chat_id, user_id)
+        return chat_member.status in ['administrator', 'creator']
+    except:
+        return False
+
+# Mute người dùng trong 10 phút
+def mute_user(chat_id, user_id):
+    # Mute người dùng
+    bot.restrict_chat_member(chat_id, user_id, until_date=time.time() + 600, can_send_messages=False)
+    bot.send_message(chat_id, f"🔇 Người dùng đã bị mute trong 10 phút!")
+
+# Hủy mute sau 10 phút
+def unmute_user(chat_id, user_id):
+    # Hủy mute người dùng
+    bot.restrict_chat_member(chat_id, user_id, can_send_messages=True)
+    bot.send_message(chat_id, f"✅ Người dùng đã được hủy mute.")
+
+@bot.message_handler(func=lambda message: 't.me' in message.text)
+@group_only
+def handle_tme_link(message):
+    # Kiểm tra nếu người gửi không phải là admin thì xóa tin nhắn và mute
+    if not is_admin(message.chat.id, message.from_user.id):
+        try:
+            # Xóa tin nhắn
+            bot.delete_message(message.chat.id, message.message_id)
+            bot.send_message(message.chat.id, "Tin nhắn chứa link <code>t.me</code> đã bị xóa!", parse_mode="HTML")
+
+            # Mute người gửi trong 10 phút
+            mute_user(message.chat.id, message.from_user.id)
+
+            # Hủy mute sau 10 phút
+            time.sleep(600)  # Chờ 10 phút (600 giây)
+            unmute_user(message.chat.id, message.from_user.id)
+
+        except Exception as e:
+            bot.send_message(message.chat.id, f"❗ Đã xảy ra lỗi: {str(e)}")
+    else:
+        # Nếu là admin thì không xóa và không mute
+        bot.send_message(message.chat.id, "Admin đã gửi tin nhắn chứa <code>t.me</code>!", parse_mode="HTML")
 
 @bot.message_handler(commands=['video'])
 @group_only
