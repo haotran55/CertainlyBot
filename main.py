@@ -20,52 +20,12 @@ def group_only(func):
         else:
             bot.reply_to(
                 message,
-                f"❗ Bot chỉ hoạt động trong nhóm này: <a href=\"{GROUP_LINK}\">Box Chat</a>",
+                f"❗ Bot chỉ hoạt động trong nhóm này: <a href=\"{GROUP_LINK}\">Tại Đây</a>",
                 parse_mode="HTML",
                 disable_web_page_preview=True
             )
     return wrapper
-
-def is_admin(chat_id, user_id):
-    """Kiểm tra xem người gửi có phải là admin không."""
-    try:
-        chat_member = bot.get_chat_member(chat_id, user_id)
-        return chat_member.status in ['administrator', 'creator']
-    except:
-        return False
-
-def mute_user(chat_id, user_id):
-    """Mute người dùng trong 10 phút."""
-    user = bot.get_chat_member(chat_id, user_id).user
-    username = user.username or user.first_name or "Unknown"
-    bot.restrict_chat_member(chat_id, user_id, until_date=time.time() + 600, can_send_messages=False)
-    bot.send_message(chat_id, f"Người dùng @{username} đã bị mute trong 10 phút!")
-
-def unmute_user(chat_id, user_id):
-    """Hủy mute người dùng."""
-    user = bot.get_chat_member(chat_id, user_id).user
-    username = user.username or user.first_name or "Người dùng"
-    bot.restrict_chat_member(chat_id, user_id, can_send_messages=True)
-    bot.send_message(chat_id, f"✅ Người dùng @{username} đã được hủy mute.")
-
-def schedule_unmute(chat_id, user_id, delay=600):
-    """Hẹn giờ unmute không làm treo bot."""
-    threading.Timer(delay, lambda: unmute_user(chat_id, user_id)).start()
-
-@bot.message_handler(func=lambda message: 't.me' in message.text)
-@group_only
-def handle_tme_link(message):
-    """Xử lý link 't.me' trong nhóm."""
-    if not is_admin(message.chat.id, message.from_user.id):
-        try:
-            bot.delete_message(message.chat.id, message.message_id)
-            bot.send_message(message.chat.id, "Tin nhắn chứa link <code>t.me</code> đã bị xóa!", parse_mode="HTML")
-            mute_user(message.chat.id, message.from_user.id)
-            schedule_unmute(message.chat.id, message.from_user.id)
-        except Exception as e:
-            bot.send_message(message.chat.id, f"❗ Đã xảy ra lỗi: {str(e)}")
-    else:
-        bot.send_message(message.chat.id, "Admin đã gửi tin nhắn chứa <code>t.me</code>!", parse_mode="HTML")
+    
 
 @bot.message_handler(commands=['video'])
 @group_only
