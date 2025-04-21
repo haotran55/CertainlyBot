@@ -1,5 +1,6 @@
 import requests
 import time
+import threading
 from telebot import TeleBot
 from flask import Flask
 from keep_alive import keep_alive
@@ -35,14 +36,21 @@ def is_admin(chat_id, user_id):
 
 def mute_user(chat_id, user_id):
     """Mute người dùng trong 10 phút."""
-    username = bot.get_chat_member(chat_id, user_id).user.username or "Unknown"
+    user = bot.get_chat_member(chat_id, user_id).user
+    username = user.username or user.first_name or "Unknown"
     bot.restrict_chat_member(chat_id, user_id, until_date=time.time() + 600, can_send_messages=False)
     bot.send_message(chat_id, f"Người dùng @{username} đã bị mute trong 10 phút!")
 
 def unmute_user(chat_id, user_id):
-    """Hủy mute người dùng sau 10 phút."""
+    """Hủy mute người dùng."""
+    user = bot.get_chat_member(chat_id, user_id).user
+    username = user.username or user.first_name or "Người dùng"
     bot.restrict_chat_member(chat_id, user_id, can_send_messages=True)
-    bot.send_message(chat_id, f"✅ Người dùng @{user_id} đã được hủy mute.")
+    bot.send_message(chat_id, f"✅ Người dùng @{username} đã được hủy mute.")
+
+def schedule_unmute(chat_id, user_id, delay=600):
+    """Hẹn giờ unmute không làm treo bot."""
+    threading.Timer(delay, lambda: unmute_user(chat_id, user_id)).start()
 
 @bot.message_handler(func=lambda message: 't.me' in message.text)
 @group_only
@@ -50,17 +58,10 @@ def handle_tme_link(message):
     """Xử lý link 't.me' trong nhóm."""
     if not is_admin(message.chat.id, message.from_user.id):
         try:
-            # Xóa tin nhắn chứa link t.me
             bot.delete_message(message.chat.id, message.message_id)
             bot.send_message(message.chat.id, "Tin nhắn chứa link <code>t.me</code> đã bị xóa!", parse_mode="HTML")
-
-            # Mute người gửi trong 10 phút
             mute_user(message.chat.id, message.from_user.id)
-
-            # Hủy mute sau 10 phút
-            time.sleep(600)
-            unmute_user(message.chat.id, message.from_user.id)
-
+            schedule_unmute(message.chat.id, message.from_user.id)
         except Exception as e:
             bot.send_message(message.chat.id, f"❗ Đã xảy ra lỗi: {str(e)}")
     else:
@@ -90,12 +91,9 @@ def welcome_new_member(message):
     for new_member in message.new_chat_members:
         uid = new_member.id
         username = new_member.username if new_member.username else "Unknown"
-        
-        # Lấy số lượng thành viên hiện tại trong nhóm
         members_count = bot.get_chat_members_count(message.chat.id)
         current_time = datetime.now().strftime("%H:%M:%S | %d/%m/%Y")
         
-        # Chào mừng người mới tham gia
         welcome_text = f"""
 🧤 Hello {new_member.first_name}
 ┌ UID: {uid}
@@ -107,7 +105,6 @@ def welcome_new_member(message):
 """
         bot.send_message(message.chat.id, welcome_text, parse_mode="Markdown")
 
-        # Lấy video ngẫu nhiên
         try:
             res = requests.get("https://api.ffcommunity.site/randomvideo.php")
             data = res.json()
@@ -121,12 +118,14 @@ def welcome_new_member(message):
         except Exception as e:
             bot.send_message(message.chat.id, "Đã xảy ra lỗi khi gửi video.")
 
-
-# Tạo thread riêng để chạy bot polling
 def run_bot():
-    """Khởi động bot với chế độ polling không giới hạn."""
-    bot.infinity_polling()
+    while True:
+        try:
+            bot.infinity_polling()
+        except Exception as e:
+            print(f"[Lỗi bot]: {e}")
+            time.sleep(5)
 
-# Gọi keep_alive() và khởi động bot
-keep_alive()
-run_bot()  # Sử dụng bot.infinity_polling() trực tiếp
+if __name__ == "__main__":
+    keep_alive()
+    run_bot()
