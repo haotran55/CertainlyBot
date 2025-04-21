@@ -1,5 +1,4 @@
 import requests
-import html
 import time
 from telebot import TeleBot
 from flask import Flask
@@ -12,6 +11,7 @@ ALLOWED_GROUP_ID = -1002639856138
 GROUP_LINK = "https://t.me/HaoEsport01"  # Link nhóm
 
 def group_only(func):
+    """Chỉ cho phép bot hoạt động trong nhóm cụ thể."""
     def wrapper(message):
         if message.chat.id == ALLOWED_GROUP_ID:
             return func(message)
@@ -24,34 +24,32 @@ def group_only(func):
             )
     return wrapper
 
-# Kiểm tra xem người gửi có phải là admin không
 def is_admin(chat_id, user_id):
+    """Kiểm tra xem người gửi có phải là admin không."""
     try:
         chat_member = bot.get_chat_member(chat_id, user_id)
         return chat_member.status in ['administrator', 'creator']
     except:
         return False
 
-# Mute người dùng trong 10 phút
 def mute_user(chat_id, user_id):
-    # Mute người dùng
-    username = message.from_user.username or "None"
+    """Mute người dùng trong 10 phút."""
+    username = bot.get_chat_member(chat_id, user_id).user.username or "Unknown"
     bot.restrict_chat_member(chat_id, user_id, until_date=time.time() + 600, can_send_messages=False)
-    bot.send_message(chat_id, f" Người dùng @{username} đã bị mute trong 10 phút!")
+    bot.send_message(chat_id, f"Người dùng @{username} đã bị mute trong 10 phút!")
 
-# Hủy mute sau 10 phút
 def unmute_user(chat_id, user_id):
-    # Hủy mute người dùng
+    """Hủy mute người dùng sau 10 phút."""
     bot.restrict_chat_member(chat_id, user_id, can_send_messages=True)
-    bot.send_message(chat_id, f"✅ Người dùng đã được hủy mute.")
+    bot.send_message(chat_id, f"✅ Người dùng @{user_id} đã được hủy mute.")
 
 @bot.message_handler(func=lambda message: 't.me' in message.text)
 @group_only
 def handle_tme_link(message):
-    # Kiểm tra nếu người gửi không phải là admin thì xóa tin nhắn và mute
+    """Xử lý link 't.me' trong nhóm."""
     if not is_admin(message.chat.id, message.from_user.id):
         try:
-            # Xóa tin nhắn
+            # Xóa tin nhắn chứa link t.me
             bot.delete_message(message.chat.id, message.message_id)
             bot.send_message(message.chat.id, "Tin nhắn chứa link <code>t.me</code> đã bị xóa!", parse_mode="HTML")
 
@@ -59,18 +57,18 @@ def handle_tme_link(message):
             mute_user(message.chat.id, message.from_user.id)
 
             # Hủy mute sau 10 phút
-            time.sleep(600)  # Chờ 10 phút (600 giây)
+            time.sleep(600)
             unmute_user(message.chat.id, message.from_user.id)
 
         except Exception as e:
             bot.send_message(message.chat.id, f"❗ Đã xảy ra lỗi: {str(e)}")
     else:
-        # Nếu là admin thì không xóa và không mute
         bot.send_message(message.chat.id, "Admin đã gửi tin nhắn chứa <code>t.me</code>!", parse_mode="HTML")
 
 @bot.message_handler(commands=['video'])
 @group_only
 def random_video(message):
+    """Lấy video ngẫu nhiên từ API và gửi cho người dùng."""
     try:
         res = requests.get("https://api.ffcommunity.site/randomvideo.php")
         data = res.json()
@@ -86,6 +84,7 @@ def random_video(message):
 
 # Tạo thread riêng để chạy bot polling
 def run_bot():
+    """Khởi động bot với chế độ polling không giới hạn."""
     bot.infinity_polling()
 
 # Gọi keep_alive() và khởi động bot
