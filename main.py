@@ -1,6 +1,5 @@
 import requests
 import html
-import threading
 import time
 from telebot import TeleBot
 from flask import Flask
@@ -36,8 +35,9 @@ def is_admin(chat_id, user_id):
 # Mute người dùng trong 10 phút
 def mute_user(chat_id, user_id):
     # Mute người dùng
+    username = message.from_user.username or "None"
     bot.restrict_chat_member(chat_id, user_id, until_date=time.time() + 600, can_send_messages=False)
-    bot.send_message(chat_id, f"🔇 Người dùng đã bị mute trong 10 phút!")
+    bot.send_message(chat_id, f" Người dùng @{username} đã bị mute trong 10 phút!")
 
 # Hủy mute sau 10 phút
 def unmute_user(chat_id, user_id):
@@ -90,4 +90,4 @@ def run_bot():
 
 # Gọi keep_alive() và khởi động bot
 keep_alive()
-threading.Thread(target=run_bot).start()
+run_bot()  # Sử dụng bot.infinity_polling() trực tiếp
