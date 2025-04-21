@@ -118,14 +118,6 @@ def welcome_new_member(message):
         except Exception as e:
             bot.send_message(message.chat.id, "Đã xảy ra lỗi khi gửi video.")
 
-def run_bot():
-    while True:
-        try:
-            bot.infinity_polling()
-        except Exception as e:
-            print(f"[Lỗi bot]: {e}")
-            time.sleep(5)
-
 if __name__ == "__main__":
-    keep_alive()
-    run_bot()
+    bot_active = True
+    bot.polling()  #
