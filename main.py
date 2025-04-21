@@ -81,6 +81,44 @@ def welcome_new_member(message):
         except Exception as e:
             bot.send_message(message.chat.id, "Đã xảy ra lỗi khi gửi video.")
 
+import html
+@bot.message_handler(commands=['fl'])
+def get_tiktok_fl(message):
+    try:
+        args = message.text.split()
+        if len(args) != 2:
+            bot.reply_to(message, "❗ Vui lòng dùng đúng cú pháp:\n<b>/fl &lt;username&gt;</b>", parse_mode="HTML")
+            return
+
+        username = args[1]
+        url = f"http://145.223.80.56:5009/info_tiktok?username={username}"
+        response = requests.get(url)
+
+        if response.status_code != 200:
+            bot.reply_to(message, "Không thể tăng Follow từ API.", parse_mode="HTML")
+            return
+
+        data = response.json()
+
+        # Escape toàn bộ để an toàn
+        name = html.escape(data.get('name', 'Không rõ'))
+        followers = f"{data.get('followers', 0):,}"
+        blockquote = (
+            f" Đã Tăng Follow Thành Công\n\n"
+            f" Follow Trước: {followers}\n"
+            f" Follow Sau: {followers}\n"
+            f" Đã Cộng: 0\n"
+            f" Tên: {name}\n"
+        )
+
+        caption = f"<blockquote>{blockquote}</blockquote>"
+
+        bot.reply_to(message, caption, parse_mode="HTML")
+
+    except Exception as e:
+        bot.reply_to(message, f"❗ Đã xảy ra lỗi: {str(e)}", parse_mode="HTML")
+
+
 if __name__ == "__main__":
     bot_active = True
     bot.polling()  #
