@@ -13,8 +13,6 @@ keep_alive()
 # Lấy token từ biến môi trường
 BOT_TOKEN = os.environ.get('BOT_TOKEN')
 bot = TeleBot(BOT_TOKEN)
-processes = []
-last_spam_time = {}
 # ID nhóm được phép sử dụng bot
 ALLOWED_GROUP_ID = -1002639856138
 GROUP_LINK = "https://t.me/HaoEsport01"
@@ -59,85 +57,6 @@ def random_video(message):
     else:
         bot.send_message(message.chat.id, "Không lấy được video, thử lại sau nhé!")
 #spam
-import phonenumbers
-from phonenumbers import carrier
-
-def get_network(phone):
-    try:
-        number = phonenumbers.parse(f"+84{phone[1:]}" if phone.startswith("0") else phone, "VN")
-        return carrier.name_for_number(number, "vi") or "Không xác định"
-    except:
-        return "Không xác định"
-
-@bot.message_handler(commands=['spam'])
-def supersms(message):
-    user_id = message.from_user.id
-    current_time = time.time()
-    if user_id in user_last_command_time:
-        elapsed_time = current_time - user_last_command_time[user_id]
-        if elapsed_time < 100:
-            remaining_time = 100 - elapsed_time
-            bot.reply_to(message, f"Vui lòng đợi {remaining_time:.1f} giây trước khi sử dụng lệnh lại.")
-            return
-
-    params = message.text.split()[1:]
-    if len(params) != 2:
-        bot.reply_to(message, "/spam sdt số_lần (tối đa 10)")
-        return
-
-    sdt, count = params
-    if not count.isdigit():
-        bot.reply_to(message, "Số lần không hợp lệ. Vui lòng chỉ nhập số.")
-        return
-
-    count = int(count)
-    if count > 10:
-        bot.reply_to(message, "Số lần tối đa là 10.")
-        return
-
-    if sdt in blacklist:
-        bot.reply_to(message, f"Số điện thoại {sdt} đã bị cấm spam.")
-        return
-
-    sdt_request = f"84{sdt[1:]}" if sdt.startswith("0") else sdt
-    network = get_network(sdt)
-
-    diggory_chat3 = f'''{name_bot}
-╭ Spam: Thành Công 
-├ Người dùng: {message.from_user.username}
-├ Số Lần Spam: {count}
-├ Nhà Mạng: {network}
-╰ Đang Tấn Công: {sdt}'''
-
-    try:
-        if not os.path.isfile("dec.py"):
-            bot.reply_to(message, "Không tìm thấy file script.")
-            return
-
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".py") as temp_file:
-            with open("dec.py", 'r', encoding='utf-8') as file:
-                temp_file.write(file.read().encode('utf-8'))
-            temp_path = temp_file.name
-
-        subprocess.Popen(["python", temp_path, sdt, str(count)])
-
-        bot.send_message(
-            message.chat.id,
-            f'<blockquote>{diggory_chat3}</blockquote>\n<blockquote> GÓI DÙNG : FREE</blockquote>',
-            parse_mode='HTML'
-        )
-
-        requests.get(f'https://dichvukey.site/apivl/call1.php?sdt={sdt_request}')
-        user_last_command_time[user_id] = time.time()
-
-    except Exception as e:
-        bot.reply_to(message, "Đã xảy ra lỗi khi xử lý yêu cầu.")
-        print(e)
-
-        
-last_usage = {}
-blacklist = ["112", "113", "114", "115", "116", "117", "118", "119", "0", "1", "2", "3", "4", "078901631"]
-
 
 
 
