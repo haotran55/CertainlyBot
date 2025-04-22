@@ -48,6 +48,41 @@ def random_video(message):
     except Exception as e:
         bot.send_message(message.chat.id, "Đã xảy ra lỗi khi lấy video.")
 
+
+import requests
+
+def get_random_video():
+    response = requests.get("https://api.ffcommunity.site/randomvideo.php")
+    return response.url  # URL video ngẫu nhiên
+
+@bot.message_handler(content_types=['new_chat_members'])
+def welcome_user(message):
+    for user in message.new_chat_members:
+        uid = user.id
+        username = f"@{user.username}" if user.username else "Không có"
+        full_name = f"{user.first_name} {user.last_name or ''}".strip()
+        time_joined = datetime.now().strftime("%H:%M:%S | %d/%m/%Y")
+
+        # Lấy video
+        video_url = get_random_video()
+        video_data = requests.get(video_url).content
+
+        # Tạo caption
+        caption = f"""🖐 Hello <b>{full_name}</b>
+├ UID: <code>{uid}</code>
+├ Username: {username}
+├ Thời Gian: <code>{time_joined}</code>
+└ <i>Chào Mừng Bạn Đã Tham Gia Nhóm <b>Box Hào Esports</b></i>
+Gõ /bot Để Xem Lệnh Bot Hỗ Trợ Nhé!"""
+
+        # Gửi video + caption
+        bot.send_video(
+            chat_id=message.chat.id,
+            video=video_data,
+            caption=caption,
+            parse_mode="HTML"
+        )
+
 # Khởi tạo và chạy Flask trong một thread riêng
 def run_flask():
     app = Flask(__name__)
