@@ -49,11 +49,7 @@ def random_video(message):
         bot.send_message(message.chat.id, "Đã xảy ra lỗi khi lấy video.")
 
 
-import requests
-
-def get_random_video():
-    response = requests.get("https://api.ffcommunity.site/randomvideo.php")
-    return response.url  # URL video ngẫu nhiên
+from io import BytesIO
 
 @bot.message_handler(content_types=['new_chat_members'])
 def welcome_user(message):
@@ -65,9 +61,11 @@ def welcome_user(message):
 
         # Lấy video
         video_url = get_random_video()
-        video_data = requests.get(video_url).content
+        video_resp = requests.get(video_url)
+        video_file = BytesIO(video_resp.content)
+        video_file.name = "https://i.imgur.com/YV2Wzoq.mp4"  # Bắt buộc phải có tên file
 
-        # Tạo caption
+        # Caption
         caption = f"""🖐 Hello <b>{full_name}</b>
 ├ UID: <code>{uid}</code>
 ├ Username: {username}
@@ -75,13 +73,14 @@ def welcome_user(message):
 └ <i>Chào Mừng Bạn Đã Tham Gia Nhóm <b>Box Hào Esports</b></i>
 Gõ /bot Để Xem Lệnh Bot Hỗ Trợ Nhé!"""
 
-        # Gửi video + caption
+        # Gửi video
         bot.send_video(
             chat_id=message.chat.id,
-            video=video_data,
+            video=video_file,
             caption=caption,
             parse_mode="HTML"
         )
+
 
 # Khởi tạo và chạy Flask trong một thread riêng
 def run_flask():
