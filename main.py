@@ -1,18 +1,24 @@
-from flask import Flask
 import os
 import threading
 import requests
 from telebot import TeleBot
+from flask import Flask
 from datetime import datetime
 from io import BytesIO
 
-BOT_TOKEN = os.environ.get("BOT_TOKEN")
+# Lấy token từ biến môi trường
+BOT_TOKEN = os.environ.get('BOT_TOKEN')
 bot = TeleBot(BOT_TOKEN)
-app = Flask(__name__)
-
-
 ALLOWED_GROUP_IDS = [-1002639856138]
 
+# Flask App
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return "Bot đang hoạt động trên Render!"
+
+# Hàm lấy video
 def get_random_video():
     try:
         res = requests.get("https://api.ffcommunity.site/randomvideo.php", timeout=5)
@@ -21,10 +27,11 @@ def get_random_video():
     except:
         return None
 
+# Lệnh /video
 @bot.message_handler(commands=['video'])
 def random_video(message):
     if message.chat.id not in ALLOWED_GROUP_IDS:
-        bot.reply_to(message, "Tham Gia Nhóm Của Chúng Tôi Để Bot Có Thể Trò Chuyện Với Bạn Dễ Dàng Hơn.\nLink Đây: [ https://t.me/HaoEsport01 ]\n\nLưu Ý, Bot Chỉ Hoạt Động Trong Những Nhóm Cụ Thể Thôi Nha!")
+        bot.reply_to(message, "Bot Chỉ Hoạt Động Trong Nhóm Này.\nLink: https://t.me/HaoEsport01")
         return
 
     video_url = get_random_video()
@@ -37,6 +44,7 @@ def random_video(message):
     else:
         bot.send_message(message.chat.id, "Không lấy được video, thử lại sau nhé!")
 
+# Welcome thành viên mới
 @bot.message_handler(content_types=['new_chat_members'])
 def welcome_user(message):
     for user in message.new_chat_members:
@@ -53,7 +61,7 @@ def welcome_user(message):
         try:
             video_resp = requests.get(video_url)
             video_file = BytesIO(video_resp.content)
-            video_file.name = "welcome.mp4"
+            video_file.name = "video.mp4"
 
             caption = f"""🖐 Hello <b>{full_name}</b>
 ├ UID: <code>{uid}</code>
@@ -71,15 +79,11 @@ Gõ /bot Để Xem Lệnh Bot Hỗ Trợ Nhé!"""
         except:
             bot.send_message(message.chat.id, f"Chào mừng {full_name} nhé! (Gửi video lỗi)")
 
-# Thiết lập webhook khi start
-@app.route('/')
-def home():
-    return "Bot đang hoạt động!"
-
+# Khởi chạy bot
 def run_bot():
     bot.polling(non_stop=True)
 
-# Khởi động bot và Flask song song
-if __name__ == "__main__":
+# Chạy Flask và bot song song
+if __name__ == '__main__':
     threading.Thread(target=run_bot).start()
     app.run(host="0.0.0.0", port=8080)
