@@ -1,6 +1,6 @@
 import os
 import requests
-from flask import Flask, request
+from flask import Flask
 from telebot import TeleBot, types
 from datetime import datetime
 from io import BytesIO
