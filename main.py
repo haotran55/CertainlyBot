@@ -14,7 +14,7 @@ keep_alive()
 BOT_TOKEN = os.environ.get('BOT_TOKEN')
 bot = TeleBot(BOT_TOKEN)
 # ID nhóm được phép sử dụng bot
-ALLOWED_GROUP_ID = -1002639856138
+ALLOWED_GROUP_IDS = [-1002639856138]
 
 # Hàm lấy video từ API
 def get_random_video():
@@ -26,9 +26,8 @@ def get_random_video():
         return None
 
 @bot.message_handler(commands=['video'])
-@group_only
 def random_video(message):
-   if message.chat.id not in ALLOWED_GROUP_ID:
+    if message.chat.id not in ALLOWED_GROUP_IDS:
         bot.reply_to(message, "Tham Gia Nhóm Của Chúng Tôi Để Bot Có Thể Trò Chuyện Với Bạn Dễ Dàng Hơn.\nLink Đây: [ https://t.me/HaoEsport01 ]\n\nLưu Ý, Bot Chỉ Hoạt Động Trong Những Nhóm Cụ Thể Thôi Nha!")
         return
 
