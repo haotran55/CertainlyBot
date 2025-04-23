@@ -64,7 +64,7 @@ def random_video(message):
 def welcome_user(message):
     for user in message.new_chat_members:
         uid = user.id
-        username = f"@{user.username}" if user.username else "Không có"
+        username = f"@{user.username}" if user.username else "@None"
         full_name = f"{user.first_name} {user.last_name or ''}".strip()
         time_joined = datetime.now().strftime("%H:%M:%S | %d/%m/%Y")
 
