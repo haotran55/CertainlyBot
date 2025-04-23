@@ -1,18 +1,15 @@
-import os
-import requests
 from flask import Flask
-from telebot import TeleBot, types
+import os
+import threading
+import requests
+from telebot import TeleBot
 from datetime import datetime
 from io import BytesIO
 
-BOT_TOKEN = os.environ.get('BOT_TOKEN')
+BOT_TOKEN = os.environ.get("BOT_TOKEN")
 bot = TeleBot(BOT_TOKEN)
 app = Flask(__name__)
 
-# Địa chỉ webhook của bạn (Render domain)
-WEBHOOK_HOST = "https://certainlybot.onrender.com"  # thay <your-render-url> bằng domain Render của bạn
-WEBHOOK_PATH = f"/{BOT_TOKEN}"
-WEBHOOK_URL = f"{WEBHOOK_HOST}{WEBHOOK_PATH}"
 
 ALLOWED_GROUP_IDS = [-1002639856138]
 
@@ -75,23 +72,14 @@ Gõ /bot Để Xem Lệnh Bot Hỗ Trợ Nhé!"""
             bot.send_message(message.chat.id, f"Chào mừng {full_name} nhé! (Gửi video lỗi)")
 
 # Thiết lập webhook khi start
-@app.before_first_request
-def setup_webhook():
-    bot.remove_webhook()
-    bot.set_webhook(url=WEBHOOK_URL)
-
-# Route để Telegram gửi update vào
-@app.route(f"/{BOT_TOKEN}", methods=["POST"])
-def receive_update():
-    json_string = request.get_data().decode("utf-8")
-    update = types.Update.de_json(json_string)
-    bot.process_new_updates([update])
-    return 'ok', 200
-
-# Route test
 @app.route('/')
 def home():
-    return "Bot đang hoạt động qua Webhook!"
+    return "Bot đang hoạt động!"
 
+def run_bot():
+    bot.polling(non_stop=True)
+
+# Khởi động bot và Flask song song
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
+    threading.Thread(target=run_bot).start()
+    app.run(host="0.0.0.0", port=8080)
