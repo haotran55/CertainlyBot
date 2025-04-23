@@ -1,33 +1,37 @@
 import os
-import threading
 import requests
-from telebot import TeleBot
-from flask import Flask
+from telebot import TeleBot, types
+from flask import Flask, request
 from datetime import datetime
 from io import BytesIO
 
-# Lấy token từ biến môi trường
-BOT_TOKEN = os.environ.get('BOT_TOKEN')
+# ENV
+BOT_TOKEN = os.environ.get("BOT_TOKEN")
+WEBHOOK_URL = os.environ.get("https://certainlybot.onrender.com")  # VD: https://your-render-url.onrender.com
 bot = TeleBot(BOT_TOKEN)
 ALLOWED_GROUP_IDS = [-1002639856138]
 
-# Flask App
+# Flask app
 app = Flask(__name__)
 
 @app.route('/')
-def home():
+def index():
     return "Bot đang hoạt động trên Render!"
 
-# Hàm lấy video
+@app.route(f'/{BOT_TOKEN}', methods=['POST'])
+def webhook():
+    json_str = request.get_data().decode('utf-8')
+    update = types.Update.de_json(json_str)
+    bot.process_new_updates([update])
+    return 'OK', 200
+
 def get_random_video():
     try:
         res = requests.get("https://api.ffcommunity.site/randomvideo.php", timeout=5)
-        data = res.json()
-        return data.get("url")
+        return res.json().get("url")
     except:
         return None
 
-# Lệnh /video
 @bot.message_handler(commands=['video'])
 def random_video(message):
     if message.chat.id not in ALLOWED_GROUP_IDS:
@@ -44,7 +48,6 @@ def random_video(message):
     else:
         bot.send_message(message.chat.id, "Không lấy được video, thử lại sau nhé!")
 
-# Welcome thành viên mới
 @bot.message_handler(content_types=['new_chat_members'])
 def welcome_user(message):
     for user in message.new_chat_members:
@@ -79,11 +82,9 @@ Gõ /bot Để Xem Lệnh Bot Hỗ Trợ Nhé!"""
         except:
             bot.send_message(message.chat.id, f"Chào mừng {full_name} nhé! (Gửi video lỗi)")
 
-# Khởi chạy bot
-def run_bot():
-    bot.polling(non_stop=True)
-
-# Chạy Flask và bot song song
+# Khởi động webhook
 if __name__ == '__main__':
-    threading.Thread(target=run_bot).start()
-    app.run(host="0.0.0.0", port=8080)
+    # Xóa webhook cũ rồi set webhook mới mỗi khi bot khởi động
+    bot.remove_webhook()
+    bot.set_webhook(url=f"{WEBHOOK_URL}/{BOT_TOKEN}")
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
