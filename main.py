@@ -1,38 +1,33 @@
 import os
+import threading
 import requests
-from telebot import TeleBot, types
+import telebot  # Thêm dòng này để sử dụng telebot
 from flask import Flask, request
 from datetime import datetime
 from io import BytesIO
 
-# ENV
-BOT_TOKEN = os.environ.get("BOT_TOKEN")
-WEBHOOK_URL = os.environ.get("WEBHOOK_URL")  # VD: https://your-render-url.onrender.com
-bot = TeleBot(BOT_TOKEN)
+# Lấy token từ biến môi trường
+BOT_TOKEN = os.environ.get('BOT_TOKEN')
+bot = telebot.TeleBot(BOT_TOKEN)
 ALLOWED_GROUP_IDS = [-1002639856138]
 
-# Flask app
+# Flask App
 app = Flask(__name__)
 
 @app.route('/')
-def index():
+def home():
     return "Bot đang hoạt động trên Render!"
 
-
-@app.route(f"/{BOT_TOKEN}", methods=['POST'])
-def webhook():
-    json_string = request.get_data().decode('utf-8')
-    update = telebot.types.Update.de_json(json_string)
-    bot.process_new_updates([update])
-    return '', 200
-
+# Hàm lấy video
 def get_random_video():
     try:
         res = requests.get("https://api.ffcommunity.site/randomvideo.php", timeout=5)
-        return res.json().get("url")
+        data = res.json()
+        return data.get("url")
     except:
         return None
 
+# Lệnh /video
 @bot.message_handler(commands=['video'])
 def random_video(message):
     if message.chat.id not in ALLOWED_GROUP_IDS:
@@ -49,6 +44,7 @@ def random_video(message):
     else:
         bot.send_message(message.chat.id, "Không lấy được video, thử lại sau nhé!")
 
+# Welcome thành viên mới
 @bot.message_handler(content_types=['new_chat_members'])
 def welcome_user(message):
     for user in message.new_chat_members:
@@ -83,15 +79,23 @@ Gõ /bot Để Xem Lệnh Bot Hỗ Trợ Nhé!"""
         except:
             bot.send_message(message.chat.id, f"Chào mừng {full_name} nhé! (Gửi video lỗi)")
 
-# Khởi động webhook
-if __name__ == '__main__':
+# Webhook nhận update từ Telegram
+@app.route(f"/{BOT_TOKEN}", methods=['POST'])
+def webhook():
+    json_string = request.get_data().decode('utf-8')
+    update = telebot.types.Update.de_json(json_string)
+    bot.process_new_updates([update])
+    return '', 200
+
+# Khởi chạy Flask và bot song song
+if __name__ == "__main__":
     WEBHOOK_URL = os.environ.get("WEBHOOK_URL")
     if not WEBHOOK_URL:
         raise Exception("Thiếu biến môi trường WEBHOOK_URL")
 
-    # Xóa webhook cũ (nếu có) rồi đặt webhook mới
+    # Xóa webhook cũ và thiết lập webhook mới
     bot.remove_webhook()
     bot.set_webhook(url=f"{WEBHOOK_URL}/{BOT_TOKEN}")
-    
+
     # Chạy Flask (webhook listener)
     app.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
