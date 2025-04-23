@@ -15,7 +15,6 @@ BOT_TOKEN = os.environ.get('BOT_TOKEN')
 bot = TeleBot(BOT_TOKEN)
 # ID nhóm được phép sử dụng bot
 ALLOWED_GROUP_ID = -1002639856138
-GROUP_LINK = "https://t.me/HaoEsport01"
 
 def group_only(func):
     def wrapper(message):
@@ -24,7 +23,7 @@ def group_only(func):
         else:
             bot.reply_to(
                 message,
-                f"❗ Bot chỉ hoạt động trong nhóm này: <a href=\"{GROUP_LINK}\">Tại Đây</a>",
+                f"❗ Bot chỉ hoạt động trong nhóm này: https://t.me/HaoEsport01",
                 parse_mode="HTML",
                 disable_web_page_preview=True
             )
