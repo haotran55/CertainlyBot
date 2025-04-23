@@ -1,22 +1,21 @@
 import os
-import threading
 import requests
-from telebot import TeleBot
-from flask import Flask
+from flask import Flask, request
+from telebot import TeleBot, types
 from datetime import datetime
-from keep_alive import keep_alive
 from io import BytesIO
 
-# Giữ Flask sống
-keep_alive()
-
-# Lấy token từ biến môi trường
 BOT_TOKEN = os.environ.get('BOT_TOKEN')
 bot = TeleBot(BOT_TOKEN)
-# ID nhóm được phép sử dụng bot
+app = Flask(__name__)
+
+# Địa chỉ webhook của bạn (Render domain)
+WEBHOOK_HOST = "https://certainlybot.onrender.com"  # thay <your-render-url> bằng domain Render của bạn
+WEBHOOK_PATH = f"/{BOT_TOKEN}"
+WEBHOOK_URL = f"{WEBHOOK_HOST}{WEBHOOK_PATH}"
+
 ALLOWED_GROUP_IDS = [-1002639856138]
 
-# Hàm lấy video từ API
 def get_random_video():
     try:
         res = requests.get("https://api.ffcommunity.site/randomvideo.php", timeout=5)
@@ -35,18 +34,11 @@ def random_video(message):
     if video_url:
         try:
             bot.send_chat_action(message.chat.id, "upload_video")
-            bot.send_video(
-                message.chat.id,
-                video=video_url,
-                caption="Video gái xinh By @CertainllyBot"
-            )
-        except Exception as e:
+            bot.send_video(message.chat.id, video=video_url, caption="Video gái xinh By @CertainllyBot")
+        except:
             bot.send_message(message.chat.id, "Lỗi khi gửi video.")
     else:
         bot.send_message(message.chat.id, "Không lấy được video, thử lại sau nhé!")
-#spam
-
-
 
 @bot.message_handler(content_types=['new_chat_members'])
 def welcome_user(message):
@@ -64,7 +56,7 @@ def welcome_user(message):
         try:
             video_resp = requests.get(video_url)
             video_file = BytesIO(video_resp.content)
-            video_file.name = "https://i.imgur.com/YV2Wzoq.mp4"
+            video_file.name = "welcome.mp4"
 
             caption = f"""🖐 Hello <b>{full_name}</b>
 ├ UID: <code>{uid}</code>
@@ -82,23 +74,24 @@ Gõ /bot Để Xem Lệnh Bot Hỗ Trợ Nhé!"""
         except:
             bot.send_message(message.chat.id, f"Chào mừng {full_name} nhé! (Gửi video lỗi)")
 
-# Flask Server cho Render / UptimeRobot
-def run_flask():
-    app = Flask(__name__)
+# Thiết lập webhook khi start
+@app.before_first_request
+def setup_webhook():
+    bot.remove_webhook()
+    bot.set_webhook(url=WEBHOOK_URL)
 
-    @app.route('/')
-    def home():
-        return "Bot đang hoạt động trên Render!"
+# Route để Telegram gửi update vào
+@app.route(f"/{BOT_TOKEN}", methods=["POST"])
+def receive_update():
+    json_string = request.get_data().decode("utf-8")
+    update = types.Update.de_json(json_string)
+    bot.process_new_updates([update])
+    return 'ok', 200
 
-    app.run(host="0.0.0.0", port=8080)
+# Route test
+@app.route('/')
+def home():
+    return "Bot đang hoạt động qua Webhook!"
 
-# Thread cho Flask
-flask_thread = threading.Thread(target=run_flask)
-flask_thread.start()
-
-# Thread cho bot Telegram
-def run_bot():
-    bot.polling(non_stop=True)
-
-bot_thread = threading.Thread(target=run_bot)
-bot_thread.start()
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
