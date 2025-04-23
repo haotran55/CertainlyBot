@@ -7,7 +7,7 @@ from io import BytesIO
 
 # ENV
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
-WEBHOOK_URL = os.environ.get("https://certainlybot.onrender.com")  # VD: https://your-render-url.onrender.com
+WEBHOOK_URL = os.environ.get("WEBHOOK_URL")  # VD: https://your-render-url.onrender.com
 bot = TeleBot(BOT_TOKEN)
 ALLOWED_GROUP_IDS = [-1002639856138]
 
@@ -18,12 +18,13 @@ app = Flask(__name__)
 def index():
     return "Bot đang hoạt động trên Render!"
 
-@app.route(f'/{BOT_TOKEN}', methods=['POST'])
+
+@app.route(f"/{BOT_TOKEN}", methods=['POST'])
 def webhook():
-    json_str = request.get_data().decode('utf-8')
-    update = types.Update.de_json(json_str)
+    json_string = request.get_data().decode('utf-8')
+    update = telebot.types.Update.de_json(json_string)
     bot.process_new_updates([update])
-    return 'OK', 200
+    return '', 200
 
 def get_random_video():
     try:
@@ -84,7 +85,13 @@ Gõ /bot Để Xem Lệnh Bot Hỗ Trợ Nhé!"""
 
 # Khởi động webhook
 if __name__ == '__main__':
-    # Xóa webhook cũ rồi set webhook mới mỗi khi bot khởi động
+    WEBHOOK_URL = os.environ.get("WEBHOOK_URL")
+    if not WEBHOOK_URL:
+        raise Exception("Thiếu biến môi trường WEBHOOK_URL")
+
+    # Xóa webhook cũ (nếu có) rồi đặt webhook mới
     bot.remove_webhook()
     bot.set_webhook(url=f"{WEBHOOK_URL}/{BOT_TOKEN}")
-    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
+    
+    # Chạy Flask (webhook listener)
+    app.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
