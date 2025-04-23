@@ -45,6 +45,8 @@ def random_video(message):
         bot.send_message(message.chat.id, "Không lấy được video, thử lại sau nhé!")
 
 # Welcome thành viên mới
+from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
+
 @bot.message_handler(content_types=['new_chat_members'])
 def welcome_user(message):
     for user in message.new_chat_members:
@@ -63,21 +65,31 @@ def welcome_user(message):
             video_file = BytesIO(video_resp.content)
             video_file.name = "video.mp4"
 
-            caption = f"""🖐 Hello <b>{full_name}</b>
-├ UID: <code>{uid}</code>
-├ Username: {username}
-├ Thời Gian: <code>{time_joined}</code>
-└ <i>Chào Mừng Bạn Đã Tham Gia Nhóm <b>Box Hào Esports</b></i>
-Gõ /bot Để Xem Lệnh Bot Hỗ Trợ Nhé!"""
+            caption = f"""🖐 <b>Welcome, {full_name}!</b>
+
+<blockquote>
+🌟 <b>UID:</b> <code>{uid}</code>
+📛 <b>Username:</b> {username}
+⏰ <b>Thời Gian:</b> <code>{time_joined}</code>
+
+✨ <i>Rất vui khi bạn đã gia nhập <b>Box Hào Esports</b>!</i>
+</blockquote>
+
+➡️ Gõ <b>/bot</b> để khám phá các lệnh bot hỗ trợ nhé!
+"""
+
+            keyboard = InlineKeyboardMarkup()
+            keyboard.add(InlineKeyboardButton("Nhóm Buff Like", url="https://t.me/checkinfo123"))
 
             bot.send_video(
                 chat_id=message.chat.id,
                 video=video_file,
                 caption=caption,
-                parse_mode="HTML"
+                parse_mode="HTML",
+                reply_markup=keyboard
             )
-        except:
-            bot.send_message(message.chat.id, f"Chào mừng {full_name} nhé! (Gửi video lỗi)")
+        except Exception as e:
+            bot.send_message(message.chat.id, f"Chào mừng {full_name} nhé! (Gửi video lỗi)\nLỗi: {e}")
 
 # Webhook nhận update từ Telegram
 @app.route(f"/{BOT_TOKEN}", methods=['POST'])
