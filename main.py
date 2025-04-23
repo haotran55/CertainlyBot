@@ -23,7 +23,7 @@ def group_only(func):
         else:
             bot.reply_to(
                 message,
-                f"❗ Bot chỉ hoạt động trong nhóm này: https://t.me/HaoEsport01",
+                f"❗ Bot chỉ hoạt động trong nhóm này https://t.me/HaoEsport01.",
                 parse_mode="HTML",
                 disable_web_page_preview=True
             )
