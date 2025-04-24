@@ -52,7 +52,7 @@ def send_welcome(message):
     text = f"""<blockquote>
 <b>Xin Chào {name}!</b>
 
-Gõ <code>/about</code> để xem danh sách lệnh của bot mà bạn có thể sử dụng:
+Gõ /about để xem danh sách lệnh của bot mà bạn có thể sử dụng:
 
 <i>(Nếu thấy bot thú vị, đừng ngần ngại chia sẻ với bạn bè để họ cùng dùng nhé!)</i>
 </blockquote>"""
@@ -62,7 +62,6 @@ Gõ <code>/about</code> để xem danh sách lệnh của bot mà bạn có th�
 
 
 from datetime import datetime, timedelta
-
 @bot.message_handler(commands=['about'])
 def send_help(message):
     username = message.from_user.username or "None"
@@ -70,31 +69,27 @@ def send_help(message):
     current_time = now.strftime("%H:%M:%S")
     current_date = now.strftime("%d/%m/%Y")
 
-    text = f"""<blockquote>
-📑 <b>Danh Sách Lệnh</b>  
-⏰ Thời Gian: <code>{current_time}</code>  
-📅 Ngày: <code>{current_date}</code>  
-👤 Người Gọi Lệnh: @{username}
-</blockquote>
+    bot.reply_to(message, f"""<blockquote>
+📑 Danh Sánh Lệnh  
+Thời Gian : {current_time}  
+Ngày : {current_date}  
+Người Gọi Lệnh : @{username}  
 
-<b>| Lệnh Chung |</b>
-» /likes - Buff Like  
-» /video - Random Video Gái  
-» /anhgai - Random Ảnh Gái  
-» /thoitiet - Check Thời Tiết  
-» /rutgon - Rút Gọn Link  
-» /spam - Spam SDT Thường  
-» /spamvip - Spam SDT Vip  
-» /tiktok - Tải Video TikTok  
-» /ttinfo - Kiểm Tra Tài Khoản TikTok  
-» /ffinfo - Kiểm Tra Tài Khoản Free Fire  
+| Lệnh Chung |
+» /likes - Buff Like
+» /video - Random Video Gái
+» /anhgai - Random Ảnh Gái
+» /thoitiet - Check Thời Tiết
+» /rutgon - Rút Gọn Link
+» /spam - Spam SDT Thường
+» /spamvip - Spam SDT Vip
+» /tiktok - Tải Video TikTok
+» /ttinfo - Kiểm Tra Tài Khoản TikTok
+» /ffinfo - Kiểm Tra Tài Khoản Free Fire
 
-<b>| Contact |</b>
-» /admin - Liên Hệ Admin
-"""
-
-    bot.reply_to(message, text, parse_mode="HTML")
-
+| Contact |
+» /admin : Liên Hệ Admin
+</blockquote>""", parse_mode="HTML")
 
 @bot.message_handler(commands=['admin'])
 def admin_info(message):
