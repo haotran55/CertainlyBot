@@ -44,6 +44,100 @@ def random_video(message):
     else:
         bot.send_message(message.chat.id, "Không lấy được video, thử lại sau nhé!")
 
+
+@bot.message_handler(commands=['start'])
+def send_welcome(message):
+    name = message.from_user.first_name or "None"
+
+    text = f"""<blockquote>
+<b>Xin Chào {name}!</b>
+
+Gõ <code>/about</code> để xem danh sách lệnh của bot mà bạn có thể sử dụng:
+
+<i>(Nếu thấy bot thú vị, đừng ngần ngại chia sẻ với bạn bè để họ cùng dùng nhé!)</i>
+</blockquote>"""
+
+    bot.reply_to(message, text, parse_mode="HTML")
+
+
+
+from datetime import datetime, timedelta
+
+@bot.message_handler(commands=['about'])
+def send_help(message):
+    username = message.from_user.username or "None"
+    now = datetime.utcnow() + timedelta(hours=7)
+    current_time = now.strftime("%H:%M:%S")
+    current_date = now.strftime("%d/%m/%Y")
+
+    text = f"""<blockquote>
+📑 <b>Danh Sách Lệnh</b>  
+⏰ Thời Gian: <code>{current_time}</code>  
+📅 Ngày: <code>{current_date}</code>  
+👤 Người Gọi Lệnh: @{username}
+</blockquote>
+
+<b>| Lệnh Chung |</b>
+» /likes - Buff Like  
+» /video - Random Video Gái  
+» /anhgai - Random Ảnh Gái  
+» /thoitiet - Check Thời Tiết  
+» /rutgon - Rút Gọn Link  
+» /spam - Spam SDT Thường  
+» /spamvip - Spam SDT Vip  
+» /tiktok - Tải Video TikTok  
+» /ttinfo - Kiểm Tra Tài Khoản TikTok  
+» /ffinfo - Kiểm Tra Tài Khoản Free Fire  
+
+<b>| Contact |</b>
+» /admin - Liên Hệ Admin
+"""
+
+    bot.reply_to(message, text, parse_mode="HTML")
+
+
+@bot.message_handler(commands=['admin'])
+def admin_info(message):
+    text = """<blockquote>
+👨‍💻 <b>Liên Hệ Admin</b>
+
+» @HaoEsports05
+</blockquote>"""
+
+    bot.reply_to(message, text, parse_mode="HTML")
+
+
+
+import requests
+
+@bot.message_handler(commands=['rutgon'])
+def shorten_link(message):
+    args = message.text.split(" ", 1)
+    if len(args) == 1:
+        bot.reply_to(message, "Vui lòng nhập link cần rút gọn.\nVí dụ: <code>/rutgon https://example.com</code>", parse_mode="HTML")
+        return
+
+    long_url = args[1]
+
+    try:
+        api_url = f"http://tinyurl.com/api-create.php?url={long_url}"
+        response = requests.get(api_url)
+
+        if response.status_code == 200:
+            short_url = response.text
+            reply_text = f"""<blockquote>
+🔗 <b>Link Đã Được Rút Gọn:</b>
+<code>{short_url}</code>
+</blockquote>"""
+            bot.reply_to(message, reply_text, parse_mode="HTML")
+        else:
+            bot.reply_to(message, "Rút gọn thất bại. Vui lòng thử lại sau.")
+    except Exception as e:
+        bot.reply_to(message, f"Lỗi khi rút gọn link: {e}")
+
+
+
+
 # Welcome thành viên mới
 # Welcome thành viên mới
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
