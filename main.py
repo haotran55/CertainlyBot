@@ -54,17 +54,7 @@ def welcome_user(message):
         username = f"@{user.username}" if user.username else "@None"
         full_name = f"{user.first_name} {user.last_name or ''}".strip()
         time_joined = datetime.now().strftime("%H:%M:%S | %d/%m/%Y")
-
-        video_url = get_random_video()
-        if not video_url:
-            bot.send_message(message.chat.id, f"Chào mừng {full_name} nhé! (Không lấy được video)")
-            return
-
-        try:
-            video_resp = requests.get(video_url)
-            video_file = BytesIO(video_resp.content)
-            video_file.name = "video.mp4"
-
+        
             caption = f"""🖐 <b>Welcome, {full_name}!</b>
 
 <blockquote>
@@ -74,16 +64,14 @@ def welcome_user(message):
 
 ✨ <i>Rất vui khi bạn đã gia nhập <b>Box Hào Esports</b>!</i>
 </blockquote>
-
-➡️ Gõ <b>/bot</b> để khám phá các lệnh bot hỗ trợ nhé!
 """
 
             keyboard = InlineKeyboardMarkup()
-            keyboard.add(InlineKeyboardButton("Nhóm Buff Like", url="https://t.me/checkinfo123"))
+            keyboard.add(InlineKeyboardButton("BUFF LIKE", url="https://t.me/checkinfo123"))
 
             bot.send_video(
                 chat_id=message.chat.id,
-                video=video_file,
+                video="https://v16m-default.tiktokcdn.com/ccf79902a33306cfe044872ad94b2619/6809d4ec/video/tos/alisg/tos-alisg-pve-0037c001/oo4jREIYzDasfQ44IKcR5FAQGeARLDge8CsQOI/?a=0&bti=OUBzOTg7QGo6OjZAL3AjLTAzYCMxNDNg&ch=0&cr=0&dr=0&er=0&lr=all&net=0&cd=0%7C0%7C0%7C0&cv=1&br=1580&bt=790&cs=0&ds=6&ft=EeF4ntZWD03Q12NvQaxQWIxRSfYFpq_45SY&mime_type=video_mp4&qs=0&rc=OTQ1NmQ3ZGZlaDc7Zjg5aUBpM2ltO245cjU6MzMzODczNEAxMDFhYy4yXi0xXjBhMzNjYSNicmlfMmQ0NDFhLS1kMWBzcw%3D%3D&vvpl=1&l=20250424080617D39FC2B3B674FA0853C2&btag=e000b8000",
                 caption=caption,
                 parse_mode="HTML",
                 reply_markup=keyboard
