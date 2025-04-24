@@ -63,46 +63,6 @@ Gõ /about để xem danh sách lệnh của bot mà bạn có thể sử dụng
 
     bot.reply_to(message, text, parse_mode="HTML")
 
-def escape_html(text):
-    return (text
-            .replace("&", "&amp;")
-            .replace("<", "&lt;")
-            .replace(">", "&gt;"))
-
-@bot.message_handler(commands=['visit'])
-def handle_visit(message):
-    try:
-        args = message.text.split()
-        if len(args) != 3:
-            return bot.reply_to(
-                message,
-                "<b>Cú pháp sai</b>\nDùng: <code>/visit &lt;uid&gt; &lt;region&gt;</code>\nVí dụ: <code>/visit 123456789 sg</code>"
-            )
-
-        uid = escape_html(args[1])
-        region = escape_html(args[2].lower())
-        url = f"https://tanhungfreefirevisit.vercel.app/visitorsff?uid={uid}&region={region}"
-
-        res = requests.get(url)
-        data = res.json()
-
-        if "message" in data:
-            message_text = escape_html(data["message"])
-            owner = escape_html(data.get("owner", "Không rõ"))
-
-            reply_text = (
-                f"<blockquote>"
-                f"UID: {uid}\n"
-                f"Region: {region.upper()}\n"
-                f"Owner: {owner}\n"
-                f"{message_text}"
-                f"</blockquote>"
-            )
-            bot.reply_to(message, reply_text)
-        else:
-            bot.reply_to(message, "<i>Không nhận được phản hồi hợp lệ từ API</i>")
-    except Exception as e:
-        bot.reply_to(message, f"<code>Lỗi: {escape_html(str(e))}</code>")
 
 
 from datetime import datetime, timedelta
