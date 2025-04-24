@@ -163,78 +163,71 @@ def get_player_stats(message):
     try:
         parts = message.text.split()
         if len(parts) != 3:
-            bot.reply_to(message, "❌ Format: Get {UID} {region}")
+            bot.reply_to(message, "❌ Format đúng: `Get UID region`\nVí dụ: `Get 12345678 sg`")
             return
-        
-        uid = parts[1]
-        region = parts[2].lower()
-        
+
+        uid, region = parts[1], parts[2].lower()
         api_url = f"https://freefireinfo-tanhung.onrender.com/info?&uid={uid}&region={region}"
-        response = requests.get(api_url)
-        data = response.json()
 
-        if "basicInfo" in data:
-            info = data["basicInfo"]
-            clan = data.get("clanBasicInfo", {})
-            pet = data.get("petInfo", {})
-            profile = data.get("profileInfo", {})
-            social = data.get("socialInfo", {})
-            credit = data.get("creditScoreInfo", {})
+        res = requests.get(api_url, timeout=10)
+        data = res.json()
 
+        if "basicInfo" not in data:
+            bot.reply_to(message, "❌ Không tìm thấy người chơi. Kiểm tra lại UID và region.")
+            return
 
-            msg = f"""
-🎮 𝗧𝗛Ô𝗡𝗚 𝗧𝗜𝗡 𝗧𝗔̀𝗜 𝗞𝗛𝗢𝗔̉𝗡 𝗙𝗥𝗘𝗘 𝗙𝗜𝗥𝗘 🎮
+        info = data["basicInfo"]
+        clan = data.get("clanBasicInfo", {})
+        pet = data.get("petInfo", {})
+        credit = data.get("creditScoreInfo", {})
+        profile = data.get("profileInfo", {})
+        social = data.get("socialInfo", {})
 
-👤 𝗧𝗛Ô𝗡𝗚 𝗧𝗜𝗡 𝗖𝗔́ 𝗡𝗛𝗔̂𝗡
-━━━━━━━━━━━━━━━
-📛 Tên: {info.get('nickname', 'N/A')}
-🆔 UID: {uid}
-🌍 Khu vực: {info.get('region', 'N/A')}
-📈 Cấp: {info.get('level', 'N/A')}
-❤️ Lượt like: {info.get('liked', 'N/A')}
-📦 Phiên bản: {info.get('releaseVersion', 'N/A')}
+        name = info.get("nickname", "N/A")
+        level = info.get("level", "N/A")
+        likes = info.get("liked", "N/A")
+        region = info.get("region", "N/A")
+        version = info.get("releaseVersion", "N/A")
+        avatar_id = info.get("headPic", "101000001")
+        avatar_url = f"https://system.ffgarena.cloud/api/iconsff?image={avatar_id}.png"
 
-🏆 𝗧𝗛𝗢̂𝗡𝗚 𝗧𝗜𝗡 𝗥𝗔𝗡𝗞
-━━━━━━━━━━━━━━━
-🎯 Rank BR: {info.get('maxRank', 'N/A')}
-⚔️ Rank CS: {info.get('csMaxRank', 'N/A')}
-📊 Điểm BR: {info.get('rankingPoints', 'N/A')}
-📈 Điểm CS: {info.get('csRankingPoints', 'N/A')}
+        reply = f"""
+𝗙𝗥𝗘𝗘 𝗙𝗜𝗥𝗘 𝗣𝗟𝗔𝗬𝗘𝗥 𝗜𝗡𝗙𝗢
 
-🏰 𝗧𝗛𝗢̂𝗡𝗚 𝗧𝗜𝗡 𝗖𝗟𝗔𝗡
-━━━━━━━━━━━━━━━
-🏷️ Tên: {clan.get('clanName', 'N/A')}
-🆔 ID: {clan.get('clanId', 'N/A')}
-📊 Cấp độ: {clan.get('clanLevel', 'N/A')}
-👥 Thành viên: {clan.get('memberNum', '0')}/{clan.get('capacity', '0')}
+👤 𝗧𝗘̂𝗡: {name}
+🆔 𝗨𝗜𝗗: {uid}
+📊 𝗖𝗔̂́𝗣: {level}
+❤️ 𝗟𝗶𝗸𝗲: {likes}
+🌍 𝗞𝗵𝘂 𝗩𝘂̛̣𝗰: {region}
+🛠️ 𝗣𝗵𝗶𝗲̂𝗻 𝗕𝗮̉𝗻: {version}
 
-🐾 𝗧𝗛𝗢̂𝗡𝗚 𝗧𝗜𝗡 𝗣𝗘𝗧
-━━━━━━━━━━━━━━━
-🐶 Tên: {pet.get('name', 'N/A')}
-📈 Cấp: {pet.get('level', 'N/A')}
-⭐ EXP: {pet.get('exp', 'N/A')}
+🏆 𝗧𝗛𝗢̂𝗡𝗚 𝗧𝗜𝗡 𝗛𝗔̣𝗖𝗛
+• BR Rank: {info.get("maxRank", "N/A")}
+• BR Point: {info.get("rankingPoints", "N/A")}
+• CS Rank: {info.get("csMaxRank", "N/A")}
+• CS Point: {info.get("csRankingPoints", "N/A")}
 
-📱 𝗧𝗛𝗢̂𝗡𝗚 𝗧𝗜𝗡 𝗫Ã 𝗛𝗢̣̂𝗜
-━━━━━━━━━━━━━━━
-🌐 Ngôn ngữ: {social.get('language', 'N/A')}
-🎮 Chế độ thích: {social.get('modePrefer', 'N/A')}
-📝 Bio: {social.get('signature', 'N/A')}
+🏰 𝗖𝗟𝗔𝗡
+• Tên: {clan.get("clanName", "Không có")}
+• Level: {clan.get("clanLevel", "N/A")}
+• Thành viên: {clan.get("memberNum", "N/A")}/{clan.get("capacity", "N/A")}
 
-📊 𝗗𝗜𝗘̂̉𝗠 𝗧𝗜́𝗡 𝗗𝗨̣𝗡𝗚
-━━━━━━━━━━━━━━━
-✅ Điểm: {credit.get('creditScore', 'N/A')}
-            """
+🐾 𝗣𝗘𝗧
+• Tên: {pet.get("name", "N/A")}
+• ID: {pet.get("id", "N/A")}
+• Cấp: {pet.get("level", "N/A")}
+• EXP: {pet.get("exp", "N/A")}
 
-            if len(msg) > 4096:
-                for i in range(0, len(msg), 4096):
-                    bot.reply_to(message, msg[i:i+4096])
-            else:
-                bot.reply_to(message, msg)
+📱 𝗧𝗛𝗢̂𝗡𝗚 𝗧𝗜𝗡 𝗫𝗔̃ 𝗛𝗢̣̂𝗜
+• Bio: {social.get("signature", "Không có")}
+• Ngôn ngữ: {social.get("language", "N/A")}
+• Chế độ yêu thích: {social.get("modePrefer", "N/A")}
 
-        else:
-            bot.reply_to(message, "❌ Không thể lấy thông tin. UID hoặc region sai.")
+✅ Credit Score: {credit.get("creditScore", "N/A")}
+"""
+        bot.send_photo(message.chat.id, photo=avatar_url, caption=reply.strip(), parse_mode="HTML")
     except Exception as e:
-        bot.reply_to(message, f"❌ Lỗi: {str(e)}")
+        bot.reply_to(message, f"❌ Lỗi: {e}")
 
 
 
