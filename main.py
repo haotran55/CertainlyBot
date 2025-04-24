@@ -209,26 +209,6 @@ def key(message):
     else:
         bot.reply_to(message, 'KEY KHÔNG HỢP LỆ.')
 
-import os
-import datetime
-
-def save_user_data(user_id):
-    today_day = datetime.date.today().day
-    user_path = f'./user/{today_day}'
-    os.makedirs(user_path, exist_ok=True)
-    
-    file_path = f'{user_path}/{user_id}.txt'
-    with open(file_path, 'w') as file:
-        file.write(f"User ID: {user_id}\n")
-        file.write(f"Timestamp: {datetime.datetime.now()}\n")
-    
-    return file_path
-
-# Ví dụ cách lưu dữ liệu
-user_id = message.from_user.id
-file_path = save_user_data(user_id)
-print(f"File saved at: {file_path}")
-
 
 
 
