@@ -71,18 +71,12 @@ def send_help(message):
     if message.chat.id not in ALLOWED_GROUP_IDS:
         bot.reply_to(message, "Bot Chỉ Hoạt Động Trong Nhóm Này.\nLink: https://t.me/HaoEsport01")
         return
-    username = message.from_user.username or "None"
-    now = datetime.utcnow() + timedelta(hours=7)
-    current_time = now.strftime("%H:%M:%S")
-    current_date = now.strftime("%d/%m/%Y")
+    full_name = f"{user.first_name} {user.last_name or ''}".strip()
 
     bot.reply_to(message, f"""<blockquote>
-📑 Danh Sánh Lệnh  
-⏰Thời Gian : {current_time}  
-📆Ngày : {current_date}  
-👤Người Gọi Lệnh : @{username} 
+Xin Chào Bạn {full_name}
 
-| Lệnh Chung |
+| Danh Sách Lệnh |
 » /likes - Buff Like
 » /visit - Buff View FF
 » /video - Random Video Gái
@@ -102,8 +96,6 @@ def send_help(message):
 @bot.message_handler(commands=['admin'])
 def admin_info(message):
     text = """<blockquote>
-👨‍💻 <b>Liên Hệ Admin</b>
-
 » @HaoEsports05
 </blockquote>"""
 
