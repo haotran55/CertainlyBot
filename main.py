@@ -47,6 +47,9 @@ def random_video(message):
 
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
+    if message.chat.id not in ALLOWED_GROUP_IDS:
+        bot.reply_to(message, "Bot Chỉ Hoạt Động Trong Nhóm Này.\nLink: https://t.me/HaoEsport01")
+        return
     name = message.from_user.first_name or "None"
 
     text = f"""<blockquote>
@@ -63,7 +66,10 @@ Gõ /about để xem danh sách lệnh của bot mà bạn có thể sử dụng
 
 from datetime import datetime, timedelta
 @bot.message_handler(commands=['about'])
-def reply_help(message):
+def send_help(message):
+    if message.chat.id not in ALLOWED_GROUP_IDS:
+        bot.reply_to(message, "Bot Chỉ Hoạt Động Trong Nhóm Này.\nLink: https://t.me/HaoEsport01")
+        return
     username = message.from_user.username or "None"
     now = datetime.utcnow() + timedelta(hours=7)
     current_time = now.strftime("%H:%M:%S")
@@ -71,9 +77,10 @@ def reply_help(message):
 
     bot.reply_to(message, f"""<blockquote>
 📑 Danh Sánh Lệnh  
-Thời Gian : {current_time}  
-Ngày : {current_date}  
-Người Gọi Lệnh : @{username}  
+⏰Thời Gian : {current_time}  
+📆Ngày : {current_date}  
+👤Người Gọi Lệnh : @{username} 
+• /start or /about - Hiển thị danh sách lệnh và hướng dẫn sử dụng. 
 
 | Lệnh Chung |
 » /likes - Buff Like
@@ -107,6 +114,9 @@ import requests
 
 @bot.message_handler(commands=['rutgon'])
 def shorten_link(message):
+    if message.chat.id not in ALLOWED_GROUP_IDS:
+        bot.reply_to(message, "Bot Chỉ Hoạt Động Trong Nhóm Này.\nLink: https://t.me/HaoEsport01")
+        return
     args = message.text.split(" ", 1)
     if len(args) == 1:
         bot.reply_to(message, "Vui lòng nhập link cần rút gọn.\nVí dụ: <code>/rutgon https://example.com</code>", parse_mode="HTML")
