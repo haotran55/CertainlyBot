@@ -45,7 +45,11 @@ def random_video(message):
         bot.send_message(message.chat.id, "Không lấy được video, thử lại sau nhé!")
 
 # Welcome thành viên mới
+# Welcome thành viên mới
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
+from datetime import datetime
+from io import BytesIO
+import requests
 
 @bot.message_handler(content_types=['new_chat_members'])
 def welcome_user(message):
@@ -54,7 +58,8 @@ def welcome_user(message):
         username = f"@{user.username}" if user.username else "@None"
         full_name = f"{user.first_name} {user.last_name or ''}".strip()
         time_joined = datetime.now().strftime("%H:%M:%S | %d/%m/%Y")
-        
+
+        try:
             caption = f"""🖐 <b>Welcome, {full_name}!</b>
 
 <blockquote>
