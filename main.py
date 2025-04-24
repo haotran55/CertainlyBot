@@ -161,7 +161,7 @@ def ffinfo_command(message):
     try:
         args = message.text.split()
         if len(args) < 2:
-            return bot.reply_to(message, "Vui lòng nhập UID.\nVí dụ: /stats 3827953808")
+            return bot.reply_to(message, "Vui lòng nhập UID.\nVí dụ: /ffinfo 3827953808")
 
         uid = args[1]
         url = f"https://www.xlanznet.site/ffstats?id={uid}"
