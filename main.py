@@ -33,7 +33,13 @@ def random_video(message):
     if message.chat.id not in ALLOWED_GROUP_IDS:
         bot.reply_to(message, "Bot Chỉ Hoạt Động Trong Nhóm Này.\nLink: https://t.me/HaoEsport01")
         return
+    today_day = datetime.date.today().day  # Chuyển ra ngoài if
+    user_id = message.from_user.id
+    today_path = f"./user/{today_day}/{user_id}.txt"
 
+    if not os.path.exists(today_path):
+        bot.reply_to(message, 'Dùng /getkey Để Lấy Key Hoặc /muavip Và Dùng /key Để Nhập Key Hôm Nay!')
+        return
     video_url = get_random_video()
     if video_url:
         try:
@@ -117,6 +123,15 @@ def shorten_link(message):
     if message.chat.id not in ALLOWED_GROUP_IDS:
         bot.reply_to(message, "Bot Chỉ Hoạt Động Trong Nhóm Này.\nLink: https://t.me/HaoEsport01")
         return
+
+    today_day = datetime.date.today().day  # Chuyển ra ngoài if
+    user_id = message.from_user.id
+    today_path = f"./user/{today_day}/{user_id}.txt"
+
+    if not os.path.exists(today_path):
+        bot.reply_to(message, 'Dùng /getkey Để Lấy Key Hoặc /muavip Và Dùng /key Để Nhập Key Hôm Nay!')
+        return
+
     args = message.text.split(" ", 1)
     if len(args) == 1:
         bot.reply_to(message, "Vui lòng nhập link cần rút gọn.\nVí dụ: <code>/rutgon https://example.com</code>", parse_mode="HTML")
@@ -139,6 +154,62 @@ def shorten_link(message):
             bot.reply_to(message, "Rút gọn thất bại. Vui lòng thử lại sau.")
     except Exception as e:
         bot.reply_to(message, f"Lỗi khi rút gọn link: {e}")
+
+
+def TimeStamp():
+    return datetime.date.today()
+
+def TimeStamp():
+    return datetime.datetime.now().strftime("%Y-%m-%d")
+@bot.message_handler(commands=['getkey'])
+def startkey(message):
+    user_id = message.from_user.id
+    today_day = datetime.date.today().day
+    key = "vLong" + str(user_id * today_day - 2007)
+
+    api_token = '67c1fe72a448b83a9c7e7340'
+    key_url = f"https://dichvukey.site/key.html?key={key}"
+
+    try:
+        response = requests.get(f'https://link4m.co/api-shorten/v2?api={api_token}&url={key_url}')
+        response.raise_for_status()
+        url_data = response.json()
+        print(key)
+
+        if 'shortenedUrl' in url_data:
+            url_key = url_data['shortenedUrl']
+            text = (f'Link Lấy Key Ngày {TimeStamp()} LÀ: {url_key}\n'
+                    'KHI LẤY KEY XONG, DÙNG LỆNH /key HaoEsports....  ĐỂ TIẾP TỤC')
+            bot.reply_to(message, text)
+        else:
+            bot.reply_to(message, 'Lỗi.')
+    except requests.RequestException:
+        bot.reply_to(message, 'Lỗi.')
+
+@bot.message_handler(commands=['key'])
+def key(message):
+    if len(message.text.split()) != 2:
+        bot.reply_to(message, 'Key Đã Vượt Là? đã vượt thì nhập /key chưa vượt thì /muavip nhé')
+        return
+
+    user_id = message.from_user.id
+    key = message.text.split()[1]
+    today_day = datetime.date.today().day
+    expected_key = "vLong" + str(user_id * today_day - 2007)  # Đảm bảo công thức khớp với công thức tạo key
+
+    if key == expected_key:
+        text_message = f'<blockquote>[ KEY HỢP LỆ ] NGƯỜI DÙNG CÓ ID: [ {user_id} ] ĐƯỢC PHÉP ĐƯỢC SỬ DỤNG CÁC LỆNH TRONG [/vlong]</blockquote>'
+        video_url = 'https://v16m-default.akamaized.net/4e91716006f611b4064fb417539f7a57/66a9164c/video/tos/alisg/tos-alisg-pve-0037c001/o4VRzDLftQGT9YgAc2pAefIqZeIoGLgGAFIWtF/?a=0&bti=OTg7QGo5QHM6OjZALTAzYCMvcCMxNDNg&ch=0&cr=0&dr=0&lr=all&cd=0%7C0%7C0%7C0&cv=1&br=2138&bt=1069&cs=0&ds=6&ft=XE5bCqT0majPD12fFa-73wUOx5EcMeF~O5&mime_type=video_mp4&qs=0&rc=PGloZWg2aTVoOGc7OzllZkBpanA0ZXA5cjplczMzODczNEAtXmAwMWEyXjUxNWFgLjYuYSNxZ3IyMmRrNHNgLS1kMS1zcw%3D%3D&vvpl=1&l=20240730103502EC9CCAF9227AE804B708&btag=e00088000'  # Đổi URL đến video của bạn
+        bot.send_video(message.chat.id, video_url, caption=text_message, parse_mode='HTML')
+        
+        user_path = f'./user/{today_day}'
+        os.makedirs(user_path, exist_ok=True)
+        with open(f'{user_path}/{user_id}.txt', "w") as fi:
+            fi.write("")
+    else:
+        bot.reply_to(message, 'KEY KHÔNG HỢP LỆ.')
+
+
 
 
 
