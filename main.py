@@ -156,16 +156,21 @@ def shorten_link(message):
         bot.reply_to(message, f"Lỗi khi rút gọn link: {e}")
 
 
-def TimeStamp():
-    return datetime.date.today()
+import time
+import datetime
 
-def TimeStamp():
-    return datetime.datetime.now().strftime("%Y-%m-%d")
+start_time = time.time()  # Lưu thời gian bắt đầu tính bằng giây
+
+def get_elapsed_seconds():
+    return int(time.time() - start_time)  # Số giây đã trôi qua kể từ khi bot bắt đầu
+
 @bot.message_handler(commands=['getkey'])
 def startkey(message):
     user_id = message.from_user.id
-    today_day = datetime.date.today().day
-    key = "vLong" + str(user_id * today_day - 2007)
+    elapsed_seconds = get_elapsed_seconds()
+    
+    # Bạn có thể dùng số giây đã trôi qua để thay thế cho ngày, ví dụ:
+    key = "vLong" + str(user_id * elapsed_seconds - 2007)
 
     api_token = '67c1fe72a448b83a9c7e7340'
     key_url = f"https://dichvukey.site/key.html?key={key}"
@@ -174,11 +179,10 @@ def startkey(message):
         response = requests.get(f'https://link4m.co/api-shorten/v2?api={api_token}&url={key_url}')
         response.raise_for_status()
         url_data = response.json()
-        print(key)
 
         if 'shortenedUrl' in url_data:
             url_key = url_data['shortenedUrl']
-            text = (f'Link Lấy Key Ngày {TimeStamp()} LÀ: {url_key}\n'
+            text = (f'Link Lấy Key Thời Gian: {elapsed_seconds} giây\n'
                     'KHI LẤY KEY XONG, DÙNG LỆNH /key HaoEsports....  ĐỂ TIẾP TỤC')
             bot.reply_to(message, text)
         else:
@@ -194,21 +198,21 @@ def key(message):
 
     user_id = message.from_user.id
     key = message.text.split()[1]
-    today_day = datetime.date.today().day
-    expected_key = "vLong" + str(user_id * today_day - 2007)  # Đảm bảo công thức khớp với công thức tạo key
+    today_timestamp = TimeStamp()  # Lấy Unix timestamp hiện tại
 
-    if key == expected_key:
-        text_message = f'<blockquote>[ KEY HỢP LỆ ] NGƯỜI DÙNG CÓ ID: [ {user_id} ] ĐƯỢC PHÉP ĐƯỢC SỬ DỤNG CÁC LỆNH TRONG [/vlong]</blockquote>'
-        video_url = 'https://v16m-default.tiktokcdn.com/ccf79902a33306cfe044872ad94b2619/6809d4ec/video/tos/alisg/tos-alisg-pve-0037c001/oo4jREIYzDasfQ44IKcR5FAQGeARLDge8CsQOI/?a=0&bti=OUBzOTg7QGo6OjZAL3AjLTAzYCMxNDNg&ch=0&cr=0&dr=0&er=0&lr=all&net=0&cd=0%7C0%7C0%7C0&cv=1&br=1580&bt=790&cs=0&ds=6&ft=EeF4ntZWD03Q12NvQaxQWIxRSfYFpq_45SY&mime_type=video_mp4&qs=0&rc=OTQ1NmQ3ZGZlaDc7Zjg5aUBpM2ltO245cjU6MzMzODczNEAxMDFhYy4yXi0xXjBhMzNjYSNicmlfMmQ0NDFhLS1kMWBzcw%3D%3D&vvpl=1&l=20250424080617D39FC2B3B674FA0853C2&btag=e000b8000'  # Đổi URL đến video của bạn
-        bot.send_video(message.chat.id, video_url, caption=text_message, parse_mode='HTML')
-        
-        user_path = f'./user/{today_day}'
-        os.makedirs(user_path, exist_ok=True)
-        with open(f'{user_path}/{user_id}.txt', "w") as fi:
-            fi.write("")
+    # Kiểm tra nếu người dùng đã yêu cầu key trước đó
+    if user_id in user_data:
+        stored_data = user_data[user_id]
+        expected_key = "HaoEsports" + str(user_id * today_timestamp - 2007)  # Sử dụng timestamp để tạo key
+
+        if key == expected_key:
+            text_message = f'<blockquote>[ KEY HỢP LỆ ] NGƯỜI DÙNG CÓ ID: [ {user_id} ] ĐƯỢC PHÉP ĐƯỢC SỬ DỤNG CÁC LỆNH TRONG [/vlong]</blockquote>'
+            video_url = 'https://v16m-default.tiktokcdn.com/ccf79902a33306cfe044872ad94b2619/6809d4ec/video/tos/alisg/tos-alisg-pve-0037c001/oo4jREIYzDasfQ44IKcR5FAQGeARLDge8CsQOI/?a=0&bti=OUBzOTg7QGo6OjZAL3AjLTAzYCMxNDNg&ch=0&cr=0&dr=0&er=0&lr=all&net=0&cd=0%7C0%7C0%7C0&cv=1&br=1580&bt=790&cs=0&ds=6&ft=EeF4ntZWD03Q12NvQaxQWIxRSfYFpq_45SY&mime_type=video_mp4&qs=0&rc=OTQ1NmQ3ZGZlaDc7Zjg5aUBpM2ltO245cjU6MzMzODczNEAxMDFhYy4yXi0xXjBhMzNjYSNicmlfMmQ0NDFhLS1kMWBzcw%3D%3D&vvpl=1&l=20250424080617D39FC2B3B674FA0853C2&btag=e000b8000'  # Đổi URL đến video của bạn
+            bot.send_video(message.chat.id, video_url, caption=text_message, parse_mode='HTML')
+        else:
+            bot.reply_to(message, 'KEY KHÔNG HỢP LỆ.')
     else:
-        bot.reply_to(message, 'KEY KHÔNG HỢP LỆ.')
-
+        bot.reply_to(message, 'Bạn chưa yêu cầu key. Hãy sử dụng /getkey trước.')
 
 
 
