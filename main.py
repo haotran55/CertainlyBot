@@ -199,7 +199,7 @@ def key(message):
 
     if key == expected_key:
         text_message = f'<blockquote>[ KEY HỢP LỆ ] NGƯỜI DÙNG CÓ ID: [ {user_id} ] ĐƯỢC PHÉP ĐƯỢC SỬ DỤNG CÁC LỆNH TRONG [/vlong]</blockquote>'
-        video_url = 'https://v16m-default.akamaized.net/4e91716006f611b4064fb417539f7a57/66a9164c/video/tos/alisg/tos-alisg-pve-0037c001/o4VRzDLftQGT9YgAc2pAefIqZeIoGLgGAFIWtF/?a=0&bti=OTg7QGo5QHM6OjZALTAzYCMvcCMxNDNg&ch=0&cr=0&dr=0&lr=all&cd=0%7C0%7C0%7C0&cv=1&br=2138&bt=1069&cs=0&ds=6&ft=XE5bCqT0majPD12fFa-73wUOx5EcMeF~O5&mime_type=video_mp4&qs=0&rc=PGloZWg2aTVoOGc7OzllZkBpanA0ZXA5cjplczMzODczNEAtXmAwMWEyXjUxNWFgLjYuYSNxZ3IyMmRrNHNgLS1kMS1zcw%3D%3D&vvpl=1&l=20240730103502EC9CCAF9227AE804B708&btag=e00088000'  # Đổi URL đến video của bạn
+        video_url = 'https://v16m-default.tiktokcdn.com/ccf79902a33306cfe044872ad94b2619/6809d4ec/video/tos/alisg/tos-alisg-pve-0037c001/oo4jREIYzDasfQ44IKcR5FAQGeARLDge8CsQOI/?a=0&bti=OUBzOTg7QGo6OjZAL3AjLTAzYCMxNDNg&ch=0&cr=0&dr=0&er=0&lr=all&net=0&cd=0%7C0%7C0%7C0&cv=1&br=1580&bt=790&cs=0&ds=6&ft=EeF4ntZWD03Q12NvQaxQWIxRSfYFpq_45SY&mime_type=video_mp4&qs=0&rc=OTQ1NmQ3ZGZlaDc7Zjg5aUBpM2ltO245cjU6MzMzODczNEAxMDFhYy4yXi0xXjBhMzNjYSNicmlfMmQ0NDFhLS1kMWBzcw%3D%3D&vvpl=1&l=20250424080617D39FC2B3B674FA0853C2&btag=e000b8000'  # Đổi URL đến video của bạn
         bot.send_video(message.chat.id, video_url, caption=text_message, parse_mode='HTML')
         
         user_path = f'./user/{today_day}'
@@ -209,6 +209,25 @@ def key(message):
     else:
         bot.reply_to(message, 'KEY KHÔNG HỢP LỆ.')
 
+import os
+import datetime
+
+def save_user_data(user_id):
+    today_day = datetime.date.today().day
+    user_path = f'./user/{today_day}'
+    os.makedirs(user_path, exist_ok=True)
+    
+    file_path = f'{user_path}/{user_id}.txt'
+    with open(file_path, 'w') as file:
+        file.write(f"User ID: {user_id}\n")
+        file.write(f"Timestamp: {datetime.datetime.now()}\n")
+    
+    return file_path
+
+# Ví dụ cách lưu dữ liệu
+user_id = message.from_user.id
+file_path = save_user_data(user_id)
+print(f"File saved at: {file_path}")
 
 
 
