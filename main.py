@@ -63,7 +63,7 @@ Gõ /about để xem danh sách lệnh của bot mà bạn có thể sử dụng
 
 from datetime import datetime, timedelta
 @bot.message_handler(commands=['about'])
-def send_help(message):
+def reply_help(message):
     username = message.from_user.username or "None"
     now = datetime.utcnow() + timedelta(hours=7)
     current_time = now.strftime("%H:%M:%S")
