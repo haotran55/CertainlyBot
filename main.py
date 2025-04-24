@@ -157,7 +157,7 @@ def tiktok_info(message):
     except Exception as e:
         bot.reply_to(message, f"<b>Lỗi:</b> <code>{e}</code>", parse_mode="HTML")
 
-
+import json
 @bot.message_handler(func=lambda message: message.text.lower().startswith('get'))
 def get_player_stats(message):
     try:
