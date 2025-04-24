@@ -19,6 +19,9 @@ def home():
     return "Bot đang hoạt động trên Render!"
 
 # Hàm lấy video
+import requests
+from io import BytesIO
+
 def get_random_video():
     try:
         res = requests.get("https://api.ffcommunity.site/randomvideo.php", timeout=5)
@@ -27,20 +30,25 @@ def get_random_video():
     except:
         return None
 
-# Lệnh /video
 @bot.message_handler(commands=['video'])
 def random_video(message):
     if message.chat.id not in ALLOWED_GROUP_IDS:
         bot.reply_to(message, "Bot Chỉ Hoạt Động Trong Nhóm Này.\nLink: https://t.me/HaoEsport01")
         return
-     # Chuyển ra ngoài if
-    
+
     video_url = get_random_video()
     if video_url:
         try:
             bot.send_chat_action(message.chat.id, "upload_video")
-            bot.send_video(message.chat.id, video=video_url, caption="Video gái xinh By @CertainllyBot")
-        except:
+            res = requests.get(video_url, stream=True, timeout=10)
+            if res.status_code == 200:
+                video_file = BytesIO(res.content)
+                video_file.name = "video.mp4"
+                bot.send_video(message.chat.id, video=video_file, caption="Video gái xinh By @CertainllyBot")
+            else:
+                bot.send_message(message.chat.id, "Không thể tải video từ nguồn.")
+        except Exception as e:
+            print("Lỗi gửi video:", e)
             bot.send_message(message.chat.id, "Lỗi khi gửi video.")
     else:
         bot.send_message(message.chat.id, "Không lấy được video, thử lại sau nhé!")
