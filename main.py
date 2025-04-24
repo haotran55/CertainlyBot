@@ -66,17 +66,20 @@ Gõ /about để xem danh sách lệnh của bot mà bạn có thể sử dụng
 
 
 from datetime import datetime, timedelta
+
 @bot.message_handler(commands=['about'])
-def send_help(message):
+def send_about(message):
     if message.chat.id not in ALLOWED_GROUP_IDS:
         bot.reply_to(message, "Bot Chỉ Hoạt Động Trong Nhóm Này.\nLink: https://t.me/HaoEsport01")
         return
+
+    user = message.from_user
     full_name = f"{user.first_name} {user.last_name or ''}".strip()
 
-    bot.reply_to(message, f"""<blockquote>
-Xin Chào Bạn {full_name}
+    about_text = f"""<blockquote>
+Xin Chào Bạn <b>{full_name}</b>
 
-| Danh Sách Lệnh |
+<b>| Danh Sách Lệnh |</b>
 » /likes - Buff Like
 » /visit - Buff View FF
 » /video - Random Video Gái
@@ -89,17 +92,11 @@ Xin Chào Bạn {full_name}
 » /ttinfo - Kiểm Tra Tài Khoản TikTok
 » /ffinfo - Kiểm Tra Tài Khoản Free Fire
 
-| Contact |
+<b>| Contact |</b>
 » /admin : Liên Hệ Admin
-</blockquote>""", parse_mode="HTML")
-
-@bot.message_handler(commands=['admin'])
-def admin_info(message):
-    text = """<blockquote>
-» @HaoEsports05
 </blockquote>"""
 
-    bot.reply_to(message, text, parse_mode="HTML")
+    bot.reply_to(message, about_text, parse_mode="HTML")
 
 
 @bot.message_handler(commands=['tiktokinfo'])
