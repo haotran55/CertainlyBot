@@ -110,6 +110,103 @@ def admin_info(message):
     bot.reply_to(message, text, parse_mode="HTML")
 
 
+@bot.message_handler(commands=['tiktokinfo'])
+def tiktok_info(message):
+    # Chặn ngoài nhóm
+    if message.chat.id not in ALLOWED_GROUP_IDS:
+        bot.reply_to(message, "Bot chỉ hoạt động trong nhóm này.\nLink: https://t.me/HaoEsport01")
+        return
+
+    try:
+        args = message.text.split()
+        if len(args) < 2:
+            return bot.reply_to(message, "Vui lòng nhập username TikTok.\nVí dụ: /tiktokinfo bacgau1989")
+
+        username = args[1]
+        url = f"http://145.223.80.56:5009/info_tiktok?username={username}"
+        r = requests.get(url)
+        data = r.json()
+
+        if not data or "username" not in data:
+            return bot.reply_to(message, "Không tìm thấy người dùng TikTok!")
+
+        # Dữ liệu người dùng
+        name = data.get("name", "Không rõ")
+        user = data["username"]
+        bio = data.get("signature", "Không có")
+        followers = f"{data.get('followers', 0):,}"
+        following = f"{data.get('following', 0):,}"
+        hearts = f"{data.get('hearts', 0):,}"
+        videos = f"{data.get('videos', 0):,}"
+        pfp = data.get("profile_picture")
+
+        # Tin nhắn trả về
+        msg = f"""
+<blockquote>
+<b>Thông tin TikTok:</b>
+• Tên: <code>{name}</code>
+• Username: <code>@{user}</code>
+• Followers: <b>{followers}</b>
+• Following: <b>{following}</b>
+• Likes: <b>{hearts}</b>
+• Videos: <b>{videos}</b>
+• Bio: <i>{bio}</i>
+</blockquote>
+        """
+
+        # Gửi ảnh + info
+        bot.send_photo(message.chat.id, pfp, caption=msg, parse_mode="HTML")
+
+    except Exception as e:
+        bot.reply_to(message, f"<b>Lỗi:</b> <code>{e}</code>", parse_mode="HTML")
+
+
+
+@bot.message_handler(commands=['ffinfo'])
+def ffinfo_command(message):
+    # Kiểm tra xem lệnh có được dùng trong nhóm cho phép không
+    if message.chat.id not in ALLOWED_GROUP_IDS:
+        bot.reply_to(message, "Bot chỉ hoạt động trong nhóm này.\nLink: https://t.me/HaoEsport01")
+        return
+
+    try:
+        args = message.text.split()
+        if len(args) < 2:
+            return bot.reply_to(message, "Vui lòng nhập UID.\nVí dụ: /stats 3827953808")
+
+        uid = args[1]
+        url = f"https://www.xlanznet.site/ffstats?id={uid}"
+        r = requests.get(url)
+        data = r.json()
+
+        if data.get("status") != "success":
+            return bot.reply_to(message, "Không tìm thấy người chơi!")
+
+        info = data["data"]["basic_info"]
+        guild = data["data"].get("Guild")
+
+        msg = f"""
+<blockquote>
+<b>Thông tin người chơi:</b>
+• Tên: <code>{info['name']}</code>
+• UID: <code>{info['id']}</code>
+• Level: <b>{info['level']}</b>
+• Likes: <b>{info['likes']}</b>
+• Server: <code>{info['server']}</code>
+• Bio: <i>{info['bio'] or 'Không có'}</i>
+
+<b>Guild:</b>
+• Tên: <code>{guild['name']}</code>
+• Leader: <code>{guild['leader']['name']}</code>
+• Thành viên: <b>{guild['members_count']}</b>
+</blockquote>
+        """
+        bot.reply_to(message, msg, parse_mode="HTML")
+
+    except Exception as e:
+        bot.reply_to(message, f"<b>Lỗi:</b> <code>{e}</code>", parse_mode="HTML")
+
+
 
 import requests
 
