@@ -33,9 +33,9 @@ def random_video(message):
     if message.chat.id not in ALLOWED_GROUP_IDS:
         bot.reply_to(message, "Bot Chỉ Hoạt Động Trong Nhóm Này.\nLink: https://t.me/HaoEsport01")
         return
-    today_day = datetime.date.today().day  # Chuyển ra ngoài if
+     # Chuyển ra ngoài if
     user_id = message.from_user.id
-    today_path = f"./user/{today_day}/{user_id}.txt"
+    today_timestamp = TimeStamp()
 
     if not os.path.exists(today_path):
         bot.reply_to(message, 'Dùng /getkey Để Lấy Key Hoặc /muavip Và Dùng /key Để Nhập Key Hôm Nay!')
@@ -124,9 +124,9 @@ def shorten_link(message):
         bot.reply_to(message, "Bot Chỉ Hoạt Động Trong Nhóm Này.\nLink: https://t.me/HaoEsport01")
         return
 
-    today_day = datetime.date.today().day  # Chuyển ra ngoài if
+    
     user_id = message.from_user.id
-    today_path = f"./user/{today_day}/{user_id}.txt"
+    today_timestamp = TimeStamp()
 
     if not os.path.exists(today_path):
         bot.reply_to(message, 'Dùng /getkey Để Lấy Key Hoặc /muavip Và Dùng /key Để Nhập Key Hôm Nay!')
