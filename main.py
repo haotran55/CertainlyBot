@@ -170,90 +170,71 @@ def get_player_stats(message):
         region = parts[2].lower()
         
         api_url = f"https://freefireinfo-tanhung.onrender.com/info?&uid={uid}&region={region}"
-        
         response = requests.get(api_url)
         data = response.json()
-        
-        if "data" in data:
-            player_data = data["data"]
-            account_info = player_data.get("AccountInfo", {})
-            guild_info = player_data.get("GuildInfo", {})
-            social_info = player_data.get("socialinfo", {})
-            pet_info = player_data.get("petInfo", {})
-            credit_score = player_data.get("creditScoreInfo", {})
-            
-            response_text = f"""
-🎮 𝗙𝗥𝗘𝗘 𝗙𝗜𝗥𝗘 𝗣𝗟𝗔𝗬𝗘𝗥 𝗜𝗡𝗙𝗢 🎮
 
-👤 𝗣𝗟𝗔𝗬𝗘𝗥 𝗗𝗘𝗧𝗔𝗜𝗟𝗦
+        if "basicInfo" in data:
+            info = data["basicInfo"]
+            clan = data.get("clanBasicInfo", {})
+            pet = data.get("petInfo", {})
+            profile = data.get("profileInfo", {})
+            social = data.get("socialInfo", {})
+            credit = data.get("creditScoreInfo", {})
+
+
+            msg = f"""
+🎮 𝗧𝗛Ô𝗡𝗚 𝗧𝗜𝗡 𝗧𝗔̀𝗜 𝗞𝗛𝗢𝗔̉𝗡 𝗙𝗥𝗘𝗘 𝗙𝗜𝗥𝗘 🎮
+
+👤 𝗧𝗛Ô𝗡𝗚 𝗧𝗜𝗡 𝗖𝗔́ 𝗡𝗛𝗔̂𝗡
 ━━━━━━━━━━━━━━━
-📝 Name: {account_info.get('AccountName', 'N/A')}
+📛 Tên: {info.get('nickname', 'N/A')}
 🆔 UID: {uid}
-🌍 Region: {account_info.get('AccountRegion', 'N/A')}
-📊 Level: {account_info.get('AccountLevel', 'N/A')}
-❤️ Likes: {account_info.get('AccountLikes', 'N/A')}
-🎮 Version: {account_info.get('ReleaseVersion', 'N/A')}
+🌍 Khu vực: {info.get('region', 'N/A')}
+📈 Cấp: {info.get('level', 'N/A')}
+❤️ Lượt like: {info.get('liked', 'N/A')}
+📦 Phiên bản: {info.get('releaseVersion', 'N/A')}
 
-🖼️ 𝗣𝗟𝗔𝗬𝗘𝗥 𝗜𝗠𝗔𝗚𝗘𝗦
+🏆 𝗧𝗛𝗢̂𝗡𝗚 𝗧𝗜𝗡 𝗥𝗔𝗡𝗞
 ━━━━━━━━━━━━━━━
-🎭 Avatar: {account_info.get('AvatarImage', 'N/A')}
-🎨 Banner: {account_info.get('BannerImage', 'N/A')}
+🎯 Rank BR: {info.get('maxRank', 'N/A')}
+⚔️ Rank CS: {info.get('csMaxRank', 'N/A')}
+📊 Điểm BR: {info.get('rankingPoints', 'N/A')}
+📈 Điểm CS: {info.get('csRankingPoints', 'N/A')}
 
-🏆 𝗥𝗔𝗡𝗞 𝗜𝗡𝗙𝗢
+🏰 𝗧𝗛𝗢̂𝗡𝗚 𝗧𝗜𝗡 𝗖𝗟𝗔𝗡
 ━━━━━━━━━━━━━━━
-🎯 BR Rank: {account_info.get('BrMaxRank', 'N/A')}
-📈 BR Points: {account_info.get('BrRankPoint', 'N/A')}
-⚔️ CS Rank: {account_info.get('CsMaxRank', 'N/A')}
-📊 CS Points: {account_info.get('CsRankPoint', 'N/A')}
+🏷️ Tên: {clan.get('clanName', 'N/A')}
+🆔 ID: {clan.get('clanId', 'N/A')}
+📊 Cấp độ: {clan.get('clanLevel', 'N/A')}
+👥 Thành viên: {clan.get('memberNum', '0')}/{clan.get('capacity', '0')}
 
-🏰 𝗚𝗨𝗜𝗟𝗗 𝗜𝗡𝗙𝗢
+🐾 𝗧𝗛𝗢̂𝗡𝗚 𝗧𝗜𝗡 𝗣𝗘𝗧
 ━━━━━━━━━━━━━━━
-🏷️ Name: {guild_info.get('GuildName', 'N/A')}
-📑 ID: {guild_info.get('GuildID', 'N/A')}
-📈 Level: {guild_info.get('GuildLevel', 'N/A')}
-👥 Members: {guild_info.get('GuildMember', 'N/A')}/{guild_info.get('GuildCapacity', 'N/A')}
+🐶 Tên: {pet.get('name', 'N/A')}
+📈 Cấp: {pet.get('level', 'N/A')}
+⭐ EXP: {pet.get('exp', 'N/A')}
 
-🐾 𝗣𝗘𝗧 𝗜𝗡𝗙𝗢
+📱 𝗧𝗛𝗢̂𝗡𝗚 𝗧𝗜𝗡 𝗫Ã 𝗛𝗢̣̂𝗜
 ━━━━━━━━━━━━━━━
-🐱 ID: {pet_info.get('id', 'N/A')}
-📊 Level: {pet_info.get('level', 'N/A')}
-⭐ EXP: {pet_info.get('exp', 'N/A')}
+🌐 Ngôn ngữ: {social.get('language', 'N/A')}
+🎮 Chế độ thích: {social.get('modePrefer', 'N/A')}
+📝 Bio: {social.get('signature', 'N/A')}
 
-📱 𝗦𝗢𝗖𝗜𝗔𝗟 𝗜𝗡𝗙𝗢
+📊 𝗗𝗜𝗘̂̉𝗠 𝗧𝗜́𝗡 𝗗𝗨̣𝗡𝗚
 ━━━━━━━━━━━━━━━
-🌐 Language ID: {social_info.get('AccountLanguage', 'N/A')}
-🎮 Preferred Mode: {social_info.get('AccountPreferMode', 'N/A')}
-📝 Bio: {social_info.get('AccountSignature', 'N/A')}
+✅ Điểm: {credit.get('creditScore', 'N/A')}
+            """
 
-📊 𝗖𝗥𝗘𝗗𝗜𝗧 𝗦𝗖𝗢𝗥𝗘
-━━━━━━━━━━━━━━━
-💯 Score: {credit_score.get('creditScore', 'N/A')}"""
-
-            weapon_images = account_info.get('EquippedWeaponImages', [])
-            if weapon_images:
-                response_text += "\n\n⚔️ 𝗘𝗤𝗨𝗜𝗣𝗣𝗘𝗗 𝗪𝗘𝗔𝗣𝗢𝗡𝗦\n━━━━━━━━━━━━━━━"
-                for idx, weapon_url in enumerate(weapon_images, 1):
-                    response_text += f"\n🔫 Weapon {idx}: {weapon_url}"
-
-            account_profile = player_data.get('AccountProfileInfo', {})
-            outfit_images = account_profile.get('EquippedOutfitImages', [])
-            if outfit_images:
-                response_text += "\n\n🎭 𝗘𝗤𝗨𝗜𝗣𝗣𝗘𝗗 𝗢𝗨𝗧𝗙𝗜𝗧𝗦\n━━━━━━━━━━━━━━━"
-                for idx, outfit_url in enumerate(outfit_images, 1):
-                    response_text += f"\n👔 Outfit {idx}: {outfit_url}"
-
-            if len(response_text) > 4096:
-                for x in range(0, len(response_text), 4096):
-                    bot.reply_to(message, response_text[x:x+4096])
+            if len(msg) > 4096:
+                for i in range(0, len(msg), 4096):
+                    bot.reply_to(message, msg[i:i+4096])
             else:
-                bot.reply_to(message, response_text)
+                bot.reply_to(message, msg)
+
         else:
-            bot.reply_to(message, "❌ Error fetching player data. Please check UID and region.")
-            
+            bot.reply_to(message, "❌ Không thể lấy thông tin. UID hoặc region sai.")
     except Exception as e:
-        bot.reply_to(message, f"❌ An error occurred: {str(e)}")
-        if "data" in locals():
-            bot.reply_to(message, f"Debug info: {json.dumps(data, indent=2)}")
+        bot.reply_to(message, f"❌ Lỗi: {str(e)}")
 
 
 
