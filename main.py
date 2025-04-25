@@ -281,6 +281,41 @@ def spam(message):
     except Exception as e:
         bot.reply_to(message, f"Lỗi xảy ra: {str(e)}")
 
+def fetch_tiktok_data(url):
+    api_url = f'https://scaninfo.vn/api/down/tiktok.php?url={url}'
+    try:
+        response = requests.get(api_url)
+        response.raise_for_status()  
+        data = response.json()
+        return data
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching TikTok data: {e}")
+        return None
+
+@bot.message_handler(commands=['tiktok'])
+def tiktok_command(message):
+    if message.chat.id not in ALLOWED_GROUP_IDS:
+        bot.reply_to(message, "Bot chỉ hoạt động trong nhóm này.\nLink: https://t.me/HaoEsport01")
+        return
+    command_parts = message.text.split(maxsplit=1)
+    if len(command_parts) == 2:
+        url = command_parts[1].strip()
+        data = fetch_tiktok_data(url)
+        
+        if data and 'code' in data and data['code'] == 0:
+            video_title = data['data'].get('title', 'N/A')
+            video_url = data['data'].get('play', 'N/A')
+            music_title = data['data']['music_info'].get('title', 'N/A')
+            music_url = data['data']['music_info'].get('play', 'N/A')
+            
+            reply_message = f"Tiêu đề Video: {video_title}\nĐường dẫn Video: {video_url}\n\nTiêu đề Nhạc: {music_title}\nĐường dẫn Nhạc: {music_url}"
+            bot.reply_to(message, reply_message)
+        else:
+            bot.reply_to(message, "Không thể lấy dữ liệu từ TikTok.")
+    else:
+        bot.reply_to(message, "Hãy cung cấp một đường dẫn TikTok hợp lệ.")
+
+
 
 @bot.message_handler(commands=['tiktokinfo'])
 def tiktok_info(message):
