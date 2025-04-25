@@ -128,16 +128,14 @@ def anv(city):
         return f"""
 <b>Thời tiết tại {city}, {country}:</b>
 
-<blockquote>
-🌐 <b>Thành phố:</b> {city}<br>
-🔗 <b>Bản đồ:</b> <a href="{map_link}">Xem trên Google Maps</a><br>
-🌤️ <b>Tình trạng:</b> {weather_info} ({icon})<br>
-🌡️ <b>Nhiệt độ:</b> {temp_info}°C (cảm nhận: {feels_like}°C)<br>
-⬆️ <b>Tối đa:</b> {temp_max}°C | ⬇️ <b>Tối thiểu:</b> {temp_min}°C<br>
-💧 <b>Độ ẩm:</b> {humidity}%<br>
-☁️ <b>Mây bao phủ:</b> {clouds}%<br>
+🌐 <b>Thành phố:</b> {city}
+🔗 <b>Bản đồ:</b> <a href="{map_link}">Xem trên Google Maps</a>
+🌤️ <b>Tình trạng:</b> {weather_info} ({icon})
+🌡️ <b>Nhiệt độ:</b> {temp_info}°C (cảm nhận: {feels_like}°C)
+⬆️ <b>Tối đa:</b> {temp_max}°C | ⬇️ <b>Tối thiểu:</b> {temp_min}°C
+💧 <b>Độ ẩm:</b> {humidity}%
+☁️ <b>Mây bao phủ:</b> {clouds}%
 💨 <b>Gió:</b> {wind_speed} m/s
-</blockquote>
 """
     else:
         return '<b>Không tìm thấy thông tin thời tiết cho địa điểm này.</b>'
