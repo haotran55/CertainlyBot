@@ -99,67 +99,56 @@ Xin Chào Bạn <b>{full_name}</b>
 » /tiktok - Tải Video TikTok
 » /ttinfo - Kiểm Tra Tài Khoản TikTok
 » /ffinfo - Kiểm Tra Tài Khoản Free Fire
-» /search - Tìm Kiếm Tài Khoản
 <b>| Contact |</b>
 » /admin : Liên Hệ Admin
 </blockquote>""", parse_mode="HTML")
 
+OWM_API_KEY = '1dcdf9b01ee855ab4b7760d43a10f854'
+@bot.message_handler(commands=['thoitiet'])
+def get_weather(message):
+    args = message.text.split(" ", 1)
+    if len(args) < 2:
+        bot.reply_to(message, "Vui lòng nhập tên thành phố.\nVí dụ: /thoitiet Hanoi")
+        return
 
-
-@bot.message_handler(commands=["search"])
-def search_account(message):
-    text = message.text[len("/search "):].strip()
-
-    if not text:
-        return bot.reply_to(message, "Vui lòng nhập tên. Ví dụ: <code>/search HàoEsports</code> hoặc <code>/search HaoEsports ind</code>")
-
-    parts = text.rsplit(" ", 1)  # Tách phần cuối cùng ra làm region (nếu có)
-
-    if len(parts) == 2 and parts[1].lower() in ["ind", "global", "br"]:
-        name, region_filter = parts[0], parts[1].lower()
-    else:
-        name, region_filter = text, None
-
-    loading_msg = bot.reply_to(message, "<blockquote>Đang tìm kiếm dữ liệu, vui lòng chờ...</blockquote>")
+    city = args[1]
+    url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={OWM_API_KEY}&units=metric&lang=vi"
 
     try:
-        api_url = f"https://ariflexlabs-search-api.vercel.app/search?name={name}"
-        res = requests.get(api_url).json()
+        res = requests.get(url)
+        data = res.json()
 
-        result_text = f"<b>Kết quả tìm kiếm cho:</b> <code>{escape(name)}</code>\n"
+        if data.get("cod") != 200:
+            bot.reply_to(message, f"Không tìm thấy thành phố <b>{city}</b>.", parse_mode="HTML")
+            return
 
-        found = False
-        for region_data in res:
-            region = region_data.get("region", "unknown").lower()
-            if region_filter and region != region_filter:
-                continue
+        # Lấy dữ liệu
+        name = data["name"]
+        country = data["sys"]["country"]
+        temp = data["main"]["temp"]
+        feels_like = data["main"]["feels_like"]
+        desc = data["weather"][0]["description"].capitalize()
+        humidity = data["main"]["humidity"]
+        wind = data["wind"]["speed"]
+        icon = data["weather"][0]["icon"]
+        icon_url = f"http://openweathermap.org/img/wn/{icon}@4x.png"
 
-            result = region_data.get("result") or {}
-            players = result.get("player", [])
-            if players:
-                result_text += f"\n<b>• Server {region.upper()}:</b>\n"
-                result_text += "<pre>┌────────────┬──────────────┬────────────┐\n"
-                result_text += "│   Nickname │    Level     │     UID    │\n"
-                result_text += "├────────────┼──────────────┼────────────┤\n"
+        # Nội dung blockquote HTML
+        caption = f"""
+<b>Thời tiết tại {name}, {country}:</b>
 
-                for player in players[:5]:
-                    nickname = player.get("nickname", "N/A")[:12].ljust(12)
-                    level = str(player.get("level", "N/A")).center(12)
-                    uid = str(player.get("accountId", "N/A"))[:12].center(12)
+<blockquote>
+🌡️ <b>Nhiệt độ:</b> {temp}°C (Cảm giác: {feels_like}°C)<br/>
+🌤️ <b>Trạng thái:</b> {desc}<br/>
+💧 <b>Độ ẩm:</b> {humidity}%<br/>
+💨 <b>Gió:</b> {wind} m/s
+</blockquote>
+"""
 
-                    result_text += f"│ {escape(nickname)}│{level}│{uid}│\n"
-
-                result_text += "└────────────┴──────────────┴────────────┘</pre>"
-                found = True
-
-        if not found:
-            result_text = "Không tìm thấy tài khoản phù hợp."
-
-        bot.edit_message_text(result_text, chat_id=message.chat.id, message_id=loading_msg.message_id)
-
+        # Gửi ảnh kèm caption HTML
+        bot.send_photo(message.chat.id, icon_url, caption=caption, parse_mode="HTML")
     except Exception as e:
-        bot.edit_message_text(f"Đã xảy ra lỗi:\n<code>{escape(str(e))}</code>", chat_id=message.chat.id, message_id=loading_msg.message_id)
-
+        bot.reply_to(message, "Đã xảy ra lỗi khi truy xuất dữ liệu thời tiết.")
 
 
 
