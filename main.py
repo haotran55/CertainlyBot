@@ -84,10 +84,10 @@ def send_about(message):
     user = message.from_user
     full_name = f"{user.first_name} {user.last_name or ''}".strip()
 
-    about_text = f"""<blockquote>
+    bot.reply_to(message, f"""<blockquote>
 Xin Chào Bạn <b>{full_name}</b>
 
-<b>| Danh Sách Lệnh |</b>
+| Danh Sách Lệnh |
 » /likes - Buff Like
 » /visit - Buff View FF
 » /video - Random Video Gái
@@ -102,19 +102,23 @@ Xin Chào Bạn <b>{full_name}</b>
 » /search - Tìm Kiếm Tài Khoản
 <b>| Contact |</b>
 » /admin : Liên Hệ Admin
-</blockquote>"""
+</blockquote>""", parse_mode="HTML")
 
-    bot.reply_to(message, about_text, parse_mode="HTML")
+
 
 @bot.message_handler(commands=["search"])
 def search_account(message):
-    args = message.text.split(maxsplit=2)
+    text = message.text[len("/search "):].strip()
 
-    if len(args) < 2:
-        return bot.reply_to(message, "Vui lòng nhập tên. Ví dụ: <code>/search HàoEsports</code> hoặc <code>/find HaoEsports ind</code>")
+    if not text:
+        return bot.reply_to(message, "Vui lòng nhập tên. Ví dụ: <code>/search HàoEsports</code> hoặc <code>/search HaoEsports ind</code>")
 
-    name = args[1]
-    region_filter = args[2].lower() if len(args) == 3 else None
+    parts = text.rsplit(" ", 1)  # Tách phần cuối cùng ra làm region (nếu có)
+
+    if len(parts) == 2 and parts[1].lower() in ["ind", "global", "br"]:
+        name, region_filter = parts[0], parts[1].lower()
+    else:
+        name, region_filter = text, None
 
     loading_msg = bot.reply_to(message, "<blockquote>Đang tìm kiếm dữ liệu, vui lòng chờ...</blockquote>")
 
@@ -130,22 +134,18 @@ def search_account(message):
             if region_filter and region != region_filter:
                 continue
 
-            players = region_data.get("result", {}).get("player", [])
+            result = region_data.get("result") or {}
+            players = result.get("player", [])
             if players:
                 result_text += f"\n<b>• Server {region.upper()}:</b>\n"
                 result_text += "<pre>┌────────────┬──────────────┬────────────┐\n"
                 result_text += "│   Nickname │    Level     │     UID    │\n"
                 result_text += "├────────────┼──────────────┼────────────┤\n"
 
-                for player in players[:8]:
-                    nickname = player.get("nickname", "N/A")[:12]
-                    level = str(player.get("level", "N/A"))
-                    uid = str(player.get("accountId", "N/A"))[:12]
-
-                    # Căn chỉnh từng cột (chiều rộng cố định)
-                    nickname = nickname.ljust(12)
-                    level = level.center(12)
-                    uid = uid.center(12)
+                for player in players[:5]:
+                    nickname = player.get("nickname", "N/A")[:12].ljust(12)
+                    level = str(player.get("level", "N/A")).center(12)
+                    uid = str(player.get("accountId", "N/A"))[:12].center(12)
 
                     result_text += f"│ {escape(nickname)}│{level}│{uid}│\n"
 
@@ -158,8 +158,8 @@ def search_account(message):
         bot.edit_message_text(result_text, chat_id=message.chat.id, message_id=loading_msg.message_id)
 
     except Exception as e:
-        bot.edit_message_text("Đã xảy ra lỗi khi tìm kiếm dữ liệu.", chat_id=message.chat.id, message_id=loading_msg.message_id)
-        print(e)
+        bot.edit_message_text(f"Đã xảy ra lỗi:\n<code>{escape(str(e))}</code>", chat_id=message.chat.id, message_id=loading_msg.message_id)
+
 
 
 
