@@ -155,7 +155,131 @@ def thoitiet(message):
 
 
 
+import time
+import os
+import subprocess
+import tempfile
+last_usage = {}
+blacklist = ["112", "113", "114", "115", "116", "117", "118", "119", "0", "1", "2", "3", "4"]
+bot_active = True
+admin_mode = False
+admins = [7658079324]  # ID admin
+name_bot = "Certainly Bot"
 
+def get_nha_mang(sdt):
+    if sdt.startswith("086") or sdt.startswith("096") or sdt.startswith("097") or sdt.startswith("098") or sdt.startswith("032") or sdt.startswith("033") or sdt.startswith("034") or sdt.startswith("035") or sdt.startswith("036") or sdt.startswith("037") or sdt.startswith("038") or sdt.startswith("039"):
+        return "Viettel"
+    elif sdt.startswith("089") or sdt.startswith("090") or sdt.startswith("093") or sdt.startswith("070") or sdt.startswith("079") or sdt.startswith("077") or sdt.startswith("076") or sdt.startswith("078"):
+        return "Mobifone"
+    elif sdt.startswith("088") or sdt.startswith("091") or sdt.startswith("094") or sdt.startswith("083") or sdt.startswith("084") or sdt.startswith("085") or sdt.startswith("081") or sdt.startswith("082"):
+        return "Vinaphone"
+    elif sdt.startswith("092") or sdt.startswith("056") or sdt.startswith("058"):
+        return "Vietnamobile"
+    elif sdt.startswith("099") or sdt.startswith("059"):
+        return "Gmobile"
+    else:
+        return "Không xác định"
+
+
+@bot.message_handler(commands=['spam'])
+def spam(message):
+    if message.chat.id not in ALLOWED_GROUP_IDS:
+        bot.reply_to(message, "Bot chỉ hoạt động trong nhóm này.\nLink: https://t.me/HaoEsport01")
+        return
+    user_id = message.from_user.id
+    current_time = time.time()
+
+    if not bot_active:
+        msg = bot.reply_to(message, 'Bot hiện đang tắt.')
+        time.sleep(10)
+        try:
+            bot.delete_message(chat_id=message.chat.id, message_id=msg.message_id)
+        except telebot.apihelper.ApiTelegramException as e:
+            print(f"Error deleting message: {e}")
+        return
+
+    if admin_mode and user_id not in admins:
+        msg = bot.reply_to(message, 'Có lẽ admin đang fix gì đó, hãy đợi xíu.')
+        return
+
+    if user_id in last_usage and current_time - last_usage[user_id] < 150:
+        remaining = 150 - (current_time - last_usage[user_id])
+        bot.reply_to(message, f"Vui lòng đợi {remaining:.1f} giây trước khi sử dụng lệnh lại.")
+        return
+
+    last_usage[user_id] = current_time
+
+    params = message.text.split()[1:]
+    if len(params) != 2:
+        bot.reply_to(message, 
+            "<blockquote>» SAI ĐỊNH DẠNG!!!\n\n"
+            "» Vui Lòng Nhập Đúng Định Dạng Bên Dưới\n\n"
+            "» /spam + SĐT + SỐ_LẦN\n"
+            "» VD: /spam 0987654321 10</blockquote>",
+            parse_mode="HTML"
+        )
+        return
+
+    sdt, count = params
+    if not count.isdigit():
+        bot.reply_to(message, "Số lần spam không hợp lệ. Vui lòng chỉ nhập số.")
+        return
+
+    count = int(count)
+    if count > 40:
+        bot.reply_to(message, "/spam sdt số_lần tối đa là 40 - đợi 150 giây để sử dụng lại.")
+        return
+
+    if sdt in blacklist:
+        bot.reply_to(message, f"Số điện thoại {sdt} đã bị cấm spam.")
+        return
+
+    # Gửi icon loading đồng hồ
+    loading_msg = bot.send_message(message.chat.id, "⏳")
+    nha_mang = get_nha_mang(sdt)
+
+
+    diggory_chat3 = f'''
+┌───────⭓ {name_bot}
+» Spam: Thành Công 
+» Số Lần Spam Free: {count}
+» Đang Tấn Công : {sdt}
+» Nhà Mạng : {nha_mang}
+» Spam 5 Lần Tầm 1-2p mới xong 
+» Hạn Chế Spam Nhé !  
+└─────────────
+    '''
+
+    script_filename = "dec.py"
+    try:
+        if not os.path.isfile(script_filename):
+            bot.reply_to(message, "Không tìm thấy file script. Vui lòng kiểm tra lại.")
+            return
+
+        with open(script_filename, 'r', encoding='utf-8') as file:
+            script_content = file.read()
+
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".py") as temp_file:
+            temp_file.write(script_content.encode('utf-8'))
+            temp_file_path = temp_file.name
+
+        # Thực thi script
+        subprocess.Popen(["python", temp_file_path, sdt, str(count)])
+
+        # Xoá đồng hồ, gửi kết quả
+        try:
+            bot.delete_message(message.chat.id, loading_msg.message_id)
+        except:
+            pass
+
+        bot.send_message(
+            message.chat.id,
+            f'<blockquote>{diggory_chat3}</blockquote>',
+            parse_mode='HTML'
+        )
+
+    except Exception as e:
+        bot.reply_to(message, f"Lỗi xảy ra: {str(e)}")
 
 
 @bot.message_handler(commands=['tiktokinfo'])
