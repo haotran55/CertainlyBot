@@ -99,12 +99,70 @@ Xin Chào Bạn <b>{full_name}</b>
 » /tiktok - Tải Video TikTok
 » /ttinfo - Kiểm Tra Tài Khoản TikTok
 » /ffinfo - Kiểm Tra Tài Khoản Free Fire
-
+» /search - Tìm Kiếm Tài Khoản
 <b>| Contact |</b>
 » /admin : Liên Hệ Admin
 </blockquote>"""
 
     bot.reply_to(message, about_text, parse_mode="HTML")
+
+@bot.message_handler(commands=["search"])
+def search_account(message):
+    args = message.text.split(maxsplit=2)
+
+    if len(args) < 2:
+        return bot.reply_to(message, "Vui lòng nhập tên. Ví dụ: <code>/search HàoEsports</code> hoặc <code>/find HaoEsports ind</code>")
+
+    name = args[1]
+    region_filter = args[2].lower() if len(args) == 3 else None
+
+    loading_msg = bot.reply_to(message, "<blockquote>Đang tìm kiếm dữ liệu, vui lòng chờ...</blockquote>")
+
+    try:
+        api_url = f"https://ariflexlabs-search-api.vercel.app/search?name={name}"
+        res = requests.get(api_url).json()
+
+        result_text = f"<b>Kết quả tìm kiếm cho:</b> <code>{escape(name)}</code>\n"
+
+        found = False
+        for region_data in res:
+            region = region_data.get("region", "unknown").lower()
+            if region_filter and region != region_filter:
+                continue
+
+            players = region_data.get("result", {}).get("player", [])
+            if players:
+                result_text += f"\n<b>• Server {region.upper()}:</b>\n"
+                result_text += "<pre>┌────────────┬──────────────┬────────────┐\n"
+                result_text += "│   Nickname │    Level     │     UID    │\n"
+                result_text += "├────────────┼──────────────┼────────────┤\n"
+
+                for player in players[:8]:
+                    nickname = player.get("nickname", "N/A")[:12]
+                    level = str(player.get("level", "N/A"))
+                    uid = str(player.get("accountId", "N/A"))[:12]
+
+                    # Căn chỉnh từng cột (chiều rộng cố định)
+                    nickname = nickname.ljust(12)
+                    level = level.center(12)
+                    uid = uid.center(12)
+
+                    result_text += f"│ {escape(nickname)}│{level}│{uid}│\n"
+
+                result_text += "└────────────┴──────────────┴────────────┘</pre>"
+                found = True
+
+        if not found:
+            result_text = "Không tìm thấy tài khoản phù hợp."
+
+        bot.edit_message_text(result_text, chat_id=message.chat.id, message_id=loading_msg.message_id)
+
+    except Exception as e:
+        bot.edit_message_text("Đã xảy ra lỗi khi tìm kiếm dữ liệu.", chat_id=message.chat.id, message_id=loading_msg.message_id)
+        print(e)
+
+
+
 
 
 @bot.message_handler(commands=['tiktokinfo'])
