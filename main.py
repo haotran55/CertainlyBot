@@ -129,13 +129,13 @@ def anv(city):
 <b>Thời tiết tại {city}, {country}:</b>
 
 <blockquote>
-🌐 <b>Thành phố:</b> {city}<br/>
-🔗 <b>Bản đồ:</b> <a href="{map_link}">Xem trên Google Maps</a><br/>
-🌤️ <b>Tình trạng:</b> {weather_info} ({icon})<br/>
-🌡️ <b>Nhiệt độ:</b> {temp_info}°C (cảm nhận: {feels_like}°C)<br/>
-⬆️ <b>Tối đa:</b> {temp_max}°C | ⬇️ <b>Tối thiểu:</b> {temp_min}°C<br/>
-💧 <b>Độ ẩm:</b> {humidity}%<br/>
-☁️ <b>Mây bao phủ:</b> {clouds}%<br/>
+🌐 <b>Thành phố:</b> {city}<br>
+🔗 <b>Bản đồ:</b> <a href="{map_link}">Xem trên Google Maps</a><br>
+🌤️ <b>Tình trạng:</b> {weather_info} ({icon})<br>
+🌡️ <b>Nhiệt độ:</b> {temp_info}°C (cảm nhận: {feels_like}°C)<br>
+⬆️ <b>Tối đa:</b> {temp_max}°C | ⬇️ <b>Tối thiểu:</b> {temp_min}°C<br>
+💧 <b>Độ ẩm:</b> {humidity}%<br>
+☁️ <b>Mây bao phủ:</b> {clouds}%<br>
 💨 <b>Gió:</b> {wind_speed} m/s
 </blockquote>
 """
