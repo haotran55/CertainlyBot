@@ -157,77 +157,108 @@ def tiktok_info(message):
     except Exception as e:
         bot.reply_to(message, f"<b>Lỗi:</b> <code>{e}</code>", parse_mode="HTML")
 
-import json
-@bot.message_handler(func=lambda message: message.text.lower().startswith('get'))
-def get_player_stats(message):
+import time
+import requests
+from telebot.types import Message
+
+user_last_like_time = {}
+
+@bot.message_handler(commands=['likes'])
+def like_handler(message: Message):
+    user_id = message.from_user.id
+    current_time = time.time()
+
     try:
-        parts = message.text.split()
-        if len(parts) != 3:
-            bot.reply_to(message, "❌ Format đúng: `Get UID region`\nVí dụ: `Get 12345678 sg`")
-            return
-
-        uid, region = parts[1], parts[2].lower()
-        api_url = f"https://freefireinfo-tanhung.onrender.com/info?&uid={uid}&region={region}"
-
-        res = requests.get(api_url, timeout=10)
-        data = res.json()
-
-        if "basicInfo" not in data:
-            bot.reply_to(message, "❌ Không tìm thấy người chơi. Kiểm tra lại UID và region.")
-            return
-
-        info = data["basicInfo"]
-        clan = data.get("clanBasicInfo", {})
-        pet = data.get("petInfo", {})
-        credit = data.get("creditScoreInfo", {})
-        profile = data.get("profileInfo", {})
-        social = data.get("socialInfo", {})
-
-        name = info.get("nickname", "N/A")
-        level = info.get("level", "N/A")
-        likes = info.get("liked", "N/A")
-        region = info.get("region", "N/A")
-        version = info.get("releaseVersion", "N/A")
-        avatar_id = info.get("headPic", "101000001")
-        avatar_url = f"https://system.ffgarena.cloud/api/iconsff?image={avatar_id}.png"
-
-        reply = f"""
-𝗙𝗥𝗘𝗘 𝗙𝗜𝗥𝗘 𝗣𝗟𝗔𝗬𝗘𝗥 𝗜𝗡𝗙𝗢
-
-👤 𝗧𝗘̂𝗡: {name}
-🆔 𝗨𝗜𝗗: {uid}
-📊 𝗖𝗔̂́𝗣: {level}
-❤️ 𝗟𝗶𝗸𝗲: {likes}
-🌍 𝗞𝗵𝘂 𝗩𝘂̛̣𝗰: {region}
-🛠️ 𝗣𝗵𝗶𝗲̂𝗻 𝗕𝗮̉𝗻: {version}
-
-🏆 𝗧𝗛𝗢̂𝗡𝗚 𝗧𝗜𝗡 𝗛𝗔̣𝗖𝗛
-• BR Rank: {info.get("maxRank", "N/A")}
-• BR Point: {info.get("rankingPoints", "N/A")}
-• CS Rank: {info.get("csMaxRank", "N/A")}
-• CS Point: {info.get("csRankingPoints", "N/A")}
-
-🏰 𝗖𝗟𝗔𝗡
-• Tên: {clan.get("clanName", "Không có")}
-• Level: {clan.get("clanLevel", "N/A")}
-• Thành viên: {clan.get("memberNum", "N/A")}/{clan.get("capacity", "N/A")}
-
-🐾 𝗣𝗘𝗧
-• Tên: {pet.get("name", "N/A")}
-• ID: {pet.get("id", "N/A")}
-• Cấp: {pet.get("level", "N/A")}
-• EXP: {pet.get("exp", "N/A")}
-
-📱 𝗧𝗛𝗢̂𝗡𝗚 𝗧𝗜𝗡 𝗫𝗔̃ 𝗛𝗢̣̂𝗜
-• Bio: {social.get("signature", "Không có")}
-• Ngôn ngữ: {social.get("language", "N/A")}
-• Chế độ yêu thích: {social.get("modePrefer", "N/A")}
-
-✅ Credit Score: {credit.get("creditScore", "N/A")}
-"""
-        bot.send_photo(message.chat.id, photo=avatar_url, caption=reply.strip(), parse_mode="HTML")
+        bot.send_chat_action(message.chat.id, "typing")
     except Exception as e:
-        bot.reply_to(message, f"❌ Lỗi: {e}")
+        print(f"Bot không thể gửi hành động typing: {e}")
+        return
+
+    # Lấy thời gian hiện tại theo ngày (chỉ so sánh ngày)
+    current_day = time.strftime("%Y-%m-%d", time.gmtime(current_time))
+    last_time = user_last_like_time.get(user_id, None)
+
+    # Kiểm tra nếu người dùng đã thực hiện lệnh trong ngày hôm nay
+    if last_time and last_time == current_day:
+        bot.reply_to(message, "<blockquote>⏳ Bạn chỉ có thể sử dụng lệnh này một lần mỗi ngày.</blockquote>", parse_mode="HTML")
+        return
+
+    parts = message.text.split()
+    if len(parts) < 2:
+        bot.reply_to(message, "<blockquote>Cú pháp đúng: /like UID</blockquote>", parse_mode="HTML")
+        return
+
+    uid = parts[1]
+    api_url = f"https://www.xlanznet.site/ffstats?id={uid}"
+
+    try:
+        loading_msg = bot.reply_to(message, "<blockquote>⏳ Đang tiến hành buff like...</blockquote>", parse_mode="HTML")
+    except Exception as e:
+        print(f"Lỗi gửi tin nhắn loading: {e}")
+        return
+
+    def safe_get(data, key):
+        value = data.get(key)
+        return str(value) if value not in [None, "", "null"] else "Không xác định"
+
+    def extract_number(text):
+        if isinstance(text, int):
+            return str(text)
+        for part in str(text).split():
+            if part.isdigit():
+                return part
+        return "Không xác định"
+
+    try:
+        response = requests.get(api_url, timeout=15)
+        data = response.json()
+    except Exception as e:
+        bot.edit_message_text(
+            "<blockquote>Lỗi kết nối đến API. Vui lòng thử lại sau.</blockquote>",
+            chat_id=loading_msg.chat.id,
+            message_id=loading_msg.message_id,
+            parse_mode="HTML"
+        )
+        return
+
+    if not data or data.get("status") != 1:
+        bot.edit_message_text(
+            "<blockquote>Server đang bảo trì hoặc quá tải, vui lòng thử lại sau.</blockquote>",
+            chat_id=loading_msg.chat.id,
+            message_id=loading_msg.message_id,
+            parse_mode="HTML"
+        )
+        return
+
+    # Lưu lại ngày người dùng thực hiện lệnh
+    user_last_like_time[user_id] = current_day
+
+    info = data["data"]["basic_info"]
+    reply_text = (
+        "<blockquote>"
+        f"BUFF LIKE THÀNH CÔNG✅ (Dùng API chính)\n"
+        f"╭👤 Name: {info['name']}\n"
+        f"├🆔 UID {info['id']}\n"
+        f"├🌏 Region : vn\n"
+        f"├📉 Like trước đó: {info['likes']}\n"
+        f"├📈 Like sau khi gửi: {info['likes']}\n"
+        f"╰👍 Like được gửi: 0"
+    )
+
+    if data.get("status") == 2:
+        reply_text += "\n⚠️ Giới hạn like hôm nay, mai hãy thử lại sau."
+
+    reply_text += "</blockquote>"
+
+    try:
+        bot.edit_message_text(
+            reply_text,
+            chat_id=loading_msg.chat.id,
+            message_id=loading_msg.message_id,
+            parse_mode="HTML"
+        )
+    except Exception as e:
+        print(f"Lỗi gửi kết quả: {e}")
 
 
 
