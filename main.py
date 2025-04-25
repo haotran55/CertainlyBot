@@ -239,15 +239,15 @@ def spam(message):
     nha_mang = get_nha_mang(sdt)
 
 
-    diggory_chat3 = f'''
-┌───────⭓ {name_bot}
+    
+  diggory_chat3 = f'''┌──⭓ {name_bot}  
 » Spam: Thành Công 
 » Số Lần Spam Free: {count}
-» Đang Tấn Công : {sdt}
+» Đang Tấn Công : {||sdt||}
 » Nhà Mạng : {nha_mang}
 » Spam 5 Lần Tầm 1-2p mới xong 
 » Hạn Chế Spam Nhé !  
-└─────────────
+└──
     '''
 
     script_filename = "dec.py"
