@@ -103,52 +103,58 @@ Xin Chào Bạn <b>{full_name}</b>
 » /admin : Liên Hệ Admin
 </blockquote>""", parse_mode="HTML")
 
-OWM_API_KEY = '1dcdf9b01ee855ab4b7760d43a10f854'
-@bot.message_handler(commands=['thoitiet'])
-def get_weather(message):
-    args = message.text.split(" ", 1)
-    if len(args) < 2:
-        bot.reply_to(message, "Vui lòng nhập tên thành phố.\nVí dụ: /thoitiet Hanoi")
-        return
+API_KEY = '1dcdf9b01ee855ab4b7760d43a10f854'
+def anv(city):
+    base_url = f'http://api.openweathermap.org/data/2.5/weather?q={city}&appid={API_KEY}&units=metric&lang=vi'
+    tna = requests.get(base_url)
+    nan = tna.json()
 
-    city = args[1]
-    url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={OWM_API_KEY}&units=metric&lang=vi"
+    if nan['cod'] == 200:
+        weather_info = nan['weather'][0]['description'].capitalize()
+        icon = nan['weather'][0]['main']
+        temp_info = nan['main']['temp']
+        feels_like = nan['main']['feels_like']
+        temp_min = nan['main']['temp_min']
+        temp_max = nan['main']['temp_max']
+        city = nan['name']
+        lat = nan['coord']['lat']
+        lon = nan['coord']['lon']
+        country = nan['sys']['country']
+        clouds = nan['clouds']['all']
+        humidity = nan['main']['humidity']
+        wind_speed = nan['wind']['speed']
+        map_link = f"https://www.google.com/maps/place/{lat},{lon}"
 
-    try:
-        res = requests.get(url)
-        data = res.json()
-
-        if data.get("cod") != 200:
-            bot.reply_to(message, f"Không tìm thấy thành phố <b>{city}</b>.", parse_mode="HTML")
-            return
-
-        # Lấy dữ liệu
-        name = data["name"]
-        country = data["sys"]["country"]
-        temp = data["main"]["temp"]
-        feels_like = data["main"]["feels_like"]
-        desc = data["weather"][0]["description"].capitalize()
-        humidity = data["main"]["humidity"]
-        wind = data["wind"]["speed"]
-        icon = data["weather"][0]["icon"]
-        icon_url = f"http://openweathermap.org/img/wn/{icon}@4x.png"
-
-        # Nội dung blockquote HTML
-        caption = f"""
-<b>Thời tiết tại {name}, {country}:</b>
+        return f"""
+<b>Thời tiết tại {city}, {country}:</b>
 
 <blockquote>
-🌡️ <b>Nhiệt độ:</b> {temp}°C (Cảm giác: {feels_like}°C)<br/>
-🌤️ <b>Trạng thái:</b> {desc}<br/>
+🌐 <b>Thành phố:</b> {city}<br/>
+🔗 <b>Bản đồ:</b> <a href="{map_link}">Xem trên Google Maps</a><br/>
+🌤️ <b>Tình trạng:</b> {weather_info} ({icon})<br/>
+🌡️ <b>Nhiệt độ:</b> {temp_info}°C (cảm nhận: {feels_like}°C)<br/>
+⬆️ <b>Tối đa:</b> {temp_max}°C | ⬇️ <b>Tối thiểu:</b> {temp_min}°C<br/>
 💧 <b>Độ ẩm:</b> {humidity}%<br/>
-💨 <b>Gió:</b> {wind} m/s
+☁️ <b>Mây bao phủ:</b> {clouds}%<br/>
+💨 <b>Gió:</b> {wind_speed} m/s
 </blockquote>
 """
+    else:
+        return '<b>Không tìm thấy thông tin thời tiết cho địa điểm này.</b>'
 
-        # Gửi ảnh kèm caption HTML
-        bot.send_photo(message.chat.id, icon_url, caption=caption, parse_mode="HTML")
+@bot.message_handler(commands=['thoitiet'])
+def thoitiet(message):
+    parts = message.text.split()
+    if len(parts) == 1:
+        bot.reply_to(message, 'Nhập đúng định dạng:\n/thoitiet [Tên tỉnh thành]')
+        return
+    city = ' '.join(parts[1:])
+    try:
+        result = anv(city)
+        bot.reply_to(message, result, parse_mode='HTML', disable_web_page_preview=False)
     except Exception as e:
-        bot.reply_to(message, "Đã xảy ra lỗi khi truy xuất dữ liệu thời tiết.")
+        bot.reply_to(message, f'<b>Lỗi:</b> {str(e)}', parse_mode='HTML')
+
 
 
 
