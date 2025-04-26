@@ -240,7 +240,9 @@ def spam(message):
 
 
     
-  diggory_chat3 = f'''┌──⭓ {name_bot}  
+  diggory_chat3 = f'''
+   
+┌──⭓ {name_bot}  
 » Spam: Thành Công 
 » Số Lần Spam Free: {count}
 » Đang Tấn Công : {||sdt||}
