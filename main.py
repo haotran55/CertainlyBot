@@ -455,7 +455,7 @@ def like_handler(message: Message):
         return
 
     uid = parts[1]
-    api_url = f"https://likes-freefire.vercel.app/likes?uid={uid}&region=vn&key=GoodKey"
+    api_url = f"https://likes-freefire.vercel.app/likes?uid={uid}&region=sg&key=GoodKey"
 
     try:
         loading_msg = bot.reply_to(message, "<blockquote>⏳ Đang tiến hành buff like...</blockquote>", parse_mode="HTML")
