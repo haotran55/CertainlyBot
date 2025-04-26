@@ -241,16 +241,16 @@ def spam(message):
 
     
   diggory_chat3 = f'''
-   
 ┌──⭓ {name_bot}  
 » Spam: Thành Công 
 » Số Lần Spam Free: {count}
-» Đang Tấn Công : {||sdt||}
-» Nhà Mạng : {nha_mang}
+» Đang Tấn Công: {sdt}
+» Nhà Mạng: {nha_mang}
 » Spam 5 Lần Tầm 1-2p mới xong 
-» Hạn Chế Spam Nhé !  
+» Hạn Chế Spam Nhé!  
 └──
-    '''
+'''
+
 
     script_filename = "dec.py"
     try:
