@@ -506,8 +506,8 @@ def like_handler(message: Message):
         f"╭👤 Name: {safe_get(data, 'PlayerNickname')}\n"
         f"├🆔 UID : {safe_get(data, 'UID')}\n"
         f"├🌏 Region : vn\n"
-        f"├📉 Like trước đó: {safe_get(data, 'LikesafterCommand')}\n"
-        f"├📈 Like sau khi gửi: {safe_get(data, 'LikesbeforeCommand')}\n"
+        f"├📉 Like trước đó: {safe_get(data, 'LikesbeforeCommand')}\n"
+        f"├📈 Like sau khi gửi: {safe_get(data, 'LikesafterCommand')}\n"
         f"╰👍 Like được gửi: {extract_number(data.get('LikesGivenByAPI'))}"
     )
 
