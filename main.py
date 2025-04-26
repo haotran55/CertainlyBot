@@ -499,16 +499,16 @@ def like_handler(message: Message):
     # Lưu lại ngày người dùng thực hiện lệnh
     user_last_like_time[user_id] = current_day
 
-    info = data["data"]["basic_info"]
+    status_code = data.get("status")
     reply_text = (
         "<blockquote>"
-        f"BUFF LIKE THÀNH CÔNG✅ (Dùng API chính)\n"
-        f"╭👤 Name: {info['name']}\n"
-        f"├🆔 UID {info['id']}\n"
+        "BUFF LIKE THÀNH CÔNG✅\n"
+        f"╭👤 Name: {safe_get(data, 'PlayerNickname')}\n"
+        f"├🆔 UID : {safe_get(data, 'UID')}\n"
         f"├🌏 Region : vn\n"
-        f"├📉 Like trước đó: {info['likes']}\n"
-        f"├📈 Like sau khi gửi: {info['likes']}\n"
-        f"╰👍 Like được gửi: 0"
+        f"├📉 Like trước đó: {safe_get(data, 'LikesafterCommand')}\n"
+        f"├📈 Like sau khi gửi: {safe_get(data, 'LikesbeforeCommand')}\n"
+        f"╰👍 Like được gửi: {extract_number(data.get('LikesGivenByAPI'))}"
     )
 
     if data.get("status") == 2:
