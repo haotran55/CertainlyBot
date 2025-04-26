@@ -318,6 +318,60 @@ def tiktok_command(message):
         bot.reply_to(message, "Hãy cung cấp một đường dẫn TikTok hợp lệ.")
 
 
+sent_messages = []
+
+def delete_all_messages_after_delay(chat_id, delay):
+    threading.Event().wait(delay)
+    for msg_id in sent_messages:
+        try:
+            bot.delete_message(chat_id, msg_id)
+        except telebot.apihelper.ApiTelegramException:
+            pass  # Bỏ qua lỗi nếu tin nhắn đã bị xóa
+    sent_messages.clear()
+
+@bot.message_handler(commands=['anhgai'])
+def send_anhgai_image(message):
+    api_url = "https://subhatde.id.vn/images/gai"
+
+    # Gửi thông báo "Đang tìm kiếm ảnh..."
+    searching_message = bot.reply_to(message, "🔎 Đang tìm kiếm ảnh...")
+    sent_messages.append(searching_message.message_id)  # Lưu ID tin nhắn
+
+    try:
+        # Lấy dữ liệu ảnh từ API
+        response = requests.get(api_url)
+        data = response.json()
+
+        # Xóa thông báo "Đang tìm kiếm ảnh..." sau khi nhận phản hồi
+        try:
+            bot.delete_message(searching_message.chat.id, searching_message.message_id)
+        except telebot.apihelper.ApiTelegramException:
+            pass  # Bỏ qua lỗi nếu đã xóa
+
+        # Kiểm tra xem phản hồi có trường 'url' không
+        if 'url' in data:
+            image_url = data['url']
+
+            # Gửi ảnh cho người dùng với chú thích
+            caption_text = f"Ảnh Mà Bạn Yêu Cầu, @{message.from_user.username}"
+            sent_message = bot.send_photo(message.chat.id, image_url, caption=caption_text)
+            sent_messages.append(sent_message.message_id)  # Lưu ID tin nhắn
+
+            # Tạo luồng để xóa tất cả tin nhắn sau 60 giây
+            threading.Thread(target=delete_all_messages_after_delay, args=(message.chat.id, 60)).start()
+        else:
+            bot.reply_to(message, "Không tìm thấy ảnh từ API.")
+    except Exception as e:
+        # Xóa thông báo "Đang tìm kiếm ảnh..." nếu có lỗi xảy ra
+        try:
+            bot.delete_message(searching_message.chat.id, searching_message.message_id)
+        except telebot.apihelper.ApiTelegramException:
+            pass  # Bỏ qua lỗi nếu đã xóa
+        bot.reply_to(message, f"Có lỗi xảy ra: {str(e)}")
+
+
+
+
 
 @bot.message_handler(commands=['tiktokinfo'])
 def tiktok_info(message):
