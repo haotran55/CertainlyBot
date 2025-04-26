@@ -373,8 +373,8 @@ def send_anhgai_image(message):
 
 
 
-@bot.message_handler(commands=['tiktokinfo'])
-def tiktok_info(message):
+@bot.message_handler(commands=['ttinfo'])
+def tt_info(message):
     # Chặn ngoài nhóm
     if message.chat.id not in ALLOWED_GROUP_IDS:
         bot.reply_to(message, "Bot chỉ hoạt động trong nhóm này.\nLink: https://t.me/HaoEsport01")
