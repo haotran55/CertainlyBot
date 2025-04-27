@@ -240,17 +240,16 @@ def spam(message):
     nha_mang = get_nha_mang(sdt)
 
     diggory_chat3 = f'''
-<blockquote>
-┌──⭓ {name_bot}<br>
-» Spam: Thành Công<br>
-» Số Lần Spam Free: {count}<br>
-» Đang Tấn Công: <spoiler>{sdt}</spoiler><br>
-» Nhà Mạng: {nha_mang}<br>
-» Spam 5 Lần Tầm 1-2p mới xong<br>
-» Hạn Chế Spam Nhé!<br>
+┌──⭓ {name_bot}
+» Spam: Thành Công
+» Số Lần Spam Free: {count}
+» Đang Tấn Công: <spoiler>{sdt}</spoiler>
+» Nhà Mạng: {nha_mang}
+» Spam 5 Lần Tầm 1-2p mới xong
+» Hạn Chế Spam Nhé!
 └──
-</blockquote>
 '''
+
 
     script_filename = "dec.py"
     try:
@@ -283,7 +282,8 @@ def spam(message):
             message.chat.id,
             diggory_chat3,
             parse_mode='HTML'
-        )
+            )
+
 
     except Exception as e:
         bot.reply_to(message, f"Lỗi xảy ra: {str(e)}")
