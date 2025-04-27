@@ -280,9 +280,9 @@ def spam(message):
         # Gửi tin nhắn kết quả
         bot.send_message(
             message.chat.id,
-            diggory_chat3,
+            f'<blockquote>{diggory_chat3}</blockquote>',
             parse_mode='HTML'
-            )
+        )
 
 
     except Exception as e:
