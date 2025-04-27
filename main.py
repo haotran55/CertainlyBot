@@ -99,6 +99,7 @@ def send_about(message):
 » /tiktok - Tải Video TikTok
 » /ttinfo - Kiểm Tra Tài Khoản TikTok
 » /ffinfo - Kiểm Tra Tài Khoản Free Fire
+» /checkban - Kiểm Tra Tài Khoản FF Có Bị Band Không
 <b>| Contact |</b>
 » /admin : Liên Hệ Admin
 </blockquote>""", parse_mode="HTML")
@@ -152,6 +153,57 @@ def thoitiet(message):
         bot.reply_to(message, result, parse_mode='HTML', disable_web_page_preview=False)
     except Exception as e:
         bot.reply_to(message, f'<b>Lỗi:</b> {str(e)}', parse_mode='HTML')
+
+
+
+@bot.message_handler(commands=['checkban'])
+def checkban_user(message):
+    args = message.text.split()
+    if len(args) < 2:
+        bot.reply_to(message, "Vui lòng nhập UID. Ví dụ: /checkban 12345678")
+        return
+
+    uid = args[1]
+    url = f"https://check-band-p.vercel.app/certainly-region/ban-info?uid={uid}"
+
+    try:
+        # Gửi tin nhắn đang xử lý
+        sent = bot.reply_to(message, "⏳ Đang kiểm tra UID...")
+
+        response = requests.get(url)
+        data = response.json()
+
+        nickname = data.get('nickname', 'Không có dữ liệu')
+        region = data.get('region', 'Không xác định')
+        ban_status = data.get('ban_status', 'Không rõ')
+        ban_period = data.get('ban_period')
+        copyright_ = data.get('copyright')
+
+        reply = (
+            "<blockquote>"
+            f"👤 <b>Thông tin người chơi:</b>\n"
+            f"• 🆔 Nickname: <code>{nickname}</code>\n"
+            f"• 🌎 Khu vực: <code>{region}</code>\n"
+            f"• 🚫 Trạng thái ban: <code>{ban_status}</code>\n"
+            f"• ⏳ Thời gian ban: <code>{ban_period if ban_period else 'Không bị ban'}</code>\n"
+            f"• ©️ Bản quyền: <code>{copyright_}</code>"
+            "</blockquote>"
+        )
+
+        bot.edit_message_text(
+            chat_id=sent.chat.id,
+            message_id=sent.message_id,
+            text=reply,
+            parse_mode='HTML'
+        )
+
+    except Exception as e:
+        bot.edit_message_text(
+            chat_id=sent.chat.id,
+            message_id=sent.message_id,
+            text=f"Đã xảy ra lỗi: {e}"
+        )
+
 
 
 
