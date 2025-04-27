@@ -244,7 +244,7 @@ def spam(message):
 ┌──⭓ {name_bot}  
 » Spam: Thành Công 
 » Số Lần Spam Free: {count}
-» Đang Tấn Công: {sdt}
+» Đang Tấn Công: <spoiler>{sdt}</spoiler>
 » Nhà Mạng: {nha_mang}
 » Spam 5 Lần Tầm 1-2p mới xong 
 » Hạn Chế Spam Nhé!  
