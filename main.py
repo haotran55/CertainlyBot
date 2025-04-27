@@ -241,47 +241,49 @@ def spam(message):
 
     
     diggory_chat3 = f'''
-┌──⭓ {name_bot}  
-» Spam: Thành Công 
-» Số Lần Spam Free: {count}
-» Đang Tấn Công: <spoiler>{sdt}</spoiler>
-» Nhà Mạng: {nha_mang}
-» Spam 5 Lần Tầm 1-2p mới xong 
-» Hạn Chế Spam Nhé!  
+<blockquote>
+┌──⭓ {name_bot}<br>
+» Spam: Thành Công<br>
+» Số Lần Spam Free: {count}<br>
+» Đang Tấn Công: <spoiler>{sdt}</spoiler><br>
+» Nhà Mạng: {nha_mang}<br>
+» Spam 5 Lần Tầm 1-2p mới xong<br>
+» Hạn Chế Spam Nhé!<br>
 └──
+</blockquote>
 '''
 
+script_filename = "dec.py"
+try:
+    if not os.path.isfile(script_filename):
+        bot.reply_to(message, "Không tìm thấy file script. Vui lòng kiểm tra lại.")
+        return
 
-    script_filename = "dec.py"
+    with open(script_filename, 'r', encoding='utf-8') as file:
+        script_content = file.read()
+
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".py") as temp_file:
+        temp_file.write(script_content.encode('utf-8'))
+        temp_file_path = temp_file.name
+
+    # Thực thi script
+    subprocess.Popen(["python", temp_file_path, sdt, str(count)])
+
+    # Xoá đồng hồ, gửi kết quả
     try:
-        if not os.path.isfile(script_filename):
-            bot.reply_to(message, "Không tìm thấy file script. Vui lòng kiểm tra lại.")
-            return
+        bot.delete_message(message.chat.id, loading_msg.message_id)
+    except:
+        pass
 
-        with open(script_filename, 'r', encoding='utf-8') as file:
-            script_content = file.read()
+    # Gửi tin nhắn thành công
+    bot.send_message(
+        message.chat.id,
+        diggory_chat3,
+        parse_mode='HTML'
+    )
 
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".py") as temp_file:
-            temp_file.write(script_content.encode('utf-8'))
-            temp_file_path = temp_file.name
-
-        # Thực thi script
-        subprocess.Popen(["python", temp_file_path, sdt, str(count)])
-
-        # Xoá đồng hồ, gửi kết quả
-        try:
-            bot.delete_message(message.chat.id, loading_msg.message_id)
-        except:
-            pass
-
-        bot.send_message(
-            message.chat.id,
-            f'<blockquote>{diggory_chat3}</blockquote>',
-            parse_mode='HTML'
-        )
-
-    except Exception as e:
-        bot.reply_to(message, f"Lỗi xảy ra: {str(e)}")
+except Exception as e:
+    bot.reply_to(message, f"Lỗi xảy ra: {str(e)}")
 
 def fetch_tiktok_data(url):
     api_url = f'https://scaninfo.vn/api/down/tiktok.php?url={url}'
