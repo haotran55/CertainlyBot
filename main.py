@@ -84,9 +84,9 @@ def send_about(message):
     user = message.from_user
     full_name = f"{user.first_name} {user.last_name or ''}".strip()
 
-    bot.reply_to(message, f"""<blockquote>
-Xin Chào Bạn <b>{full_name}</b>
-
+    bot.reply_to(message, f"""
+    Xin Chào Bạn <b>{full_name}</b>
+<blockquote>
 | Danh Sách Lệnh |
 » /likes - Buff Like
 » /visit - Buff View FF
@@ -243,7 +243,7 @@ def spam(message):
 ┌──⭓ {name_bot}
 » Spam: Thành Công
 » Số Lần Spam Free: {count}
-» Đang Tấn Công: <spoiler>{sdt}</spoiler>
+» Đang Tấn Công: {sdt}
 » Nhà Mạng: {nha_mang}
 » Spam 5 Lần Tầm 1-2p mới xong
 » Hạn Chế Spam Nhé!
