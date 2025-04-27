@@ -159,6 +159,7 @@ import time
 import os
 import subprocess
 import tempfile
+
 last_usage = {}
 blacklist = ["112", "113", "114", "115", "116", "117", "118", "119", "0", "1", "2", "3", "4"]
 bot_active = True
@@ -238,8 +239,6 @@ def spam(message):
     loading_msg = bot.send_message(message.chat.id, "⏳")
     nha_mang = get_nha_mang(sdt)
 
-
-    
     diggory_chat3 = f'''
 <blockquote>
 ┌──⭓ {name_bot}<br>
@@ -253,37 +252,43 @@ def spam(message):
 </blockquote>
 '''
 
-script_filename = "dec.py"
-try:
-    if not os.path.isfile(script_filename):
-        bot.reply_to(message, "Không tìm thấy file script. Vui lòng kiểm tra lại.")
-        return
-
-    with open(script_filename, 'r', encoding='utf-8') as file:
-        script_content = file.read()
-
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".py") as temp_file:
-        temp_file.write(script_content.encode('utf-8'))
-        temp_file_path = temp_file.name
-
-    # Thực thi script
-    subprocess.Popen(["python", temp_file_path, sdt, str(count)])
-
-    # Xoá đồng hồ, gửi kết quả
+    script_filename = "dec.py"
     try:
-        bot.delete_message(message.chat.id, loading_msg.message_id)
-    except:
-        pass
+        if not os.path.isfile(script_filename):
+            bot.reply_to(message, "Không tìm thấy file script. Vui lòng kiểm tra lại.")
+            return
 
-    # Gửi tin nhắn thành công
-    bot.send_message(
-        message.chat.id,
-        diggory_chat3,
-        parse_mode='HTML'
-    )
+        with open(script_filename, 'r', encoding='utf-8') as file:
+            script_content = file.read()
 
-except Exception as e:
-    bot.reply_to(message, f"Lỗi xảy ra: {str(e)}")
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".py") as temp_file:
+            temp_file.write(script_content.encode('utf-8'))
+            temp_file_path = temp_file.name
+
+        # Thực thi script
+        subprocess.Popen(
+            ["python", temp_file_path, sdt, str(count)],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
+        )
+
+        # Xoá đồng hồ, gửi kết quả
+        try:
+            bot.delete_message(message.chat.id, loading_msg.message_id)
+        except Exception as e:
+            print(f"Lỗi khi xóa loading_msg: {e}")
+
+        # Gửi tin nhắn kết quả
+        bot.send_message(
+            message.chat.id,
+            diggory_chat3,
+            parse_mode='HTML'
+        )
+
+    except Exception as e:
+        bot.reply_to(message, f"Lỗi xảy ra: {str(e)}")
+
+
 
 def fetch_tiktok_data(url):
     api_url = f'https://scaninfo.vn/api/down/tiktok.php?url={url}'
