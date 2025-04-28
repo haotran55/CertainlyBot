@@ -588,6 +588,7 @@ def like_handler(message: Message):
 
 
 
+
 @bot.message_handler(commands=['ffinfo'])
 def ffinfo_command(message):
     # Kiểm tra xem lệnh có được dùng trong nhóm cho phép không
@@ -601,30 +602,45 @@ def ffinfo_command(message):
             return bot.reply_to(message, "Vui lòng nhập UID.\nVí dụ: /ffinfo 3827953808")
 
         uid = args[1]
-        url = f"https://www.xlanznet.site/ffstats?id={uid}"
+        url = f"https://aditya-info.onrender.com/player-info?uid={uid}&region=vn"
         r = requests.get(url)
         data = r.json()
 
-        if data.get("status") != "success":
+        # Không còn data["status"], nên kiểm tra khác
+        if not data.get("basicInfo"):
             return bot.reply_to(message, "Không tìm thấy người chơi!")
 
-        info = data["data"]["basic_info"]
-        guild = data["data"].get("Guild")
+        basic_info = data["basicInfo"]
+        clan_info = data.get("clanBasicInfo")
+        social_info = data.get("socialInfo")
+
+        nickname = basic_info.get("nickname", "Không có")
+        account_id = basic_info.get("accountId", "Không có")
+        level = basic_info.get("level", "Không có")
+        likes = basic_info.get("liked", "Không có")
+        region = basic_info.get("region", "Không có")
+        bio = social_info.get("signature", "Không có") if social_info else "Không có"
+
+        if clan_info:
+            clan_name = clan_info.get("clanName", "Không có")
+            clan_members = clan_info.get("memberNum", "Không có")
+        else:
+            clan_name = "Không có"
+            clan_members = "Không có"
 
         msg = f"""
 <blockquote>
 <b>Thông tin người chơi:</b>
-• Tên: <code>{info['name']}</code>
-• UID: <code>{info['id']}</code>
-• Level: <b>{info['level']}</b>
-• Likes: <b>{info['likes']}</b>
-• Server: <code>{info['server']}</code>
-• Bio: <i>{info['bio'] or 'Không có'}</i>
+• Tên: <code>{nickname}</code>
+• UID: <code>{account_id}</code>
+• Level: <b>{level}</b>
+• Likes: <b>{likes}</b>
+• Server: <code>{region}</code>
+• Bio: <i>{bio}</i>
 
 <b>Guild:</b>
-• Tên: <code>{guild['name']}</code>
-• Leader: <code>{guild['leader']['name']}</code>
-• Thành viên: <b>{guild['members_count']}</b>
+• Tên: <code>{clan_name}</code>
+• Thành viên: <b>{clan_members}</b>
 </blockquote>
         """
 
