@@ -298,7 +298,7 @@ def spam(message):
 » Số Lần Spam Free: {count}
 » Đang Tấn Công: {sdt}
 » Nhà Mạng: {nha_mang}
-» Spam 5 Lần Tầm 1-2p mới xong
+» Spam {count} Lần Tầm 1-2p mới xong
 » Hạn Chế Spam Nhé!
 └──
 '''
