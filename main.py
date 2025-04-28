@@ -166,7 +166,7 @@ def checkban_user(message):
         return
 
     uid = args[1]
-    url = f"https://check-band-p.vercel.app/certainly-region/ban-info?uid={uid}"
+    url = f"https://check-band11.vercel.app/haoesports-region/ban-info?uid={uid}"
 
     try:
         # Gửi tin nhắn đang xử lý
