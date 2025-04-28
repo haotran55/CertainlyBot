@@ -217,7 +217,7 @@ blacklist = ["112", "113", "114", "115", "116", "117", "118", "119", "0", "1", "
 bot_active = True
 admin_mode = False
 admins = [7658079324]  # ID admin
-name_bot = "Certainly Bot"
+name_bot = "Bot Hào Vip"
 
 def get_nha_mang(sdt):
     if sdt.startswith("086") or sdt.startswith("096") or sdt.startswith("097") or sdt.startswith("098") or sdt.startswith("032") or sdt.startswith("033") or sdt.startswith("034") or sdt.startswith("035") or sdt.startswith("036") or sdt.startswith("037") or sdt.startswith("038") or sdt.startswith("039"):
