@@ -632,7 +632,7 @@ def ffinfo_command(message):
         bot.reply_to(message, msg, parse_mode="HTML")
 
         # Gửi thêm ảnh banner
-        banner_url = f"https://aditya-banner.onrender.com/banner-image?uid={uid}&region=sg"
+        banner_url = f"https://aditya-banner.onrender.com/banner-image?uid={uid}&region=vn"
         bot.send_photo(message.chat.id, banner_url)
 
     except Exception as e:
