@@ -88,7 +88,6 @@ def send_about(message):
     Xin Chào Bạn <b>{full_name}</b>
 <blockquote>
 | Danh Sách Lệnh |
-<blockquote>
 
 » /likes - Buff Like
 » /visit - Buff View FF
