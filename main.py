@@ -627,7 +627,13 @@ def ffinfo_command(message):
 • Thành viên: <b>{guild['members_count']}</b>
 </blockquote>
         """
+
+        # Gửi tin nhắn thông tin
         bot.reply_to(message, msg, parse_mode="HTML")
+
+        # Gửi thêm ảnh banner
+        banner_url = f"https://aditya-banner.onrender.com/banner-image?uid={uid}&region=sg"
+        bot.send_photo(message.chat.id, banner_url)
 
     except Exception as e:
         bot.reply_to(message, f"<b>Lỗi:</b> <code>{e}</code>", parse_mode="HTML")
