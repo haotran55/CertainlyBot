@@ -101,6 +101,7 @@ def send_about(message):
 » /ttinfo - Kiểm Tra Tài Khoản TikTok
 » /ffinfo - Kiểm Tra Tài Khoản Free Fire
 » /checkban - Kiểm Tra Tài Khoản FF Có Bị Band Không
+» /jwt - Lấy Mã jwt 
 <b>| Contact |</b>
 » /admin : Liên Hệ Admin
 </blockquote>""", parse_mode="HTML")
@@ -204,6 +205,83 @@ def checkban_user(message):
             message_id=sent.message_id,
             text=f"Đã xảy ra lỗi: {e}"
         )
+
+
+import json
+import os
+user_waiting_file = {}
+
+@bot.message_handler(commands=['jwt'])
+def handle_jwt_command(message):
+    user_id = message.from_user.id
+    user_waiting_file[user_id] = True  # Đánh dấu user đang chờ file
+    bot.reply_to(message, "Vui lòng gửi file JSON chứa danh sách UID và PASSWORD.")
+
+@bot.message_handler(content_types=['document'])
+def handle_document(message):
+    user_id = message.from_user.id
+
+    # Kiểm tra user có đang trong trạng thái chờ file không
+    if not user_waiting_file.get(user_id, False):
+        bot.reply_to(message, "Bạn cần dùng lệnh /jwt trước khi gửi file.")
+        return
+
+    try:
+        file_info = bot.get_file(message.document.file_id)
+        downloaded_file = bot.download_file(file_info.file_path)
+
+        filename = message.document.file_name
+        local_path = f"./{filename}"
+
+        # Lưu file tạm
+        with open(local_path, 'wb') as new_file:
+            new_file.write(downloaded_file)
+
+        # Đọc JSON
+        with open(local_path, 'r') as f:
+            data = json.load(f)
+
+        if not isinstance(data, list):
+            bot.reply_to(message, "Lỗi: File JSON phải là danh sách các object {uid, password}.")
+            os.remove(local_path)
+            return
+
+        # Bắt đầu lấy token
+        results = []
+        for user in data:
+            uid = user.get('uid')
+            password = user.get('password')
+            if not uid or not password:
+                continue
+
+            url = f"https://ariflexlabs-jwt-gen.onrender.com/fetch-token?uid={uid}&password={password}"
+            try:
+                response = requests.get(url)
+                if response.status_code == 200:
+                    jwt_token = response.json().get('token')
+                    results.append({"uid": uid, "token": jwt_token})
+                else:
+                    results.append({"uid": uid, "error": response.text})
+            except Exception as e:
+                results.append({"uid": uid, "error": str(e)})
+
+        output_file = f"output_{user_id}.json"
+        with open(output_file, 'w') as f:
+            json.dump(results, f, indent=2)
+
+        # Gửi file kết quả
+        with open(output_file, 'rb') as f:
+            bot.send_document(message.chat.id, f)
+
+        # Xóa file tạm
+        os.remove(local_path)
+        os.remove(output_file)
+
+        # Reset trạng thái
+        user_waiting_file[user_id] = False
+
+    except Exception as e:
+        bot.reply_to(message, f"Đã xảy ra lỗi: {e}")
 
 
 
