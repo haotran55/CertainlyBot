@@ -166,7 +166,7 @@ def checkban_user(message):
         return
 
     uid = args[1]
-    url = f"https://check-band11.vercel.app/haoesports-region/ban-info?uid={uid}"
+    url = f"https://check-band-p-3uv9.vercel.app/haoesports-region/ban-info?uid={uid}"
 
     try:
         # Gửi tin nhắn đang xử lý
@@ -176,6 +176,7 @@ def checkban_user(message):
         data = response.json()
 
         nickname = data.get('nickname', 'Không có dữ liệu')
+        uid = data.get('uid', 'Không Có Uid')
         region = data.get('region', 'Không xác định')
         ban_status = data.get('ban_status', 'Không rõ')
         ban_period = data.get('ban_period')
@@ -183,8 +184,9 @@ def checkban_user(message):
 
         reply = (
             "<blockquote>"
-            f"👤 <b>Thông tin người chơi:</b>\n"
-            f"• 🆔 Nickname: <code>{nickname}</code>\n"
+            f"✅ <b>Thông tin người chơi:</b>\n"
+            f"• 👤 Nickname: <code>{nickname}</code>\n"
+            f"• 🆔 ID: <code>{uid}</code>\n"
             f"• 🌎 Khu vực: <code>{region}</code>\n"
             f"• 🚫 Trạng thái ban: <code>{ban_status}</code>\n"
             f"• ⏳ Thời gian ban: <code>{ban_period if ban_period else 'Không bị ban'}</code>\n"
