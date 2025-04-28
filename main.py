@@ -44,7 +44,7 @@ def random_video(message):
             if res.status_code == 200:
                 video_file = BytesIO(res.content)
                 video_file.name = "video.mp4"
-                bot.send_video(message.chat.id, video=video_file, caption="Video gái xinh By @CertainllyBot")
+                bot.send_video(message.chat.id, video=video_file, caption="Video gái xinh By @BotHaoVip_bot")
             else:
                 bot.send_message(message.chat.id, "Không thể tải video từ nguồn.")
         except Exception as e:
