@@ -740,13 +740,10 @@ def ffinfo_command(message):
 import requests
 
 @bot.message_handler(commands=['rutgon'])
-def shorten_link(message):
+def shorten_link_link4m(message):
     if message.chat.id not in ALLOWED_GROUP_IDS:
         bot.reply_to(message, "Bot Chỉ Hoạt Động Trong Nhóm Này.\nLink: https://t.me/HaoEsport01")
         return
-
-    
-    
 
     args = message.text.split(" ", 1)
     if len(args) == 1:
@@ -754,22 +751,21 @@ def shorten_link(message):
         return
 
     long_url = args[1]
+    api_token = "67c1fe72a448b83a9c7e7340"
+    api_url = f"https://link4m.co/api-shorten/v2?api={api_token}&url={long_url}"
 
     try:
-        api_url = f"http://tinyurl.com/api-create.php?url={long_url}"
         response = requests.get(api_url)
+        result = response.json()
 
-        if response.status_code == 200:
-            short_url = response.text
-            reply_text = f"""<blockquote>
-🔗 <b>Link Đã Được Rút Gọn:</b>
-<code>{short_url}</code>
-</blockquote>"""
+        if result["status"] == "success":
+            short_url = result["shortenedUrl"]
+            reply_text = f"""<b>🔗 Link Đã Được Rút Gọn:</b>\n<code>{short_url}</code>"""
             bot.reply_to(message, reply_text, parse_mode="HTML")
         else:
-            bot.reply_to(message, "Rút gọn thất bại. Vui lòng thử lại sau.")
+            bot.reply_to(message, f"Lỗi rút gọn: {result.get('message', 'Không rõ lý do')}")
     except Exception as e:
-        bot.reply_to(message, f"Lỗi khi rút gọn link: {e}")
+        bot.reply_to(message, f"Lỗi hệ thống: {e}")
 
 
 
