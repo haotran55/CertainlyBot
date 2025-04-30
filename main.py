@@ -85,26 +85,44 @@ def send_about(message):
     full_name = f"{user.first_name} {user.last_name or ''}".strip()
 
     bot.reply_to(message, f"""
-    Xin Chào Bạn <b>{full_name}</b>
-<blockquote>
-| Danh Sách Lệnh |
+    bot.reply_to(message, f"""
+<b>Xin chào bạn, {full_name}!</b>
 
-» /likes - Buff Like
-» /visit - Buff View FF
-» /video - Random Video Gái
-» /anhgai - Random Ảnh Gái
-» /thoitiet - Check Thời Tiết
-» /rutgon - Rút Gọn Link
-» /spam - Spam SDT Thường
-» /spamvip - Spam SDT Vip
-» /tiktok - Tải Video TikTok
-» /ttinfo - Kiểm Tra Tài Khoản TikTok
-» /ffinfo - Kiểm Tra Tài Khoản Free Fire
-» /checkban - Kiểm Tra Tài Khoản FF Có Bị Band Không
-» /jwt - Lấy Mã jwt 
-<b>| Contact |</b>
-» /admin : Liên Hệ Admin
-</blockquote>""", parse_mode="HTML")
+<pre>
+┏━━━━━━━━━━━━━━━┓
+┃  LỆNH TIKTOK  ┃
+┗━━━━━━━━━━━━━━━┛
+• /tiktok    - Tải video TikTok
+• /ttinfo    - Kiểm tra tài khoản TikTok
+
+┏━━━━━━━━━━━━━━━━━━┓
+┃  LỆNH FREE FIRE  ┃
+┗━━━━━━━━━━━━━━━━━━┛
+• /visit     - Buff view FF
+• /ffinfo    - Kiểm tra tài khoản FF
+• /checkban  - Kiểm tra FF bị band không
+• /likes     - Buff like
+
+┏━━━━━━━━━━━━━━━┓
+┃     ẢNH/GÁI     ┃
+┗━━━━━━━━━━━━━━━┛
+• /video     - Random video gái
+• /anhgai    - Random ảnh gái
+
+┏━━━━━━━━━━━━━━━━━━┓
+┃   CÔNG CỤ KHÁC   ┃
+┗━━━━━━━━━━━━━━━━━━┛
+• /spam      - Spam SDT thường
+• /spamvip   - Spam SDT VIP
+• /thoitiet  - Kiểm tra thời tiết
+• /rutgon    - Rút gọn link
+
+┏━━━━━━━━━━━━━━━┓
+┃   LIÊN HỆ ADMIN ┃
+┗━━━━━━━━━━━━━━━┛
+• /admin     - Liên hệ admin
+</pre>
+""", parse_mode="HTML")
 
 API_KEY = '1dcdf9b01ee855ab4b7760d43a10f854'
 def anv(city):
@@ -180,7 +198,6 @@ def checkban_user(message):
         region = data.get('region', 'Không xác định')
         ban_status = data.get('ban_status', 'Không rõ')
         ban_period = data.get('ban_period')
-        copyright_ = data.get('copyright')
 
         reply = (
             "<blockquote>"
@@ -189,8 +206,7 @@ def checkban_user(message):
             f"• 🆔 ID: <code>{uid}</code>\n"
             f"• 🌎 Khu vực: <code>{region}</code>\n"
             f"• 🚫 Trạng thái ban: <code>{ban_status}</code>\n"
-            f"• ⏳ Thời gian ban: <code>{ban_period if ban_period else 'Không bị ban'}</code>\n"
-            f"• ©️ Bản quyền: <code>{copyright_}</code>"
+            f"• ⏳ Thời gian ban: <code>{ban_period if ban_period else 'Không bị ban'}</code>"
             "</blockquote>"
         )
 
@@ -208,82 +224,6 @@ def checkban_user(message):
             text=f"Đã xảy ra lỗi: {e}"
         )
 
-
-import json
-import os
-user_waiting_file = {}
-
-@bot.message_handler(commands=['jwt'])
-def handle_jwt_command(message):
-    user_id = message.from_user.id
-    user_waiting_file[user_id] = True  # Đánh dấu user đang chờ file
-    bot.reply_to(message, "Vui lòng gửi file JSON chứa danh sách UID và PASSWORD.")
-
-@bot.message_handler(content_types=['document'])
-def handle_document(message):
-    user_id = message.from_user.id
-
-    # Kiểm tra user có đang trong trạng thái chờ file không
-    if not user_waiting_file.get(user_id, False):
-        bot.reply_to(message, "Bạn cần dùng lệnh /jwt trước khi gửi file.")
-        return
-
-    try:
-        file_info = bot.get_file(message.document.file_id)
-        downloaded_file = bot.download_file(file_info.file_path)
-
-        filename = message.document.file_name
-        local_path = f"./{filename}"
-
-        # Lưu file tạm
-        with open(local_path, 'wb') as new_file:
-            new_file.write(downloaded_file)
-
-        # Đọc JSON
-        with open(local_path, 'r') as f:
-            data = json.load(f)
-
-        if not isinstance(data, list):
-            bot.reply_to(message, "Lỗi: File JSON phải là danh sách các object {uid, password}.")
-            os.remove(local_path)
-            return
-
-        # Bắt đầu lấy token
-        results = []
-        for user in data:
-            uid = user.get('uid')
-            password = user.get('password')
-            if not uid or not password:
-                continue
-
-            url = f"https://ariflexlabs-jwt-gen.onrender.com/fetch-token?uid={uid}&password={password}"
-            try:
-                response = requests.get(url)
-                if response.status_code == 200:
-                    jwt_token = response.json().get('token')
-                    results.append({"uid": uid, "token": jwt_token})
-                else:
-                    results.append({"uid": uid, "error": response.text})
-            except Exception as e:
-                results.append({"uid": uid, "error": str(e)})
-
-        output_file = f"output_{user_id}.json"
-        with open(output_file, 'w') as f:
-            json.dump(results, f, indent=2)
-
-        # Gửi file kết quả
-        with open(output_file, 'rb') as f:
-            bot.send_document(message.chat.id, f)
-
-        # Xóa file tạm
-        os.remove(local_path)
-        os.remove(output_file)
-
-        # Reset trạng thái
-        user_waiting_file[user_id] = False
-
-    except Exception as e:
-        bot.reply_to(message, f"Đã xảy ra lỗi: {e}")
 
 
 
@@ -498,7 +438,7 @@ def send_anhgai_image(message):
             sent_messages.append(sent_message.message_id)  # Lưu ID tin nhắn
 
             # Tạo luồng để xóa tất cả tin nhắn sau 60 giây
-            threading.Thread(target=delete_all_messages_after_delay, args=(message.chat.id, 60)).start()
+            threading.Thread(target=delete_all_messages_after_delay, args=(message.chat.id, 200)).start()
         else:
             bot.reply_to(message, "Không tìm thấy ảnh từ API.")
     except Exception as e:
