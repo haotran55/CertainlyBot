@@ -84,10 +84,10 @@ def send_about(message):
     user = message.from_user
     full_name = f"{user.first_name} {user.last_name or ''}".strip()
 
-    bot.reply_to(message, f"""
+    bot.reply_to(message, f"""<blockquote>
 <b>Xin chào bạn, {full_name}!</b>
 
-<pre>
+
 [ LỆNH TIKTOK ]
 • /tiktok    - Tải video TikTok
 • /ttinfo    - Kiểm tra tài khoản TikTok
@@ -102,6 +102,7 @@ def send_about(message):
 • /anhgai    - Random Ảnh Gái
 
 [ CÔNG CỤ KHÁC ]
+• /check     - Check Tài Xỉu
 • /spam      - Spam SDT thường
 • /spamvip   - Spam SDT VIP
 • /thoitiet  - Kiểm tra thời tiết
@@ -109,8 +110,7 @@ def send_about(message):
 
 [ LIÊN HỆ ADMIN ]
 • /admin     - Liên hệ admin
-</pre>
-""", parse_mode="HTML")
+</blockquote>""", parse_mode="HTML")
 
 
 API_KEY = '1dcdf9b01ee855ab4b7760d43a10f854'
@@ -213,6 +213,26 @@ def checkban_user(message):
             text=f"Đã xảy ra lỗi: {e}"
         )
 
+from taixiu_predictor import TaiXiuPredictor
+predictor = TaiXiuPredictor()
+@bot.message_handler(commands=['check'])
+def handle_check(message):
+    try:
+        args = message.text.split()
+        if len(args) < 2:
+            bot.reply_to(message, "Vui lòng dùng cú pháp: /check tài hoặc /check xỉu")
+            return
+        result = args[1].strip().lower()
+        if result not in ['tài', 'xỉu']:
+            bot.reply_to(message, "Chỉ chấp nhận 'tài' hoặc 'xỉu'")
+            return
+
+        predictor.add_result(result)
+        prediction, confidence = predictor.predict()
+        bot.reply_to(message, f"Dự đoán tiếp theo: {prediction.upper()} ({confidence}%)")
+
+    except Exception as e:
+        bot.reply_to(message, f"Lỗi xử lý: {e}")
 
 
 
