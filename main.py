@@ -85,44 +85,33 @@ def send_about(message):
     full_name = f"{user.first_name} {user.last_name or ''}".strip()
 
     bot.reply_to(message, f"""
-    bot.reply_to(message, f"""
 <b>Xin chào bạn, {full_name}!</b>
 
 <pre>
-┏━━━━━━━━━━━━━━━┓
-┃  LỆNH TIKTOK  ┃
-┗━━━━━━━━━━━━━━━┛
+[ LỆNH TIKTOK ]
 • /tiktok    - Tải video TikTok
 • /ttinfo    - Kiểm tra tài khoản TikTok
 
-┏━━━━━━━━━━━━━━━━━━┓
-┃  LỆNH FREE FIRE  ┃
-┗━━━━━━━━━━━━━━━━━━┛
-• /visit     - Buff view FF
+[ LỆNH FREE FIRE ]
+• /likes     - Buff Like
 • /ffinfo    - Kiểm tra tài khoản FF
-• /checkban  - Kiểm tra FF bị band không
-• /likes     - Buff like
+• /checkban  - Kiểm tra FF bị ban
 
-┏━━━━━━━━━━━━━━━┓
-┃     ẢNH/GÁI     ┃
-┗━━━━━━━━━━━━━━━┛
-• /video     - Random video gái
-• /anhgai    - Random ảnh gái
+[ ẢNH / GIẢI TRÍ ]
+• /video     - Random Video Gái
+• /anhgai    - Random Ảnh Gái
 
-┏━━━━━━━━━━━━━━━━━━┓
-┃   CÔNG CỤ KHÁC   ┃
-┗━━━━━━━━━━━━━━━━━━┛
+[ CÔNG CỤ KHÁC ]
 • /spam      - Spam SDT thường
 • /spamvip   - Spam SDT VIP
 • /thoitiet  - Kiểm tra thời tiết
 • /rutgon    - Rút gọn link
 
-┏━━━━━━━━━━━━━━━┓
-┃   LIÊN HỆ ADMIN ┃
-┗━━━━━━━━━━━━━━━┛
+[ LIÊN HỆ ADMIN ]
 • /admin     - Liên hệ admin
 </pre>
 """, parse_mode="HTML")
+
 
 API_KEY = '1dcdf9b01ee855ab4b7760d43a10f854'
 def anv(city):
