@@ -271,11 +271,15 @@ def load_data():
     try:
         with open(DATA_FILE, "r") as f:
             data = json.load(f)
-            user_turns = data["user_turns"]
-            history = data["history"]
-            profit = data["profit"]
-    except FileNotFoundError:
+            user_turns = data.get("user_turns", {})
+            history = data.get("history", [])
+            profit = data.get("profit", {})
+    except (FileNotFoundError, json.JSONDecodeError):
+        user_turns = {}
+        history = []
+        profit = {}
         save_data()
+
 
 load_data()
 
