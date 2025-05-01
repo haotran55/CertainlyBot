@@ -213,7 +213,9 @@ def checkban_user(message):
             text=f"Đã xảy ra lỗi: {e}"
         )
 
-
+import random
+import string
+import json
 DATA_FILE = "data.json"
 history = []
 user_turns = {}
