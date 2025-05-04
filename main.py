@@ -685,70 +685,73 @@ def like_handler(message: Message):
 
 
 
-@bot.message_handler(commands=['ffinfo'])
-def ffinfo_command(message):
-    # Kiểm tra xem lệnh có được dùng trong nhóm cho phép không
-    if message.chat.id not in ALLOWED_GROUP_IDS:
-        bot.reply_to(message, "Bot chỉ hoạt động trong nhóm này.\nLink: https://t.me/HaoEsport01")
-        return
-
+@bot.message_handler(commands=['info'])
+def get_player_info(message):
     try:
         args = message.text.split()
-        if len(args) < 2:
-            return bot.reply_to(message, "Vui lòng nhập UID.\nVí dụ: /ffinfo 3827953808")
+        if len(args) != 3:
+            bot.reply_to(message, "❗ Dùng đúng cú pháp:\n/info <uid> <region>\nVí dụ: /info 7669969208 IND")
+            return
 
         uid = args[1]
-        url = f"https://aditya-info.onrender.com/player-info?uid={uid}&region=vn"
-        r = requests.get(url)
-        data = r.json()
+        region = args[2].upper()
+        info_url = INFO_API.format(uid=uid, region=region)
+        banner_url = BANNER_API.format(uid=uid, region=region)
+        outfit_url = OUTFIT_API.format(uid=uid, region=region)
 
-        # Không còn data["status"], nên kiểm tra khác
-        if not data.get("basicInfo"):
-            return bot.reply_to(message, "Không tìm thấy người chơi!")
+        # Lấy dữ liệu từ API info
+        res = requests.get(info_url)
+        data = res.json()
 
-        basic_info = data["basicInfo"]
-        clan_info = data.get("clanBasicInfo")
-        social_info = data.get("socialInfo")
+        if "basicInfo" not in data:
+            bot.reply_to(message, "❌ Không tìm thấy người chơi.")
+            return
 
-        nickname = basic_info.get("nickname", "Không có")
-        account_id = basic_info.get("accountId", "Không có")
-        level = basic_info.get("level", "Không có")
-        likes = basic_info.get("liked", "Không có")
-        region = basic_info.get("region", "Không có")
-        bio = social_info.get("signature", "Không có") if social_info else "Không có"
+        info = data["basicInfo"]
+        clan = data.get("clanBasicInfo", {})
+        social = data.get("socialInfo", {})
+        credit = data.get("creditScoreInfo", {})
+        pet = data.get("petInfo", {})
 
-        if clan_info:
-            clan_name = clan_info.get("clanName", "Không có")
-            clan_members = clan_info.get("memberNum", "Không có")
-        else:
-            clan_name = "Không có"
-            clan_members = "Không có"
+        # Soạn kết quả văn bản
+        reply = (
+            f"🔍 Thông tin người chơi\n"
+            f"<pre>"
+            f"👤 Nickname       : {info.get('nickname')}\n"
+            f"🌍 Region         : {info.get('region')}\n"
+            f"🎖️ Level          : {info.get('level')} | Rank: {info.get('rank')} (RP: {info.get('rankingPoints')})\n"
+            f"❤️ Like           : {info.get('liked')} | Badge: {info.get('badgeCnt')}\n"
+            f"🗓️ Tạo ngày       : {convert_timestamp(info.get('createAt'))}\n"
+            f"⏰ Online gần nhất: {convert_timestamp(info.get('lastLoginAt'))}\n"
+            f"\n"
+            f"🐾 Pet\n"
+            f"  ID              : {pet.get('id', 'N/A')}\n"
+            f"  Level           : {pet.get('level', 'N/A')} | Skin: {pet.get('skinId', 'N/A')}\n"
+            f"\n"
+            f"🏅 Clan\n"
+            f"  Tên             : {clan.get('clanName', 'Không có')}\n"
+            f"  Leader          : {clan.get('captainId', '')} | Cấp: {clan.get('clanLevel', '')}\n"
+            f"  Thành viên      : {clan.get('memberNum', '')}/{clan.get('capacity', '')}\n"
+            f"\n"
+            f"🧾 Xã hội\n"
+            f"  Ngôn ngữ        : {social.get('language', '')} | Giới tính: {social.get('gender', '')}\n"
+            f"  Chữ ký          : {social.get('signature', 'Không có')}\n"
+            f"\n"
+            f"💎 Khác\n"
+            f"  CS Rank         : {info.get('csRank')} | Max CS: {info.get('csMaxRank')}\n"
+            f"  Credit Score    : {credit.get('creditScore', 'N/A')}\n"
+            f"</pre>"
+        )
 
-        msg = f"""
-<blockquote>
-<b>Thông tin người chơi:</b>
-• Tên: <code>{nickname}</code>
-• UID: <code>{account_id}</code>
-• Level: <b>{level}</b>
-• Likes: <b>{likes}</b>
-• Server: <code>{region}</code>
-• Bio: <i>{bio}</i>
+        # Gửi kết quả trước
+        bot.send_message(message.chat.id, reply, parse_mode='HTML')
 
-<b>Guild:</b>
-• Tên: <code>{clan_name}</code>
-• Thành viên: <b>{clan_members}</b>
-</blockquote>
-        """
-
-        # Gửi tin nhắn thông tin
-        bot.reply_to(message, msg, parse_mode="HTML")
-
-        # Gửi thêm ảnh banner
-        banner_url = f"https://aditya-banner.onrender.com/banner-image?uid={uid}&region=vn"
-        bot.send_photo(message.chat.id, banner_url)
+        # Sau đó mới gửi ảnh
+        bot.send_photo(message.chat.id, photo=banner_url, caption="📸 Banner")
+        bot.send_photo(message.chat.id, photo=outfit_url, caption="🧥 Outfit")
 
     except Exception as e:
-        bot.reply_to(message, f"<b>Lỗi:</b> <code>{e}</code>", parse_mode="HTML")
+        bot.reply_to(message, f"⚠️ Đã xảy ra lỗi:\n{e}")
 
 
 
