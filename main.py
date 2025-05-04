@@ -685,6 +685,11 @@ def like_handler(message: Message):
 
 
 
+# Định nghĩa các URL API
+INFO_API = "https://api.example.com/info?uid={uid}&region={region}"
+BANNER_API = "https://api.example.com/banner?uid={uid}&region={region}"
+OUTFIT_API = "https://api.example.com/outfit?uid={uid}&region={region}"
+
 @bot.message_handler(commands=['info'])
 def get_player_info(message):
     try:
