@@ -84,33 +84,31 @@ def send_about(message):
     user = message.from_user
     full_name = f"{user.first_name} {user.last_name or ''}".strip()
 
-    bot.reply_to(message, f"""<blockquote>
-<b>Xin chào bạn, {full_name}!</b>
+    bot.reply_to(message, f"""<b>Xin chào bạn, {full_name}!</b>
 
+<b>[ LỆNH TIKTOK ]</b>
+• <code>/tiktok</code>    - Tải video TikTok  
+• <code>/ttinfo</code>    - Kiểm tra tài khoản TikTok  
 
-[ LỆNH TIKTOK ]
-• /tiktok    - Tải video TikTok
-• /ttinfo    - Kiểm tra tài khoản TikTok
+<b>[ LỆNH FREE FIRE ]</b>
+• <code>/likes</code>     - Buff Like  
+• <code>/ffinfo</code>    - Kiểm tra tài khoản FF  
+• <code>/checkban</code>  - Kiểm tra FF bị ban  
 
-[ LỆNH FREE FIRE ]
-• /likes     - Buff Like
-• /ffinfo    - Kiểm tra tài khoản FF
-• /checkban  - Kiểm tra FF bị ban
+<b>[ ẢNH / GIẢI TRÍ ]</b>
+• <code>/video</code>     - Random Video Gái  
+• <code>/anhgai</code>    - Random Ảnh Gái  
 
-[ ẢNH / GIẢI TRÍ ]
-• /video     - Random Video Gái
-• /anhgai    - Random Ảnh Gái
+<b>[ CÔNG CỤ KHÁC ]</b>
+• <code>/check</code>     - Check Tài Xỉu  
+• <code>/spam</code>      - Spam SDT thường  
+• <code>/spamvip</code>   - Spam SDT VIP  
+• <code>/thoitiet</code>  - Kiểm tra thời tiết  
+• <code>/rutgon</code>    - Rút gọn link  
 
-[ CÔNG CỤ KHÁC ]
-• /check     - Check Tài Xỉu
-• /spam      - Spam SDT thường
-• /spamvip   - Spam SDT VIP
-• /thoitiet  - Kiểm tra thời tiết
-• /rutgon    - Rút gọn link
-
-[ LIÊN HỆ ADMIN ]
-• /admin     - Liên hệ admin
-</blockquote>""", parse_mode="HTML")
+<b>[ LIÊN HỆ ADMIN ]</b>
+• <code>/admin</code>     - Liên hệ admin
+""", parse_mode="HTML")
 
 
 API_KEY = '1dcdf9b01ee855ab4b7760d43a10f854'
