@@ -608,7 +608,7 @@ def like_handler(message: Message):
         return
 
     uid = parts[1]
-    api_url = f"https://aditya-free-like.onrender.com/like?uid={uid}&server_name=sg&key=free60remain"
+    api_url = f"https://scromnyi.onrender.com/like?uid={uid}&region=sg"
 
     try:
         loading_msg = bot.reply_to(message, "<blockquote>⏳ Đang tiến hành buff like...</blockquote>", parse_mode="HTML")
