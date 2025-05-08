@@ -87,7 +87,10 @@ def send_about(message):
     bot.reply_to(message, f"""Xin chào bạn, {full_name}!
 <blockquote>
 | Danh Sách Lệnh |
-• /tiktok  - Tải video TikTok  
+</blockquote>
+
+
+• /tiktok  - Tải video TikTok
 • /ttinfo  - Kiểm tra tài khoản TikTok
 • /info - Kiểm tra tài khoản FF  
 • /checkban - Kiểm tra FF bị ban  
@@ -98,7 +101,7 @@ def send_about(message):
 • /spamvip - Spam SDT VIP  
 • /thoitiet - Kiểm tra thời tiết  
 • /rutgon - Rút gọn link  
-</blockquote>""", parse_mode="HTML")
+""", parse_mode="HTML")
 
 
 API_KEY = '1dcdf9b01ee855ab4b7760d43a10f854'
