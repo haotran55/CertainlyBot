@@ -199,13 +199,19 @@ def analyze_md5(md5_hash):
 
     history.append(prediction)
 
-    return (f"📊 *PHÂN TÍCH PHIÊN TÀI XỈU MD5:*\n"
-            f"`{md5_hash}`\n\n"
-            f"🧠 *Thuật toán 1* (2 ký tự cuối): {result1}\n"
-            f"🧠 *Thuật toán 2* (4 byte đầu): {result2}\n"
-            f"🧠 *Thuật toán 3* (Tổng MD5): {result3}\n\n"
-            f"✅ *Kết luận:* {final_result} 🔥")
+    return (
+        f"<blockquote>"
+        f"📊 <strong>PHÂN TÍCH PHIÊN TÀI XỈU MD5:</strong><br>"
+        f"<code>{md5_hash}</code><br><br>"
+        f"🧠 <strong>Thuật toán 1</strong> (2 ký tự cuối): {result1}<br>"
+        f"🧠 <strong>Thuật toán 2</strong> (4 byte đầu): {result2}<br>"
+        f"🧠 <strong>Thuật toán 3</strong> (Tổng MD5): {result3}<br><br>"
+        f"✅ <strong>Kết luận:</strong> {final_result} 🔥"
+        f"</blockquote>"
+    )
 
+
+ 
 def save_data():
     with open(DATA_FILE, "w") as f:
         json.dump({"user_turns": user_turns, "history": history, "profit": profit}, f)
@@ -241,7 +247,8 @@ def handle_check(message):
             return
 
         result_msg = analyze_md5(md5_hash)
-        bot.reply_to(message, result_msg, parse_mode="Markdown")
+        bot.reply_to(message, result_msg, parse_mode="HTML")
+
 
     except Exception as e:
         bot.reply_to(message, f"❌ Lỗi: {e}")
