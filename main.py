@@ -295,8 +295,8 @@ def spam(message):
         msg = bot.reply_to(message, 'Có lẽ admin đang fix gì đó, hãy đợi xíu.')
         return
 
-    if user_id in last_usage and current_time - last_usage[user_id] < 150:
-        remaining = 150 - (current_time - last_usage[user_id])
+    if user_id in last_usage and current_time - last_usage[user_id] < 100:
+        remaining = 100 - (current_time - last_usage[user_id])
         bot.reply_to(message, f"Vui lòng đợi {remaining:.1f} giây trước khi sử dụng lệnh lại.")
         return
 
