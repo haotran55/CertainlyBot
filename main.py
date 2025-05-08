@@ -84,31 +84,21 @@ def send_about(message):
     user = message.from_user
     full_name = f"{user.first_name} {user.last_name or ''}".strip()
 
-    bot.reply_to(message, f"""<b>Xin chào bạn, {full_name}!</b>
-
-<b>[ LỆNH TIKTOK ]</b>
-• <code>/tiktok</code>    - Tải video TikTok  
-• <code>/ttinfo</code>    - Kiểm tra tài khoản TikTok  
-
-<b>[ LỆNH FREE FIRE ]</b>
-• <code>/likes</code>     - Buff Like  
-• <code>/ffinfo</code>    - Kiểm tra tài khoản FF  
-• <code>/checkban</code>  - Kiểm tra FF bị ban  
-
-<b>[ ẢNH / GIẢI TRÍ ]</b>
-• <code>/video</code>     - Random Video Gái  
-• <code>/anhgai</code>    - Random Ảnh Gái  
-
-<b>[ CÔNG CỤ KHÁC ]</b>
-• <code>/check</code>     - Check Tài Xỉu  
-• <code>/spam</code>      - Spam SDT thường  
-• <code>/spamvip</code>   - Spam SDT VIP  
-• <code>/thoitiet</code>  - Kiểm tra thời tiết  
-• <code>/rutgon</code>    - Rút gọn link  
-
-<b>[ LIÊN HỆ ADMIN ]</b>
-• <code>/admin</code>     - Liên hệ admin
-""", parse_mode="HTML")
+    bot.reply_to(message, f"""Xin chào bạn, {full_name}!
+<blockquote>
+| Danh Sách Lệnh |
+• /tiktok  - Tải video TikTok  
+• /ttinfo  - Kiểm tra tài khoản TikTok
+• /info - Kiểm tra tài khoản FF  
+• /checkban - Kiểm tra FF bị ban  
+• /video - Random Video Gái  
+• /anhgai - Random Ảnh Gái  
+• /check - Check Tài Xỉu  
+• /spam - Spam SDT thường  
+• /spamvip - Spam SDT VIP  
+• /thoitiet - Kiểm tra thời tiết  
+• /rutgon - Rút gọn link  
+</blockquote>""", parse_mode="HTML")
 
 
 API_KEY = '1dcdf9b01ee855ab4b7760d43a10f854'
@@ -576,117 +566,15 @@ def tt_info(message):
     except Exception as e:
         bot.reply_to(message, f"<b>Lỗi:</b> <code>{e}</code>", parse_mode="HTML")
 
-import time
-import requests
-from telebot.types import Message
-
-user_last_like_time = {}
-
-@bot.message_handler(commands=['likes'])
-def like_handler(message: Message):
-    user_id = message.from_user.id
-    current_time = time.time()
-
-    try:
-        bot.send_chat_action(message.chat.id, "typing")
-    except Exception as e:
-        print(f"Bot không thể gửi hành động typing: {e}")
-        return
-
-    # Lấy thời gian hiện tại theo ngày (chỉ so sánh ngày)
-    current_day = time.strftime("%Y-%m-%d", time.gmtime(current_time))
-    last_time = user_last_like_time.get(user_id, None)
-
-    # Kiểm tra nếu người dùng đã thực hiện lệnh trong ngày hôm nay
-    if last_time and last_time == current_day:
-        bot.reply_to(message, "<blockquote>⏳ Bạn chỉ có thể sử dụng lệnh này một lần mỗi ngày.</blockquote>", parse_mode="HTML")
-        return
-
-    parts = message.text.split()
-    if len(parts) < 2:
-        bot.reply_to(message, "<blockquote>Cú pháp đúng: /like UID</blockquote>", parse_mode="HTML")
-        return
-
-    uid = parts[1]
-    api_url = f"https://scromnyi.onrender.com/like?uid={uid}&region=sg"
-
-    try:
-        loading_msg = bot.reply_to(message, "<blockquote>⏳ Đang tiến hành buff like...</blockquote>", parse_mode="HTML")
-    except Exception as e:
-        print(f"Lỗi gửi tin nhắn loading: {e}")
-        return
-
-    def safe_get(data, key):
-        value = data.get(key)
-        return str(value) if value not in [None, "", "null"] else "Không xác định"
-
-    def extract_number(text):
-        if isinstance(text, int):
-            return str(text)
-        for part in str(text).split():
-            if part.isdigit():
-                return part
-        return "Không xác định"
-
-    try:
-        response = requests.get(api_url, timeout=15)
-        data = response.json()
-    except Exception as e:
-        bot.edit_message_text(
-            "<blockquote>Lỗi kết nối đến API. Vui lòng thử lại sau.</blockquote>",
-            chat_id=loading_msg.chat.id,
-            message_id=loading_msg.message_id,
-            parse_mode="HTML"
-        )
-        return
-
-    if not data or data.get("status") != 1:
-        bot.edit_message_text(
-            "<blockquote>Server đang bảo trì hoặc quá tải, vui lòng thử lại sau.</blockquote>",
-            chat_id=loading_msg.chat.id,
-            message_id=loading_msg.message_id,
-            parse_mode="HTML"
-        )
-        return
-
-    # Lưu lại ngày người dùng thực hiện lệnh
-    user_last_like_time[user_id] = current_day
-
-    status_code = data.get("status")
-    reply_text = (
-        "<blockquote>"
-        "BUFF LIKE THÀNH CÔNG✅\n"
-        f"╭👤 Name: {safe_get(data, 'PlayerNickname')}\n"
-        f"├🆔 UID : {safe_get(data, 'UID')}\n"
-        f"├🌏 Region : vn\n"
-        f"├📉 Like trước đó: {safe_get(data, 'LikesbeforeCommand')}\n"
-        f"├📈 Like sau khi gửi: {safe_get(data, 'LikesafterCommand')}\n"
-        f"╰👍 Like được gửi: {extract_number(data.get('LikesGivenByAPI'))}"
-    )
-
-    if data.get("status") == 2:
-        reply_text += "\n⚠️ Giới hạn like hôm nay, mai hãy thử lại sau."
-
-    reply_text += "</blockquote>"
-
-    try:
-        bot.edit_message_text(
-            reply_text,
-            chat_id=loading_msg.chat.id,
-            message_id=loading_msg.message_id,
-            parse_mode="HTML"
-        )
-    except Exception as e:
-        print(f"Lỗi gửi kết quả: {e}")
 
 
 
 
 
 # Định nghĩa các URL API
-INFO_API = "https://api.example.com/info?uid={uid}&region={region}"
-BANNER_API = "https://api.example.com/banner?uid={uid}&region={region}"
-OUTFIT_API = "https://api.example.com/outfit?uid={uid}&region={region}"
+INFO_API = "https://aditya-info-v2op.onrender.com/player-info?uid={uid}&region={region}"
+BANNER_API = "https://aditya-outfit-v2op.onrender.com/outfit-image?uid={uid}&region={region}"
+
 
 @bot.message_handler(commands=['info'])
 def get_player_info(message):
@@ -700,7 +588,7 @@ def get_player_info(message):
         region = args[2].upper()
         info_url = INFO_API.format(uid=uid, region=region)
         banner_url = BANNER_API.format(uid=uid, region=region)
-        outfit_url = OUTFIT_API.format(uid=uid, region=region)
+        
 
         # Lấy dữ liệu từ API info
         res = requests.get(info_url)
@@ -751,7 +639,7 @@ def get_player_info(message):
 
         # Sau đó mới gửi ảnh
         bot.send_photo(message.chat.id, photo=banner_url, caption="📸 Banner")
-        bot.send_photo(message.chat.id, photo=outfit_url, caption="🧥 Outfit")
+        
 
     except Exception as e:
         bot.reply_to(message, f"⚠️ Đã xảy ra lỗi:\n{e}")
