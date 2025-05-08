@@ -1,4 +1,4 @@
-Flask
-python-telegram-bot[webhooks]==20.7
-openai
+Flask==2.3.3
+pyTelegramBotAPI==4.14.0
+openai==1.23.2
 requests
