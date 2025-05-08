@@ -54,54 +54,7 @@ def random_video(message):
         bot.send_message(message.chat.id, "Không lấy được video, thử lại sau nhé!")
 
 
-@bot.message_handler(commands=['start'])
-def send_welcome(message):
-    if message.chat.id not in ALLOWED_GROUP_IDS:
-        bot.reply_to(message, "Bot Chỉ Hoạt Động Trong Nhóm Này.\nLink: https://t.me/HaoEsport01")
-        return
-    name = message.from_user.first_name or "None"
 
-    text = f"""<blockquote>
-<b>Xin Chào {name}!</b>
-
-Gõ /about để xem danh sách lệnh của bot mà bạn có thể sử dụng:
-
-<i>(Nếu thấy bot thú vị, đừng ngần ngại chia sẻ với bạn bè để họ cùng dùng nhé!)</i>
-</blockquote>"""
-
-    bot.reply_to(message, text, parse_mode="HTML")
-
-
-
-from datetime import datetime, timedelta
-
-@bot.message_handler(commands=['about'])
-def send_about(message):
-    if message.chat.id not in ALLOWED_GROUP_IDS:
-        bot.reply_to(message, "Bot Chỉ Hoạt Động Trong Nhóm Này.\nLink: https://t.me/HaoEsport01")
-        return
-
-    user = message.from_user
-    full_name = f"{user.first_name} {user.last_name or ''}".strip()
-
-    bot.reply_to(message, f"""Xin chào bạn, {full_name}!
-<blockquote>
-| Danh Sách Lệnh |
-</blockquote>
-
-
-• /tiktok  - Tải video TikTok
-• /ttinfo  - Kiểm tra tài khoản TikTok
-• /info - Kiểm tra tài khoản FF  
-• /checkban - Kiểm tra FF bị ban  
-• /video - Random Video Gái  
-• /anhgai - Random Ảnh Gái  
-• /check - Check Tài Xỉu  
-• /spam - Spam SDT thường  
-• /spamvip - Spam SDT VIP  
-• /thoitiet - Kiểm tra thời tiết  
-• /rutgon - Rút gọn link  
-""", parse_mode="HTML")
 
 
 API_KEY = '1dcdf9b01ee855ab4b7760d43a10f854'
@@ -417,8 +370,8 @@ def spam(message):
             print(f"Lỗi khi xóa loading_msg: {e}")
 
         # Gửi tin nhắn kết quả
-        bot.send_message(
-            message.chat.id,
+        bot.reply_to(
+            message,
             f'<blockquote>{diggory_chat3}</blockquote>',
             parse_mode='HTML'
         )
