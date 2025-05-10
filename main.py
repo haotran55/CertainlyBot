@@ -20,7 +20,11 @@ def home():
 
 
 # Hàm lấy tên item (nếu cần tên)
-import requests
+def format_timestamp(timestamp):
+    # Convert Unix timestamp (seconds) to datetime object
+    dt = datetime.utcfromtimestamp(int(timestamp))
+    # Format it as DD/MM/YYYY
+    return dt.strftime('%d/%m/%Y')
 
 def fetch_data(user_id, region):
     url = f'https://free-fire-gnwz.onrender.com/api/account?uid={user_id}&region={region}'
@@ -58,6 +62,9 @@ def handle_command(message):
 
         def g(key, dic): return dic.get(key, 'Không có')
 
+        # Format 'Ngày tạo' field
+        account_created = format_timestamp(basic.get('createAt', '0'))  # Default to '0' if no timestamp
+
         info = f"""
 <pre>
 <b>📌 Thông tin tài khoản:</b>
@@ -67,7 +74,7 @@ Cấp độ: {g('level', basic)}
 Booyah Pass: {g('hasElitePass', basic)}
 Lượt thích: {g('liked', basic)}
 Máy chủ: {g('region', basic)}
-Ngày tạo: {g('createAt', basic)}
+Ngày tạo: {account_created}
 
 <b>👥 Thông tin quân đoàn:</b>
 Tên: {g('clanName', clan)}
@@ -78,7 +85,7 @@ Thành viên: {g('memberNum', clan)}
 Tên: {g('nickname', captain)}
 Cấp độ: {g('level', captain)}
 Lượt thích: {g('liked', captain)}
-Ngày tạo: {g('createAt', captain)}
+Ngày tạo: {format_timestamp(captain.get('createAt', '0'))}
 </pre>
 """
         bot.edit_message_text(info.strip(), message.chat.id, loading_message.message_id, parse_mode="HTML")
@@ -86,6 +93,7 @@ Ngày tạo: {g('createAt', captain)}
     except Exception as e:
         bot.edit_message_text("<pre>⚠️ Đã xảy ra lỗi khi xử lý yêu cầu.</pre>", message.chat.id, loading_message.message_id, parse_mode="HTML")
         print(e)
+
 
 # Webhook nhận update từ Telegram
 @app.route(f"/{BOT_TOKEN}", methods=['POST'])
