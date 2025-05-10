@@ -20,97 +20,68 @@ def home():
 
 
 # Hàm lấy tên item (nếu cần tên)
-def get_item_name(item_id):
-    try:
-        url = f"https://ff-items-lk.vercel.app/myitem?item_id={item_id}&key=PRINCE"
-        res = requests.get(url)
-        data = res.json()
-        return data.get("item_name", f"Item {item_id}")
-    except:
-        return f"Item {item_id}"
+import requests
 
-# Gửi ảnh item (skin, quần áo, pet)
-def send_item_image(chat_id, item_id, caption=None):
-    image_url = f"https://ff-items-lk.vercel.app/myitem?item_id={item_id}&key=PRINCE"
-    try:
-        bot.send_photo(chat_id, image_url, caption=caption)
-    except Exception as e:
-        print(f"❌ Lỗi gửi ảnh item {item_id}: {e}")
+def fetch_data(user_id, region):
+    url = f'https://free-fire-gnwz.onrender.com/api/account?uid={user_id}&region={region}'
+    response = requests.get(url)
+    if response.status_code != 200:
+        return None
+    return response.json()
 
-# Chỉ xử lý trong nhóm cho phép
-
-# Lệnh /start
-
-# Lệnh /account uid region
 @bot.message_handler(commands=['get'])
-def get_account_info(message):
+def handle_command(message):
     if message.chat.id not in ALLOWED_GROUP_IDS:
         bot.reply_to(message, "Bot Chỉ Hoạt Động Trong Nhóm Này https://t.me/HaoEsport01")
         return
+        
+    parts = message.text.split()
+    if len(parts) != 3:
+        bot.reply_to(message, "<blockquote>❌ Sai cú pháp!\nVí dụ: /get 12345678 sg</blockquote>", parse_mode="HTML")
+        return
+
+    _, user_id, region = parts
 
     try:
-        parts = message.text.strip().split()
-        if len(parts) != 3:
-            bot.reply_to(message, "❌ Sai cú pháp. Dùng:\n/get uid region")
+        data = fetch_data(user_id, region)
+        if not data:
+            bot.reply_to(message, "<blockquote>❌ Không tìm thấy người chơi hoặc server quá tải!</blockquote>", parse_mode="HTML")
             return
 
-        uid, region = parts[1], parts[2]
-        url = f"https://free-fire-gnwz.onrender.com/api/account?uid={uid}&region={region}"
-        response = requests.get(url)
-        data = response.json()
+        basic = data['basicInfo']
+        clan = data['clanBasicInfo']
+        captain = data['captainBasicInfo']
 
-        if "basicInfo" not in data:
-            bot.reply_to(message, "❌ Không tìm thấy thông tin tài khoản.")
-            return
+        def g(key, dic): return dic.get(key, 'Không có')
 
-        basic = data["basicInfo"]
-        profile = data.get("profileInfo", {})
-        pet = data.get("petInfo", {})
-
-        avatar_name = get_item_name(basic.get("headPic", 0))
-        banner_name = get_item_name(basic.get("bannerId", 0))
-        weapon_names = [get_item_name(wid) for wid in basic.get("weaponSkinShows", [])]
-        clothes_names = [get_item_name(cid) for cid in profile.get("clothes", [])]
-        pet_skin_name = get_item_name(pet.get("skinId", 0)) if pet else ""
-
-        # Nội dung văn bản
-        reply = f"""<b>📌 Thông tin tài khoản:</b>
+        info = f"""
 <blockquote>
-👤 Nickname: {basic['nickname']}
-🎮 Level: {basic['level']}
-🏆 Rank: {basic['rank']} (RP: {basic['rankingPoints']})
-💣 CS Rank: {basic['csRank']} (RP: {basic['csRankingPoints']})
-🧢 Avatar: {avatar_name}
-🎴 Banner: {banner_name}
-</blockquote>"""
+<b>📌 Thông tin tài khoản:</b>
+Tên: {g('nickname', basic)}
+ID: {g('accountId', basic)}
+Cấp độ: {g('level', basic)}
+Booyah Pass: {g('hasElitePass', basic)}
+Lượt thích: {g('liked', basic)}
+Máy chủ: {g('region', basic)}
+Ngày tạo: {g('createAt', basic)}
 
-        if weapon_names:
-            reply += "<b>🎯 Vũ khí hiển thị:</b>\n<blockquote>"
-            reply += "\n".join(f"🔫 {name}" for name in weapon_names)
-            reply += "</blockquote>"
+<b>👥 Thông tin quân đoàn:</b>
+Tên: {g('clanName', clan)}
+Cấp độ: {g('clanLevel', clan)}
+Thành viên: {g('memberNum', clan)}
 
-        if clothes_names:
-            reply += "<b>👕 Trang phục:</b>\n<blockquote>"
-            reply += "\n".join(f"👗 {name}" for name in clothes_names)
-            reply += "</blockquote>"
-
-        if pet:
-            reply += f"<b>🐾 Pet:</b>\n<blockquote>📛 {pet.get('name', '')}\n🎨 {pet_skin_name}</blockquote>"
-
-        bot.reply_to(message, reply, parse_mode="HTML")
-
-        # Gửi ảnh item
-        for cid in profile.get("clothes", []):
-            send_item_image(message.chat.id, cid, caption="👕 Trang phục")
-
-        for wid in basic.get("weaponSkinShows", []):
-            send_item_image(message.chat.id, wid, caption="🔫 Skin vũ khí")
-
-        if pet:
-            send_item_image(message.chat.id, pet.get("skinId", 0), caption="🐾 Pet Skin")
+<b>👑 Chủ quân đoàn:</b>
+Tên: {g('nickname', captain)}
+Cấp độ: {g('level', captain)}
+Lượt thích: {g('liked', captain)}
+Ngày tạo: {g('createAt', captain)}
+</blockquote>
+"""
+        bot.reply_to(message, info.strip(), parse_mode="HTML")
 
     except Exception as e:
-        bot.reply_to(message, f"🚫 Lỗi: {str(e)}")
+        bot.reply_to(message, "<blockquote>⚠️ Đã xảy ra lỗi khi xử lý yêu cầu.</blockquote>", parse_mode="HTML")
+        print(e)
 
 # Webhook nhận update từ Telegram
 @app.route(f"/{BOT_TOKEN}", methods=['POST'])
