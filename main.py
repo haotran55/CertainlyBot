@@ -33,19 +33,20 @@ def fetch_data(user_id, region):
         return None
     return response.json()
 
+# Handler lệnh /ff
 @bot.message_handler(commands=['get'])
 def handle_command(message):
-    # Check if the message comes from an allowed group
+    # Kiểm tra nhóm hợp lệ
     if message.chat.id not in ALLOWED_GROUP_IDS:
-        bot.reply_to(message, "Bot Chỉ Hoạt Động Trong Nhóm Này https://t.me/HaoEsport01")
+        bot.reply_to(message, "Bot chỉ hoạt động trong nhóm này  https://t.me/HaoEsport01")
         return
 
-    # Send a loading message
-    loading_message = bot.reply_to(message, "<pre>⏳ Đang tải thông tin...</pre>", parse_mode="HTML")
+    # Gửi tin nhắn chờ xử lý
+    loading_message = bot.reply_to(message, "⏳ *Đang tải thông tin...*", parse_mode="Markdown")
 
     parts = message.text.split()
     if len(parts) != 3:
-        bot.edit_message_text("<pre>❌ Sai cú pháp!\nVí dụ: /get 12345678 sg</pre>", message.chat.id, loading_message.message_id, parse_mode="HTML")
+        bot.edit_message_text("❌ *Sai cú pháp!*\nVí dụ: `/get 12345678 sg`", message.chat.id, loading_message.message_id, parse_mode="Markdown")
         return
 
     _, user_id, region = parts
@@ -53,7 +54,7 @@ def handle_command(message):
     try:
         data = fetch_data(user_id, region)
         if not data:
-            bot.edit_message_text("<pre>❌ Không tìm thấy người chơi hoặc server quá tải!</pre>", message.chat.id, loading_message.message_id, parse_mode="HTML")
+            bot.edit_message_text("❌ *Không tìm thấy người chơi hoặc server quá tải!*", message.chat.id, loading_message.message_id, parse_mode="Markdown")
             return
 
         basic = data['basicInfo']
@@ -62,36 +63,32 @@ def handle_command(message):
 
         def g(key, dic): return dic.get(key, 'Không có')
 
-        # Format 'Ngày tạo' field
-        account_created = format_timestamp(basic.get('createAt', '0'))  # Default to '0' if no timestamp
-
         info = f"""
-<pre>
-<b>📌 Thông tin tài khoản:</b>
-Tên: {g('nickname', basic)}
-ID: {g('accountId', basic)}
-Cấp độ: {g('level', basic)}
-Booyah Pass: {g('hasElitePass', basic)}
-Lượt thích: {g('liked', basic)}
-Máy chủ: {g('region', basic)}
-Ngày tạo: {account_created}
+📌 *Thông tin tài khoản:*
+• Tên: `{g('nickname', basic)}`
+• ID: `{g('accountId', basic)}`
+• Cấp độ: `{g('level', basic)}`
+• Booyah Pass: `{"Có" if g('hasElitePass', basic) else "Không"}`
+• Lượt thích: `{g('liked', basic)}`
+• Máy chủ: `{g('region', basic)}`
+• Ngày tạo: `{format_timestamp(basic.get('createAt', 0))}`
 
-<b>👥 Thông tin quân đoàn:</b>
-Tên: {g('clanName', clan)}
-Cấp độ: {g('clanLevel', clan)}
-Thành viên: {g('memberNum', clan)}
+👥 *Thông tin quân đoàn:*
+• Tên: `{g('clanName', clan)}`
+• Cấp độ: `{g('clanLevel', clan)}`
+• Thành viên: `{g('memberNum', clan)}`
 
-<b>👑 Chủ quân đoàn:</b>
-Tên: {g('nickname', captain)}
-Cấp độ: {g('level', captain)}
-Lượt thích: {g('liked', captain)}
-Ngày tạo: {format_timestamp(captain.get('createAt', '0'))}
-</pre>
+👑 *Chủ quân đoàn:*
+• Tên: `{g('nickname', captain)}`
+• Cấp độ: `{g('level', captain)}`
+• Lượt thích: `{g('liked', captain)}`
+• Ngày tạo: `{format_timestamp(captain.get('createAt', 0))}`
 """
-        bot.edit_message_text(info.strip(), message.chat.id, loading_message.message_id, parse_mode="HTML")
+
+        bot.edit_message_text(info.strip(), message.chat.id, loading_message.message_id, parse_mode="Markdown")
 
     except Exception as e:
-        bot.edit_message_text("<pre>⚠️ Đã xảy ra lỗi khi xử lý yêu cầu.</pre>", message.chat.id, loading_message.message_id, parse_mode="HTML")
+        bot.edit_message_text("⚠️ *Đã xảy ra lỗi khi xử lý yêu cầu.*", message.chat.id, loading_message.message_id, parse_mode="Markdown")
         print(e)
 
 
