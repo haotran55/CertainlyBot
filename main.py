@@ -20,76 +20,109 @@ def home():
 
 
 # Hàm lấy tên item (nếu cần tên)
-def format_timestamp(timestamp):
-    # Convert Unix timestamp (seconds) to datetime object
-    dt = datetime.utcfromtimestamp(int(timestamp))
-    # Format it as DD/MM/YYYY
-    return dt.strftime('%d/%m/%Y')
-
-def fetch_data(user_id, region):
-    url = f'https://free-fire-gnwz.onrender.com/api/account?uid={user_id}&region={region}'
-    response = requests.get(url)
-    if response.status_code != 200:
-        return None
-    return response.json()
-
-# Handler lệnh /ff
-@bot.message_handler(commands=['get'])
-def handle_command(message):
-    # Kiểm tra nhóm hợp lệ
+@bot.message_handler(func=lambda message: message.text.lower().startswith('get'))
+def get_player_stats(message):
     if message.chat.id not in ALLOWED_GROUP_IDS:
-        bot.reply_to(message, "Bot chỉ hoạt động trong nhóm này  https://t.me/HaoEsport01")
+        bot.reply_to(message, "❌ Bot Chỉ Hoạt Động Trong Nhóm Này.\n👉 Link: https://t.me/HaoEsport01")
         return
-
-    # Gửi tin nhắn chờ xử lý
-    loading_message = bot.reply_to(message, "⏳ *Đang tải thông tin...*", parse_mode="Markdown")
-
-    parts = message.text.split()
-    if len(parts) != 3:
-        bot.edit_message_text("❌ *Sai cú pháp!*\nVí dụ: `/get 12345678 sg`", message.chat.id, loading_message.message_id, parse_mode="Markdown")
-        return
-
-    _, user_id, region = parts
-
+        
     try:
-        data = fetch_data(user_id, region)
-        if not data:
-            bot.edit_message_text("❌ *Không tìm thấy người chơi hoặc server quá tải!*", message.chat.id, loading_message.message_id, parse_mode="Markdown")
+        parts = message.text.split()
+        if len(parts) != 3:
+            bot.reply_to(message, "❌ Format: Get {UID} {region}")
             return
 
-        basic = data['basicInfo']
-        clan = data['clanBasicInfo']
-        captain = data['captainBasicInfo']
+        uid = parts[1]
+        region = parts[2].upper()
 
-        def g(key, dic): return dic.get(key, 'Không có')
+        api_url = f"https://free-fire-gnwz.onrender.com/api/account?uid={uid}&region={region}"
 
-        info = f"""
-📌 *Thông tin tài khoản:*
-• Tên: `{g('nickname', basic)}`
-• ID: `{g('accountId', basic)}`
-• Cấp độ: `{g('level', basic)}`
-• Booyah Pass: `{"Có" if g('hasElitePass', basic) else "Không"}`
-• Lượt thích: `{g('liked', basic)}`
-• Máy chủ: `{g('region', basic)}`
-• Ngày tạo: `{format_timestamp(basic.get('createAt', 0))}`
+        response = requests.get(api_url)
+        data = response.json()
 
-👥 *Thông tin quân đoàn:*
-• Tên: `{g('clanName', clan)}`
-• Cấp độ: `{g('clanLevel', clan)}`
-• Thành viên: `{g('memberNum', clan)}`
+        # Trích xuất dữ liệu
+        basic = data.get("basicInfo", {})
+        profile = data.get("profileInfo", {})
+        clan = data.get("clanBasicInfo", {})
+        pet = data.get("petInfo", {})
+        social = data.get("socialInfo", {})
+        credit = data.get("creditScoreInfo", {})
 
-👑 *Chủ quân đoàn:*
-• Tên: `{g('nickname', captain)}`
-• Cấp độ: `{g('level', captain)}`
-• Lượt thích: `{g('liked', captain)}`
-• Ngày tạo: `{format_timestamp(captain.get('createAt', 0))}`
+        response_text = f"""
+🎮 𝗙𝗥𝗘𝗘 𝗙𝗜𝗥𝗘 𝗔𝗖𝗖𝗢𝗨𝗡𝗧 𝗜𝗡𝗙𝗢 🎮
+
+👤 𝗣𝗟𝗔𝗬𝗘𝗥 𝗗𝗘𝗧𝗔𝗜𝗟𝗦
+━━━━━━━━━━━━━━━
+📝 Name: {basic.get('nickname', 'N/A')}
+🆔 UID: {uid}
+🌍 Region: {basic.get('region', 'N/A')}
+📊 Level: {basic.get('level', 'N/A')}
+❤️ Likes: {basic.get('liked', 'N/A')}
+🎮 Version: {basic.get('releaseVersion', 'N/A')}
+
+🖼️ 𝗜𝗠𝗔𝗚𝗘𝗦 (ID Only)
+━━━━━━━━━━━━━━━
+🧑 Avatar ID: {profile.get('avatarId', 'N/A')}
+🎨 Banner ID: {basic.get('bannerId', 'N/A')}
+🖼️ HeadPic ID: {basic.get('headPic', 'N/A')}
+
+🏆 𝗥𝗔𝗡𝗞 𝗜𝗡𝗙𝗢
+━━━━━━━━━━━━━━━
+🎯 BR Rank ID: {basic.get('rank', 'N/A')}
+📈 BR Points: {basic.get('rankingPoints', 'N/A')}
+⚔️ CS Rank ID: {basic.get('csRank', 'N/A')}
+📊 CS Points: {basic.get('csRankingPoints', 'N/A')}
+
+🏰 𝗖𝗟𝗔𝗡 𝗜𝗡𝗙𝗢
+━━━━━━━━━━━━━━━
+🏷️ Name: {clan.get('clanName', 'N/A')}
+📑 ID: {clan.get('clanId', 'N/A')}
+📈 Level: {clan.get('clanLevel', 'N/A')}
+👥 Members: {clan.get('memberNum', 'N/A')}/{clan.get('capacity', 'N/A')}
+
+🐾 𝗣𝗘𝗧 𝗜𝗡𝗙𝗢
+━━━━━━━━━━━━━━━
+🐶 Name: {pet.get('name', 'N/A')}
+🆔 ID: {pet.get('id', 'N/A')}
+📊 Level: {pet.get('level', 'N/A')}
+⭐ EXP: {pet.get('exp', 'N/A')}
+
+📱 𝗦𝗢𝗖𝗜𝗔𝗟 𝗜𝗡𝗙𝗢
+━━━━━━━━━━━━━━━
+🌐 Language: {social.get('language', 'N/A')}
+🎮 Preferred Mode: {social.get('modePrefer', 'N/A')}
+📝 Bio: {social.get('signature', 'N/A')}
+
+📊 𝗖𝗥𝗘𝗗𝗜𝗧 𝗦𝗖𝗢𝗥𝗘
+━━━━━━━━━━━━━━━
+💯 Score: {credit.get('creditScore', 'N/A')}
 """
 
-        bot.edit_message_text(info.strip(), message.chat.id, loading_message.message_id, parse_mode="Markdown")
+        # Danh sách vũ khí
+        weapon_skins = basic.get("weaponSkinShows", [])
+        if weapon_skins:
+            response_text += "\n\n⚔️ 𝗘𝗤𝗨𝗜𝗣𝗣𝗘𝗗 𝗪𝗘𝗔𝗣𝗢𝗡𝗦\n━━━━━━━━━━━━━━━"
+            for idx, weapon_id in enumerate(weapon_skins, 1):
+                response_text += f"\n🔫 Weapon {idx}: ID {weapon_id}"
+
+        # Trang phục
+        outfits = profile.get("clothes", [])
+        if outfits:
+            response_text += "\n\n🎭 𝗘𝗤𝗨𝗜𝗣𝗣𝗘𝗗 𝗢𝗨𝗧𝗙𝗜𝗧𝗦\n━━━━━━━━━━━━━━━"
+            for idx, cloth_id in enumerate(outfits, 1):
+                response_text += f"\n👔 Outfit {idx}: ID {cloth_id}"
+
+        if len(response_text) > 4096:
+            for x in range(0, len(response_text), 4096):
+                bot.reply_to(message, response_text[x:x+4096])
+        else:
+            bot.reply_to(message, response_text)
 
     except Exception as e:
-        bot.edit_message_text("⚠️ *Đã xảy ra lỗi khi xử lý yêu cầu.*", message.chat.id, loading_message.message_id, parse_mode="Markdown")
-        print(e)
+        bot.reply_to(message, f"❌ An error occurred: {str(e)}")
+        if "data" in locals():
+            bot.reply_to(message, f"Debug info: {json.dumps(data, indent=2)}")
+
 
 
 # Webhook nhận update từ Telegram
