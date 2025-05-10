@@ -31,13 +31,17 @@ def fetch_data(user_id, region):
 
 @bot.message_handler(commands=['get'])
 def handle_command(message):
+    # Check if the message comes from an allowed group
     if message.chat.id not in ALLOWED_GROUP_IDS:
         bot.reply_to(message, "Bot Chỉ Hoạt Động Trong Nhóm Này https://t.me/HaoEsport01")
         return
-        
+
+    # Send a loading message
+    loading_message = bot.reply_to(message, "<pre>⏳ Đang tải thông tin...</pre>", parse_mode="HTML")
+
     parts = message.text.split()
     if len(parts) != 3:
-        bot.reply_to(message, "<blockquote>❌ Sai cú pháp!\nVí dụ: /get 12345678 sg</blockquote>", parse_mode="HTML")
+        bot.edit_message_text("<pre>❌ Sai cú pháp!\nVí dụ: /get 12345678 sg</pre>", message.chat.id, loading_message.message_id, parse_mode="HTML")
         return
 
     _, user_id, region = parts
@@ -45,7 +49,7 @@ def handle_command(message):
     try:
         data = fetch_data(user_id, region)
         if not data:
-            bot.reply_to(message, "<blockquote>❌ Không tìm thấy người chơi hoặc server quá tải!</blockquote>", parse_mode="HTML")
+            bot.edit_message_text("<pre>❌ Không tìm thấy người chơi hoặc server quá tải!</pre>", message.chat.id, loading_message.message_id, parse_mode="HTML")
             return
 
         basic = data['basicInfo']
@@ -55,7 +59,7 @@ def handle_command(message):
         def g(key, dic): return dic.get(key, 'Không có')
 
         info = f"""
-<blockquote>
+<pre>
 <b>📌 Thông tin tài khoản:</b>
 Tên: {g('nickname', basic)}
 ID: {g('accountId', basic)}
@@ -75,12 +79,12 @@ Tên: {g('nickname', captain)}
 Cấp độ: {g('level', captain)}
 Lượt thích: {g('liked', captain)}
 Ngày tạo: {g('createAt', captain)}
-</blockquote>
+</pre>
 """
-        bot.reply_to(message, info.strip(), parse_mode="HTML")
+        bot.edit_message_text(info.strip(), message.chat.id, loading_message.message_id, parse_mode="HTML")
 
     except Exception as e:
-        bot.reply_to(message, "<blockquote>⚠️ Đã xảy ra lỗi khi xử lý yêu cầu.</blockquote>", parse_mode="HTML")
+        bot.edit_message_text("<pre>⚠️ Đã xảy ra lỗi khi xử lý yêu cầu.</pre>", message.chat.id, loading_message.message_id, parse_mode="HTML")
         print(e)
 
 # Webhook nhận update từ Telegram
