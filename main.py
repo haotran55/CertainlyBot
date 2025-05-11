@@ -2,6 +2,9 @@ import os
 import threading
 import requests
 import telebot
+import requests
+from telebot import TeleBot
+from telebot.types import Message  # ✅ Import thêm dòng này
 from flask import Flask, request
 from datetime import datetime
 from io import BytesIO
