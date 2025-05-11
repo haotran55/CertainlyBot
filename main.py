@@ -63,7 +63,7 @@ def handle_like(message):
             f"Before Likes: {likes_before}\n"
             f"After Likes: {likes_after}\n"
             f"Likes Given By Bot: {likes_given_by_bot}\n"
-            f"@checkinfo123"
+            f"@HaoEsport01"
         )
 
         # Edit loading message to show result
