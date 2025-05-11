@@ -37,7 +37,7 @@ def handle_like(message):
         region = parts[2]
 
         # Send loading notification
-        loading_msg = bot.reply_to(message, "🔄 Processing...")
+        loading_msg = bot.reply_to(message, "Sending Likes Please Wait...")
 
         api_url = f"https://freefirelike-api.onrender.com/like?uid={uid}&server_name={region}&key=tranhao116b"
         response = requests.get(api_url)
