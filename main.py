@@ -327,34 +327,38 @@ def fetch_tiktok_data(url):
     api_url = f'https://www.tikwm.com/api?url={url}'
     try:
         response = requests.get(api_url)
-        response.raise_for_status()  
+        response.raise_for_status()
         data = response.json()
         return data
     except requests.exceptions.RequestException as e:
         print(f"Error fetching TikTok data: {e}")
         return None
 
-@bot.message_handler(y=['taivideotiktok'])
+@bot.message_handler(func=lambda message: message.text.lower().startswith("taivideotiktok"))
 def tiktokvideo_command(message):
     command_parts = message.text.split(maxsplit=1)
     if len(command_parts) == 2:
         url = command_parts[1].strip()
         data = fetch_tiktok_data(url)
-        
-        if data and 'code' in data and data['code'] == 0:
-            video_title = data['data'].get('title', 'N/A')
-            video_url = data['data'].get('play', 'N/A')
-            music_title = data['data']['music_info'].get('title', 'N/A')
-            music_url = data['data']['music_info'].get('play', 'N/A')
-            
-            reply_message = f'<blockquote>Tiêu đề Video: {video_title}
-\n╭────────────────╮\nĐường dẫn Video: <a href="{video_url}">TẠI ĐÂY</a>
-\n╰────────────────╯\nTiêu đề Nhạc: {music_title}\nĐường dẫn Nhạc: <a href="{music_url}">Link</a></blockquote>'
+
+        if data and data.get('code') == 0:
+            video_title = data['data'].get('title', 'Không rõ tiêu đề')
+            video_url = data['data'].get('play', 'Không có link')
+            music_title = data['data']['music_info'].get('title', 'Không rõ nhạc')
+            music_url = data['data']['music_info'].get('play', 'Không có link')
+
+            reply_message = f'''Tiêu đề Video: {video_title}
+╭────────────────╮
+📹 Video: <a href="{video_url}">TẠI ĐÂY</a>
+╰────────────────╯
+🎵 Nhạc nền: {music_title}
+🔗 Link Nhạc: <a href="{music_url}">Nghe tại đây</a>'''
+
             bot.reply_to(message, reply_message, parse_mode='HTML')
         else:
-            bot.reply_to(message, "Không thể lấy dữ liệu từ TikTok.")
+            bot.reply_to(message, "⚠️ Không thể lấy dữ liệu từ TikTok. Vui lòng kiểm tra lại link.")
     else:
-        bot.reply_to(message, "Sai Link.")
+        bot.reply_to(message, "⚠️ Bạn cần nhập link TikTok sau lệnh. Ví dụ:\n`taivideotiktok https://www.tiktok.com/...`", parse_mode='Markdown')
 
 
 @bot.message_handler(commands=['like'])
