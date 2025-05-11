@@ -13,7 +13,7 @@ from io import BytesIO
 
 BOT_TOKEN = os.environ.get('BOT_TOKEN')
 bot = telebot.TeleBot(BOT_TOKEN)
-
+ALLOWED_GROUP_IDS = [-1002639856138]
 
 app = Flask(__name__)
 
