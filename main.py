@@ -160,49 +160,39 @@ def get_player_stats(message):
 
 #lệnh
 
-from datetime import datetime, timedelta
-@bot.message_handler(commands=['bot', 'start'])
+@bot.message_handler(commands=['bot'])
 def send_help(message):
-    user_name = message.from_user.first_name
-  
-    bot.reply_to(message, f"""Xin Chào {user_name}
-<blockquote>
-╭────────────────╮
-                  LỆNH CƠ BẢN
-╰────────────────╯
-» /video - Random Video Gái Xinh
-» /anhgai - Random Ảnh Gái Xinh 
-» /info - Check Info Telegram 
-» /id - Lấy Id Bạn
-» /idnhom - Lấy Id Nhóm 
-» /ask - Hỏi GenAI 
-» /gg - Menu Tìm Kiếm 
-» /rutgon - Rút Gọn Link URL
-» /voice - Chuyển Văn Bản Thành Giọng Nói 
-» /spam - Spam SĐT 
-» /tv - Dịch từ tiếng Anh sang tiếng Việt  
-» /time - Thời Gian Bot Hoạt Động 
-╭────────────────╮
-                  LỆNH TIKTOK
-╰────────────────╯
-» /tiktok - Lấy Info Tiktok
-» /taivideotiktok - Tải Video Tiktok
-» /fl - Follow TikTok 
-╭────────────────╮
-                  LỆNH LỬA CHÙA 🔥
-╰────────────────╯
-» /like - Buff Like FF
-» get - Check Info FF
-» /checkban - Check Ban FF
-» /search - Check Tk FF Bằng Tên 
-» /visit - Buff Lượt Xem FF
-╭────────────────╮
-                  LỆNH ADMIN
-╰────────────────╯
-» /ban - Ban Người Dùng 
-» /mute - Mute Người Dùng
-</blockquote>
-Lưu Ý! Click Vào Lệnh Để Biết Cách Sử Dụng""", parse_mode="HTML")
+    bot.reply_to(message, """<blockquote>
+╔════════════════╗  
+    📌 *DANH SÁCH LỆNH*
+╚════════════════╝  
+/vlong       Full Lệnh  
+/spam        Spam SĐT  
+/spamvip     Spam SĐT VIP  
+/gg          Tìm Ảnh GG  
+/info        Check FB  
+/tik         INFO TikTok  
+/viewtiktok  Xem View  
+/tele        INFO Telegram  
+/thoitiet    Check Thời Tiết  
+/hoi         Hỏi GG Trả Lời  
+/id          ID Telegram  
+/voice       Chữ Thành Giọng  
+/tiktok      Tải Video TikTok  
+/tool        Tool Gộp  
+/tai         Tải File Bằng Link  
+/code        Lấy HTML Web  
+/tv          Ngôn Ngữ Tiếng Việt  
+/muavip  Mua Vip Đỡ Vượt Key
+╔═════════════════╗  
+       🔥 *FREE FIRE* 🔥  
+╚═════════════════╝  
+/ff   CHECK TT BẰNG ID
+/like     BUFF LIKE 
+/name CHECK TT BẰNG TÊN
+/visit    BUFF VIEW
+/ngl    SPAM https://ngl.link
+</blockquote>""", parse_mode='HTML')
 
 
 @bot.message_handler(commands=['voice'])
