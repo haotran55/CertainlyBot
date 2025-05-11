@@ -33,7 +33,7 @@ def handle_like(message):
         region = parts[2]
 
         # Send loading notification
-        loading_msg = bot.reply_to(message, "Sending Likes Please Wait...")
+        loading_msg = bot.reply_to(message, "🔄 Processing...")
 
         api_url = f"https://freefirelike-api.onrender.com/like?uid={uid}&server_name={region}&key=tranhao116b"
         response = requests.get(api_url)
@@ -58,11 +58,12 @@ def handle_like(message):
         likes_given_by_bot = likes_after - likes_before
 
         reply = (
+            f"Likes Sent ✅\n"
             f"Player Nickname: {nickname}\n"
-            f"Likes at start of day: {likes_start_day}\n"
-            f"Likes before Command: {likes_before}\n"
-            f"Likes after Command: {likes_after}\n"
-            f"Likes Given By Bot: {likes_given_by_bot}"
+            f"Before Likes: {likes_before}\n"
+            f"After Likes: {likes_after}\n"
+            f"Likes Given By Bot: {likes_given_by_bot}\n"
+            f"@checkinfo123"
         )
 
         # Edit loading message to show result
