@@ -1,17 +1,17 @@
 import os
 import threading
 import requests
-import telebot  # Thêm dòng này để sử dụng telebot
+import telebot
 from flask import Flask, request
 from datetime import datetime
 from io import BytesIO
+import requests
+from io import BytesIO
 
-# Lấy token từ biến môi trường
 BOT_TOKEN = os.environ.get('BOT_TOKEN')
 bot = telebot.TeleBot(BOT_TOKEN)
-ALLOWED_GROUP_IDS = [-1002639856138]
 
-# Flask App
+
 app = Flask(__name__)
 
 @app.route('/')
@@ -19,7 +19,38 @@ def home():
     return "Bot đang hoạt động trên Render!"
 
 
-# Hàm lấy tên item (nếu cần tên)
+
+#video
+
+def get_random_video():
+    try:
+        res = requests.get("https://api.ffcommunity.site/randomvideo.php", timeout=5)
+        data = res.json()
+        return data.get("url")
+    except:
+        return None
+
+@bot.message_handler(commands=['video'])
+def random_video(message):
+ 
+
+    video_url = get_random_video()
+    if video_url:
+        try:
+            bot.send_chat_action(message.chat.id, "upload_video")
+            res = requests.get(video_url, stream=True, timeout=10)
+            if res.status_code == 200:
+                video_file = BytesIO(res.content)
+                video_file.name = "video.mp4"
+                bot.send_video(message.chat.id, video=video_file, caption="Video gái xinh By @BotHaoVip_bot")
+            else:
+                bot.send_message(message.chat.id, "Không thể tải video từ nguồn.")
+        except Exception as e:
+            print("Lỗi gửi video:", e)
+            bot.send_message(message.chat.id, "Lỗi khi gửi video.")
+    else:
+        bot.send_message(message.chat.id, "Không lấy được video, thử lại sau nhé!")
+
 @bot.message_handler(func=lambda message: message.text.lower().startswith('get'))
 def get_player_stats(message):
     if message.chat.id not in ALLOWED_GROUP_IDS:
@@ -124,8 +155,374 @@ def get_player_stats(message):
             bot.reply_to(message, f"Debug info: {json.dumps(data, indent=2)}")
 
 
+#lệnh
 
-# Webhook nhận update từ Telegram
+from datetime import datetime, timedelta
+@bot.message_handler(commands=['bot', 'start'])
+def send_help(message):
+    user_name = message.from_user.first_name
+  
+    bot.reply_to(message, f"""Xin Chào {user_name}
+<blockquote>
+╭────────────────╮
+                  LỆNH CƠ BẢN
+╰────────────────╯
+» /video - Random Video Gái Xinh
+» /anhgai - Random Ảnh Gái Xinh 
+» /info - Check Info Telegram 
+» /id - Lấy Id Bạn
+» /idnhom - Lấy Id Nhóm 
+» /ask - Hỏi GenAI 
+» /gg - Menu Tìm Kiếm 
+» /rutgon - Rút Gọn Link URL
+» /voice - Chuyển Văn Bản Thành Giọng Nói 
+» /spam - Spam SĐT 
+» /tv - Dịch từ tiếng Anh sang tiếng Việt  
+» /time - Thời Gian Bot Hoạt Động 
+╭────────────────╮
+                  LỆNH TIKTOK
+╰────────────────╯
+» /tiktok - Lấy Info Tiktok
+» /taivideotiktok - Tải Video Tiktok
+» /fl - Follow TikTok 
+╭────────────────╮
+                  LỆNH LỬA CHÙA 🔥
+╰────────────────╯
+» /like - Buff Like FF
+» get - Check Info FF
+» /checkban - Check Ban FF
+» /search - Check Tk FF Bằng Tên 
+» /visit - Buff Lượt Xem FF
+╭────────────────╮
+                  LỆNH ADMIN
+╰────────────────╯
+» /ban - Ban Người Dùng 
+» /mute - Mute Người Dùng
+</blockquote>
+Lưu Ý! Click Vào Lệnh Để Biết Cách Sử Dụng""", parse_mode="HTML")
+
+
+@bot.message_handler(commands=['voice'])
+def text_to_voice(message):
+    text = message.text[7:].strip()  
+  
+    
+    if not text:
+        bot.reply_to(message, ' Vui Lòng Nhập nội dung')
+        return
+
+    try:
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.mp3') as temp_file:
+            tts = gTTS(text, lang='vi')
+            tts.save(temp_file.name)
+            temp_file_path = temp_file.name  
+       
+        with open(temp_file_path, 'rb') as f:
+            bot.send_voice(message.chat.id, f, reply_to_message_id=message.message_id)
+    
+    except Exception as e:
+        bot.reply_to(message, f'Đã xảy ra lỗi: {e}')
+    
+    finally:
+        if os.path.exists(temp_file_path):
+            os.remove(temp_file_path)
+
+            
+
+@bot.message_handler(commands=['id', 'ID'])
+def handle_id_command(message):
+    if message.reply_to_message:  
+        user_id = message.reply_to_message.from_user.id
+        first_name = message.reply_to_message.from_user.first_name
+        bot.reply_to(message, f"ID của {first_name} là: `{user_id}`", parse_mode='Markdown')
+    elif len(message.text.split()) == 1:
+        if message.chat.type in ["group", "supergroup"]:
+            chat_id = message.chat.id
+            chat_title = message.chat.title
+            bot.reply_to(message, f"ID của nhóm này là: `{chat_id}`\nTên nhóm: {chat_title}", parse_mode='Markdown')
+        else:
+            user_id = message.from_user.id
+            first_name = message.from_user.first_name
+            bot.reply_to(message, f"ID của bạn là: `{user_id}`\nTên: {first_name}", parse_mode='Markdown')
+
+@bot.message_handler(commands=['idnhom'])
+def handle_id_command(message):
+    if message.reply_to_message:  
+        user_id = message.reply_to_message.from_user.id
+        first_name = message.reply_to_message.from_user.first_name
+        bot.reply_to(message, f"ID của {first_name} là: `{user_id}`", parse_mode='Markdown')
+    elif len(message.text.split()) == 1:
+        if message.chat.type in ["group", "supergroup"]:
+            chat_id = message.chat.id
+            chat_title = message.chat.title
+            bot.reply_to(message, f"ID của nhóm này là: `{chat_id}`\nTên nhóm: {chat_title}", parse_mode='Markdown')
+        else:
+            user_id = message.from_user.id
+            first_name = message.from_user.first_name
+            bot.reply_to(message, f"ID của bạn là: `{user_id}`\nTên: {first_name}", parse_mode='Markdown')
+   
+
+@bot.message_handler(commands=['tv'])
+def tieng_viet(message):
+    chat_id = message.chat.id
+    message_id = message.message_id
+    keyboard = types.InlineKeyboardMarkup()
+    url_button = types.InlineKeyboardButton("Tiếng Việt 🇻🇳", url='https://t.me/setlanguage/abcxyz')
+    keyboard.add(url_button)
+    bot.send_message(chat_id, 'Click vào nút "<b>Tiếng Việt</b>" để đổi thành ngôn ngữ Việt Nam.', reply_markup=keyboard, parse_mode='HTML')
+
+sent_messages = []
+
+def delete_all_messages_after_delay(chat_id, delay):
+    threading.Event().wait(delay)
+    for msg_id in sent_messages:
+        try:
+            bot.delete_message(chat_id, msg_id)
+        except telebot.apihelper.ApiTelegramException:
+            pass  # Bỏ qua lỗi nếu tin nhắn đã bị xóa
+    sent_messages.clear()
+
+@bot.message_handler(commands=['anhgai'])
+def send_anhgai_image(message):
+    api_url = "https://subhatde.id.vn/images/gai"
+
+    # Gửi thông báo "Đang tìm kiếm ảnh..."
+    searching_message = bot.reply_to(message, "🔎 Đang tìm kiếm ảnh...")
+    sent_messages.append(searching_message.message_id)  # Lưu ID tin nhắn
+
+    try:
+        # Lấy dữ liệu ảnh từ API
+        response = requests.get(api_url)
+        data = response.json()
+
+        # Xóa thông báo "Đang tìm kiếm ảnh..." sau khi nhận phản hồi
+        try:
+            bot.delete_message(searching_message.chat.id, searching_message.message_id)
+        except telebot.apihelper.ApiTelegramException:
+            pass  # Bỏ qua lỗi nếu đã xóa
+
+        # Kiểm tra xem phản hồi có trường 'url' không
+        if 'url' in data:
+            image_url = data['url']
+
+            # Gửi ảnh cho người dùng với chú thích
+            caption_text = f"Ảnh Mà Bạn Yêu Cầu, @{message.from_user.username}"
+            sent_message = bot.send_photo(message.chat.id, image_url, caption=caption_text)
+            sent_messages.append(sent_message.message_id)  # Lưu ID tin nhắn
+
+            # Tạo luồng để xóa tất cả tin nhắn sau 60 giây
+            threading.Thread(target=delete_all_messages_after_delay, args=(message.chat.id, 200)).start()
+        else:
+            bot.reply_to(message, "Không tìm thấy ảnh từ API.")
+    except Exception as e:
+        # Xóa thông báo "Đang tìm kiếm ảnh..." nếu có lỗi xảy ra
+        try:
+            bot.delete_message(searching_message.chat.id, searching_message.message_id)
+        except telebot.apihelper.ApiTelegramException:
+            pass  # Bỏ qua lỗi nếu đã xóa
+        bot.reply_to(message, f"Có lỗi xảy ra: {str(e)}")
+
+
+def fetch_tiktok_data(url):
+    api_url = f'https://www.tikwm.com/api?url={url}'
+    try:
+        response = requests.get(api_url)
+        response.raise_for_status()  
+        data = response.json()
+        return data
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching TikTok data: {e}")
+        return None
+
+@bot.message_handler(y=['taivideotiktok'])
+def tiktokvideo_command(message):
+    command_parts = message.text.split(maxsplit=1)
+    if len(command_parts) == 2:
+        url = command_parts[1].strip()
+        data = fetch_tiktok_data(url)
+        
+        if data and 'code' in data and data['code'] == 0:
+            video_title = data['data'].get('title', 'N/A')
+            video_url = data['data'].get('play', 'N/A')
+            music_title = data['data']['music_info'].get('title', 'N/A')
+            music_url = data['data']['music_info'].get('play', 'N/A')
+            
+            reply_message = f'<blockquote>Tiêu đề Video: {video_title}
+\n╭────────────────╮\nĐường dẫn Video: <a href="{video_url}">TẠI ĐÂY</a>
+\n╰────────────────╯\nTiêu đề Nhạc: {music_title}\nĐường dẫn Nhạc: <a href="{music_url}">Link</a></blockquote>'
+            bot.reply_to(message, reply_message, parse_mode='HTML')
+        else:
+            bot.reply_to(message, "Không thể lấy dữ liệu từ TikTok.")
+    else:
+        bot.reply_to(message, "Sai Link.")
+
+
+@bot.message_handler(commands=['like'])
+def like_handler(message: Message):
+    command_parts = message.text.split()  
+    if len(command_parts) != 2:  
+        bot.reply_to(message, "<blockquote>like 8324665667</blockquote>", parse_mode="HTML")  
+        return  
+
+    idgame = command_parts[1]  
+    urllike = f"linkapi?uid={idgame}"  
+
+    def safe_get(data, key):
+        value = data.get(key)
+        return value if value not in [None, ""] else "Không xác định"
+
+    # Gửi request
+    try:
+        response = requests.get(urllike, timeout=15)
+        response.raise_for_status()
+        data = response.json()
+    except requests.exceptions.RequestException:
+        bot.reply_to(message, "<blockquote>Server đang quá tải, vui lòng thử lại sau.</blockquote>", parse_mode="HTML")
+        return
+    except ValueError:
+        bot.reply_to(message, "<blockquote>Phản hồi từ server không hợp lệ.</blockquote>", parse_mode="HTML")
+        return
+    status_code = data.get("status")
+    reply_text = (
+        f"<blockquote>\n"
+        f"<b>Player Nickname:</b> {safe_get(data, 'username')}\n"
+        f"<b>Player UID:</b> {safe_get(data, 'uid')}\n"
+        f"<b>Player Level:</b> {safe_get(data, 'level')}\n"
+        f"<b>Likes before Command:</b> {safe_get(data, 'likes_before')}\n"
+        f"✅ <b>Likes after Command:</b> {safe_get(data, 'likes_after')}\n"
+        f"➕ <b> Likes given:</b> {safe_get(data, 'likes_given')} like"
+    )
+
+    if status_code == 2:
+        reply_text += "\n\n⚠️ <i> Player has reached max likes today!.</i>"
+
+    reply_text += "\n</blockquote>"
+    bot.reply_to(message, reply_text, parse_mode="HTML")
+
+
+
+
+    #
+    #like
+    
+def unban_chat(chat_id, user_id):
+    bot.restrict_chat_member(chat_id, user_id, can_send_messages=True)
+
+@bot.message_handler(commands=["ban"])
+def ban_user(message):
+    if message.from_user.id != ADMIN_ID:
+        return  
+
+    try:
+        _, user_id, hours = message.text.split()
+        user_id, hours = int(user_id), int(hours)
+
+        bot.restrict_chat_member(message.chat.id, user_id, can_send_messages=False)
+        bot.reply_to(message, f"Đã cấm chat {user_id} trong {hours} giờ.")
+
+        threading.Timer(hours * 3600, unban_chat, args=(message.chat.id, user_id)).start()
+
+    except:
+        bot.reply_to(message, "Sai")
+
+
+
+@bot.message_handler(commands=['tiktok'])
+def tt_info(message):
+  
+
+    try:
+        args = message.text.split()
+        if len(args) < 2:
+            return bot.reply_to(message, "Vui lòng nhập username TikTok.\nVí dụ: /tiktok bacgau1989")
+
+        username = args[1]
+        url = f"http://145.223.80.56:5009/info_tiktok?username={username}"
+        r = requests.get(url)
+        data = r.json()
+
+        if not data or "username" not in data:
+            return bot.reply_to(message, "Không tìm thấy người dùng TikTok!")
+
+        # Dữ liệu người dùng
+        name = data.get("name", "Không rõ")
+        user = data["username"]
+        bio = data.get("signature", "Không có")
+        followers = f"{data.get('followers', 0):,}"
+        following = f"{data.get('following', 0):,}"
+        hearts = f"{data.get('hearts', 0):,}"
+        videos = f"{data.get('videos', 0):,}"
+        pfp = data.get("profile_picture")
+
+        # Tin nhắn trả về
+        msg = f"""
+<blockquote>
+<b>Thông tin TikTok:</b>
+• Tên: <code>{name}</code>
+• Username: <code>@{user}</code>
+• Followers: <b>{followers}</b>
+• Following: <b>{following}</b>
+• Likes: <b>{hearts}</b>
+• Videos: <b>{videos}</b>
+• Bio: <i>{bio}</i>
+</blockquote>
+        """
+
+        # Gửi ảnh + info
+        bot.send_photo(message.chat.id, pfp, caption=msg, parse_mode="HTML")
+
+    except Exception as e:
+        bot.reply_to(message, f"<b>Lỗi:</b> <code>{e}</code>", parse_mode="HTML")
+
+@bot.message_handler(commands=['checkban'])
+def checkban_user(message):
+    args = message.text.split()
+    if len(args) < 2:
+        bot.reply_to(message, "Vui lòng nhập UID. Ví dụ: /checkban 12345678")
+        return
+
+    uid = args[1]
+    url = f"https://check-band-p-3uv9.vercel.app/haoesports-region/ban-info?uid={uid}"
+
+    try:
+        # Gửi tin nhắn đang xử lý
+        sent = bot.reply_to(message, "⏳ Đang kiểm tra UID...")
+
+        response = requests.get(url)
+        data = response.json()
+
+        nickname = data.get('nickname', 'Không có dữ liệu')
+        uid = data.get('uid', 'Không Có Uid')
+        region = data.get('region', 'Không xác định')
+        ban_status = data.get('ban_status', 'Không rõ')
+        ban_period = data.get('ban_period')
+
+        reply = (
+            "<blockquote>"
+            f"✅ <b>Thông tin người chơi:</b>\n"
+            f"• 👤 Nickname: <code>{nickname}</code>\n"
+            f"• 🆔 ID: <code>{uid}</code>\n"
+            f"• 🌎 Khu vực: <code>{region}</code>\n"
+            f"• 🚫 Trạng thái ban: <code>{ban_status}</code>\n"
+            f"• ⏳ Thời gian ban: <code>{ban_period if ban_period else 'Không bị ban'}</code>"
+            "</blockquote>"
+        )
+
+        bot.edit_message_text(
+            chat_id=sent.chat.id,
+            message_id=sent.message_id,
+            text=reply,
+            parse_mode='HTML'
+        )
+
+    except Exception as e:
+        bot.edit_message_text(
+            chat_id=sent.chat.id,
+            message_id=sent.message_id,
+            text=f"Đã xảy ra lỗi: {e}"
+        )
+
+#hmm
 @app.route(f"/{BOT_TOKEN}", methods=['POST'])
 def webhook():
     json_string = request.get_data().decode('utf-8')
@@ -133,7 +530,7 @@ def webhook():
     bot.process_new_updates([update])
     return 'ok', 200
 
-# Khởi chạy Flask và bot song song
+#cc
 if __name__ == "__main__":
     WEBHOOK_URL = os.environ.get("WEBHOOK_URL")
     if not WEBHOOK_URL:
@@ -145,4 +542,3 @@ if __name__ == "__main__":
 
     # Chạy Flask (webhook listener)
     app.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
-
