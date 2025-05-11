@@ -160,52 +160,6 @@ def get_player_stats(message):
 
 #lệnh
 
-@bot.message_handler(commands=['bot'])
-def send_help(message):
-    bot.reply_to(message, """<blockquote>
-╔════════════════╗  
-    📌 *DANH SÁCH LỆNH*
-╚════════════════╝  
-/start - Bắt đầu  
-/help - Trợ giúp  
-/info - Check info Telegram
-/report - Báo cáo cho Admin  
-/id - Lấy ID Tele Của User/Group  
-/tv - Đổi Tiếng Việt Trên Tele  
-/ask + [tin nhắn] - Hỏi đáp free  
-/tt + [username/link TikTok] - Kiểm tra thông tin tài khoản TikTok  
-/thoitiet + [thành phố] - Xem tình hình thời tiết  
-/visit + [region] + [uid] - Tăng Lượt View Free Fire
-/addfr + [uid] - Spam Kết Bạn Free Fire (VN)
-/spam + [uid] - Spam Kết Bạn Free Fire (IND)
-/xucxac - Lắc xúc xắc ngẫu nhiên
-/doaniq - Bot đo chỉ số IQ hài hước của bạn
-/share - Buff share bài viết Facebook
-/tym + [url] - Tăng Tim TikTok
-/fl + [username] - Tăng Follow TikTok
-/tiktok + [url] - Tải Video TikTok
-/like + [region] + [uid] - Buff Like Free Fire
-/thinh - Gửi 1 câu thả thính  
-/joker - Gửi 1 câu đùa  
-/meme - Gửi một câu meme hài hước random
-/time - Xem thời gian hiện tại
-/get + [region] + [uid] - Check Info Free Fire
-/taoanh - Tạo ảnh bằng AI (VN)  
-/image - Tạo ảnh bằng AI (ENG)  
-/qr - Tạo mã QR từ văn bản / Tạo QR thanh toán  
-/quotes - Gửi một câu danh ngôn truyền cảm hứng
-/loikhuyen - Gửi một lời khuyên tích cực ngẫu nhiên
-/idfb - Lấy ID Từ Link Hoặc Username Facebook
-/choose - Chọn ngẫu nhiên giữa hai lựa chọn  
-/uptime – Xem thời gian bot đã hoạt động
-/ping – Kiểm tra bot có hoạt động không
-/doannhau + [số người] - Ước lượng thiệt hại sau một trận quất sập bàn!
-/rutgon + [url] - Tạo link rút gọn TinyURL  
-/voice + [văn bản] - Tạo voice từ văn bản  
-/bot + [tin nhắn] - Bot auto reply  
-/dich + [văn bản] - Dịch tất cả ngôn ngữ thành tiếng việt  
-/date + [d/m/Y] - Đã bao nhiêu ngày kể từ ngày  
-</blockquote>""", parse_mode='HTML')
 
 
 @bot.message_handler(commands=['voice'])
