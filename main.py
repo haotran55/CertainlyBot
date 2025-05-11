@@ -23,6 +23,10 @@ def home():
 
 @bot.message_handler(commands=['like'])
 def handle_like(message):
+    if message.chat.id != ALLOWED_CHAT_ID:
+        bot.reply_to(message, "Bot Chỉ Hoạt Động Trong Nhóm Này https://t.me/HaoEsport01")
+        return
+    
     try:
         parts = message.text.split()
         if len(parts) < 3:
