@@ -24,19 +24,18 @@ def home():
 @bot.message_handler(commands=['like'])
 def handle_like(message):
     if message.chat.id not in ALLOWED_GROUP_IDS:
-        bot.reply_to(message, "Bot Chỉ Hoạt Động Trong Nhóm Này.\nLink: https://t.me/HaoEsport01")
+        bot.reply_to(message, "<blockquote>Bot chỉ hoạt động trong nhóm này.\nLink: https://t.me/HaoEsport01</blockquote>", parse_mode="HTML")
         return
 
     parts = message.text.split()
     if len(parts) < 3:
-        bot.reply_to(message, "<blockquote>Vui lòng cung cấp khu vực và UID hợp lệ.Ví dụ: /like 8324665667 vn</blockquote>",parse_mode="HTML")
+        bot.reply_to(message, "<blockquote>Vui lòng cung cấp khu vực và UID hợp lệ.\nVí dụ: /like 8324665667 vn</blockquote>", parse_mode="HTML")
         return
 
     uid = parts[1]
     region = parts[2]
 
-    # Gửi thông báo đang xử lý
-    loading_msg = bot.reply_to(message, "<blockquote>Đang Gửi Lượt Thích, Vui Lòng Đợi...</blockquote>",parse_mode="HTML")
+    loading_msg = bot.reply_to(message, f"<blockquote>Đang gửi lượt thích tới {uid}, vui lòng đợi...</blockquote>", parse_mode="HTML")
 
     try:
         api_url = f"https://freefirelike-api.onrender.com/like?uid={uid}&server_name={region}&key=qqwweerrb"
@@ -46,7 +45,8 @@ def handle_like(message):
             bot.edit_message_text(
                 chat_id=loading_msg.chat.id,
                 message_id=loading_msg.message_id,
-                text="Đã xảy ra lỗi. Vui lòng kiểm tra khu vực tài khoản hoặc thử lại sau."
+                text="<blockquote>Đã xảy ra lỗi. Vui lòng kiểm tra khu vực tài khoản hoặc thử lại sau.</blockquote>",
+                parse_mode="HTML"
             )
             return
 
@@ -56,7 +56,8 @@ def handle_like(message):
             bot.edit_message_text(
                 chat_id=loading_msg.chat.id,
                 message_id=loading_msg.message_id,
-                text="Đã xảy ra lỗi. Vui lòng kiểm tra khu vực tài khoản hoặc thử lại sau."
+                text="<blockquote>Đã xảy ra lỗi. Vui lòng kiểm tra khu vực tài khoản hoặc thử lại sau.</blockquote>",
+                parse_mode="HTML"
             )
             return
 
@@ -64,7 +65,8 @@ def handle_like(message):
             bot.edit_message_text(
                 chat_id=loading_msg.chat.id,
                 message_id=loading_msg.message_id,
-                text=f"💔 UID {uid} đã nhận đủ lượt thích hôm nay. Vui lòng thử UID khác."
+                text=f"<blockquote>💔 UID {uid} đã nhận đủ lượt thích hôm nay. Vui lòng thử UID khác.</blockquote>",
+                parse_mode="HTML"
             )
             return
 
@@ -74,25 +76,27 @@ def handle_like(message):
         likes_given_by_bot = likes_after - likes_before
 
         reply = (
-            f"Likes Sent Successfully\n"
-            f"Player Nickname: {nickname}\n"
-            f"Before Likes: {likes_before}\n"
-            f"After Likes: {likes_after}\n"
-            f"Likes Given By Bot: {likes_given_by_bot}\n"
-            f"@HaoEsport01"
+            f"<blockquote>✅ Likes Sent Successfully\n"
+            f"👤 Player Nickname: {nickname}\n"
+            f"📉 Likes Before: {likes_before}\n"
+            f"📈 Likes After: {likes_after}\n"
+            f"✅ Likes Given: {likes_given_by_bot}\n"
+            f"@HaoEsport01</blockquote>"
         )
 
         bot.edit_message_text(
             chat_id=loading_msg.chat.id,
             message_id=loading_msg.message_id,
-            text=reply
+            text=reply,
+            parse_mode="HTML"
         )
 
     except Exception:
         bot.edit_message_text(
             chat_id=loading_msg.chat.id,
             message_id=loading_msg.message_id,
-            text="Đã xảy ra lỗi. Vui lòng kiểm tra khu vực tài khoản hoặc thử lại sau."
+            text="<blockquote>Đã xảy ra lỗi. Vui lòng kiểm tra khu vực tài khoản hoặc thử lại sau.</blockquote>",
+            parse_mode="HTML"
         )
 
 #video
