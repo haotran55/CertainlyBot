@@ -83,7 +83,8 @@ def handle_like(message):
             f"📉 Like Trước: {likes_before}\n"
             f"📈 Like Sau: {likes_after}\n"
             f"👍 Like Đã Gửi: {likes_given_by_bot}\n"
-            f"@HaoEsport01</blockquote>"
+            f"───────────────────\n"
+            f"Liên Hệ: @HaoEsports01</blockquote>"
         )
 
         bot.edit_message_text(
