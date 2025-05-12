@@ -29,14 +29,14 @@ def handle_like(message):
 
     parts = message.text.split()
     if len(parts) < 3:
-        bot.reply_to(message, "Vui lòng cung cấp khu vực và UID hợp lệ.Ví dụ: /like 8324665667 vn")
+        bot.reply_to(message, "<blockquote>Vui lòng cung cấp khu vực và UID hợp lệ.Ví dụ: /like 8324665667 vn</blockquote>",parse_mode="HTML")
         return
 
     uid = parts[1]
     region = parts[2]
 
     # Gửi thông báo đang xử lý
-    loading_msg = bot.reply_to(message, "Đang Gửi Lượt Thích, Vui Lòng Đợi...")
+    loading_msg = bot.reply_to(message, "<blockquote>Đang Gửi Lượt Thích, Vui Lòng Đợi...</blockquote>",parse_mode="HTML")
 
     try:
         api_url = f"https://freefirelike-api.onrender.com/like?uid={uid}&server_name={region}&key=qqwweerrb"
