@@ -26,43 +26,55 @@ def handle_like(message):
     if message.chat.id not in ALLOWED_GROUP_IDS:
         bot.reply_to(message, "Bot Chỉ Hoạt Động Trong Nhóm Này.\nLink: https://t.me/HaoEsport01")
         return
-    
+
+    parts = message.text.split()
+    if len(parts) < 3:
+        bot.reply_to(message, "Please use the correct syntax: /like [uid] [region]\nExample: /like 12345678 sg")
+        return
+
+    uid = parts[1]
+    region = parts[2]
+
+    # Gửi thông báo đang xử lý
+    loading_msg = bot.reply_to(message, "Sending Likes, Please Wait...")
+
     try:
-        parts = message.text.split()
-        if len(parts) < 3:
-            bot.reply_to(message, "❗ Please use the correct syntax: /like [uid] [region]\nExample: /like 12345678 sg")
-            return
+        api_url = f"https://freefirelike-api.onrender.com/like?uid={uid}&server_name={region}&key=qqwweerrb"
+        response = requests.get(api_url, timeout=10)
 
-        uid = parts[1]
-        region = parts[2]
-
-        # Send loading notification
-        loading_msg = bot.reply_to(message, "Sending Likes Please Wait...")
-
-        api_url = f"https://freefirelike-api.onrender.com/like?uid={uid}&server_name={region}&key=tranhao116b"
-        response = requests.get(api_url)
-        response.raise_for_status()
-        data = response.json()
-
-        likes_start_day = data.get("LikesGivenByAPI", 0)
-
-        # If LikesGivenByAPI == 0, report specific error
-        if likes_start_day == 0:
-            error_msg = f"UID {uid} has already received Max Likes for Today. Please Try a different UID."
+        if response.status_code != 200:
             bot.edit_message_text(
                 chat_id=loading_msg.chat.id,
                 message_id=loading_msg.message_id,
-                text=error_msg
+                text="An error occurred. Please check account region or try again later."
+            )
+            return
+
+        data = response.json()
+
+        if "LikesGivenByAPI" not in data or "LikesbeforeCommand" not in data or "LikesafterCommand" not in data:
+            bot.edit_message_text(
+                chat_id=loading_msg.chat.id,
+                message_id=loading_msg.message_id,
+                text="An error occurred. Please check account region or try again later."
+            )
+            return
+
+        if data["LikesGivenByAPI"] == 0:
+            bot.edit_message_text(
+                chat_id=loading_msg.chat.id,
+                message_id=loading_msg.message_id,
+                text=f"UID {uid} has already received Max Likes for Today. Please Try a different UID."
             )
             return
 
         nickname = data.get("PlayerNickname", "Unknown")
-        likes_before = data.get("LikesbeforeCommand", 0)
-        likes_after = data.get("LikesafterCommand", 0)
+        likes_before = data["LikesbeforeCommand"]
+        likes_after = data["LikesafterCommand"]
         likes_given_by_bot = likes_after - likes_before
 
         reply = (
-            f"Likes Sent ✅\n"
+            f"Likes Sent Successfully\n"
             f"Player Nickname: {nickname}\n"
             f"Before Likes: {likes_before}\n"
             f"After Likes: {likes_after}\n"
@@ -70,16 +82,18 @@ def handle_like(message):
             f"@HaoEsport01"
         )
 
-        # Edit loading message to show result
         bot.edit_message_text(
             chat_id=loading_msg.chat.id,
             message_id=loading_msg.message_id,
             text=reply
         )
 
-    except Exception as e:
-        bot.reply_to(message, f"❌ Error: {e}")
-
+    except Exception:
+        bot.edit_message_text(
+            chat_id=loading_msg.chat.id,
+            message_id=loading_msg.message_id,
+            text="An error occurred. Please check account region or try again later."
+        )
 
 #video
 
