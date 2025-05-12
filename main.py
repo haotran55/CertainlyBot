@@ -29,14 +29,14 @@ def handle_like(message):
 
     parts = message.text.split()
     if len(parts) < 3:
-        bot.reply_to(message, "Please use the correct syntax: /like [uid] [region]\nExample: /like 12345678 sg")
+        bot.reply_to(message, "Vui lòng cung cấp khu vực và UID hợp lệ.Ví dụ: /like 8324665667 vn")
         return
 
     uid = parts[1]
     region = parts[2]
 
     # Gửi thông báo đang xử lý
-    loading_msg = bot.reply_to(message, "Sending Likes, Please Wait...")
+    loading_msg = bot.reply_to(message, "Đang Gửi Lượt Thích, Vui Lòng Đợi...")
 
     try:
         api_url = f"https://freefirelike-api.onrender.com/like?uid={uid}&server_name={region}&key=qqwweerrb"
@@ -46,7 +46,7 @@ def handle_like(message):
             bot.edit_message_text(
                 chat_id=loading_msg.chat.id,
                 message_id=loading_msg.message_id,
-                text="An error occurred. Please check account region or try again later."
+                text="Đã xảy ra lỗi. Vui lòng kiểm tra khu vực tài khoản hoặc thử lại sau."
             )
             return
 
@@ -56,7 +56,7 @@ def handle_like(message):
             bot.edit_message_text(
                 chat_id=loading_msg.chat.id,
                 message_id=loading_msg.message_id,
-                text="An error occurred. Please check account region or try again later."
+                text="Đã xảy ra lỗi. Vui lòng kiểm tra khu vực tài khoản hoặc thử lại sau."
             )
             return
 
@@ -64,7 +64,7 @@ def handle_like(message):
             bot.edit_message_text(
                 chat_id=loading_msg.chat.id,
                 message_id=loading_msg.message_id,
-                text=f"UID {uid} has already received Max Likes for Today. Please Try a different UID."
+                text=f"💔 UID {uid} đã nhận đủ lượt thích hôm nay. Vui lòng thử UID khác."
             )
             return
 
@@ -92,7 +92,7 @@ def handle_like(message):
         bot.edit_message_text(
             chat_id=loading_msg.chat.id,
             message_id=loading_msg.message_id,
-            text="An error occurred. Please check account region or try again later."
+            text="Đã xảy ra lỗi. Vui lòng kiểm tra khu vực tài khoản hoặc thử lại sau."
         )
 
 #video
