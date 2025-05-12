@@ -71,16 +71,18 @@ def handle_like(message):
             return
 
         nickname = data.get("PlayerNickname", "Unknown")
+        uid = data.get("UID", "Unknown")
         likes_before = data["LikesbeforeCommand"]
         likes_after = data["LikesafterCommand"]
         likes_given_by_bot = likes_after - likes_before
 
         reply = (
-            f"<blockquote>✅ Likes Sent Successfully\n"
-            f"👤 Player Nickname: {nickname}\n"
-            f"📉 Likes Before: {likes_before}\n"
-            f"📈 Likes After: {likes_after}\n"
-            f"✅ Likes Given: {likes_given_by_bot}\n"
+            f"<blockquote>✅ BUFF LIKE THÀNH CÔNG\n"
+            f"👤 Tên: {nickname}\n"
+            f"🆔 UID: {uid}\n"
+            f"📉 Like Trước: {likes_before}\n"
+            f"📈 Like Sau: {likes_after}\n"
+            f"👍 Like Đã Gửi: {likes_given_by_bot}\n"
             f"@HaoEsport01</blockquote>"
         )
 
