@@ -78,7 +78,7 @@ def handle_like(message):
 
         reply = (
             f"<blockquote>✅ BUFF LIKE THÀNH CÔNG\n"
-            f"👤 Tên: {nickname}\n"
+            f"👤 Người Chơi: {nickname}\n"
             f"🆔 UID: {uid}\n"
             f"📉 Like Trước: {likes_before}\n"
             f"📈 Like Sau: {likes_after}\n"
