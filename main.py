@@ -121,7 +121,7 @@ def TimeStamp():
 
 def generate_key(user_id):
     today_str = datetime.now().strftime("%Y%m%d")  # ví dụ: 20250513
-    return "HàoEsports" + str(user_id * int(today_str) - 2007)
+    return "HaoEsports" + str(user_id * int(today_str) - 2007)
 
 @bot.message_handler(commands=['getkey'])
 def startkey(message):
@@ -170,7 +170,7 @@ def key(message):
             f"<blockquote>"
             f"✅ <b>[KEY HỢP LỆ]</b>\n"
             f"🆔 Người dùng: <b>{user_id}</b>\n"
-            f"🚀 Được cấp quyền dùng các lệnh trong <code>/vlong</code>\n"
+            f"🚀 Được cấp quyền dùng  lệnh <code>/like</code>\n"
             f"</blockquote>"
         )
         video_url = 'https://v16m-default.tiktokcdn.com/ccf79902a33306cfe044872ad94b2619/6809d4ec/video/tos/alisg/tos-alisg-pve-0037c001/oo4jREIYzDasfQ44IKcR5FAQGeARLDge8CsQOI/?a=0&bti=OUBzOTg7QGo6OjZAL3AjLTAzYCMxNDNg&ch=0&cr=0&dr=0&er=0&lr=all&net=0&cd=0%7C0%7C0%7C0&cv=1&br=1580&bt=790&cs=0&ds=6&ft=EeF4ntZWD03Q12NvQaxQWIxRSfYFpq_45SY&mime_type=video_mp4&qs=0&rc=OTQ1NmQ3ZGZlaDc7Zjg5aUBpM2ltO245cjU6MzMzODczNEAxMDFhYy4yXi0xXjBhMzNjYSNicmlfMmQ0NDFhLS1kMWBzcw%3D%3D&vvpl=1&l=20250424080617D39FC2B3B674FA0853C2&btag=e000b8000'
