@@ -29,11 +29,11 @@ def handle_like(message):
 
     parts = message.text.split()
     if len(parts) < 3:
-        bot.reply_to(message, "<blockquote>Vui lòng cung cấp khu vực và UID hợp lệ.\nVí dụ: /like 8324665667 vn</blockquote>", parse_mode="HTML")
+        bot.reply_to(message, "<blockquote>Vui lòng cung cấp khu vực và UID hợp lệ.\nVí dụ: /like vn 8324665667</blockquote>", parse_mode="HTML")
         return
 
-    uid = parts[1]
-    region = parts[2]
+    region = parts[1]
+    uid = parts[2]
 
     loading_msg = bot.reply_to(message, f"<blockquote>Đang gửi lượt thích tới {uid}, vui lòng đợi...</blockquote>", parse_mode="HTML")
 
