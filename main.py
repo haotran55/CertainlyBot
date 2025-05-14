@@ -103,7 +103,7 @@ def handle_like(message):
             parse_mode="HTML"
         )
 
-#video
+import time
 @bot.message_handler(commands=['follow', 'fl', 'tiktok'])
 def handle_follow_command(message):
     try:
@@ -118,38 +118,43 @@ def handle_follow_command(message):
         buff_url = f"https://tiktok-follow-api-obiyeuem.onrender.com/follow?username={username}"
 
         # Lấy số follow trước
-        res_before = requests.get(info_url, timeout=10).json()
+        res_before = requests.get(info_url, timeout=999).json()
         follow_before = res_before["followers"]
 
-        # Gửi tin nhắn loading (văn bản)
-        loading_msg = bot.reply_to(
-            message,
-            f"⏳ Đang gửi buff follow cho @{username}...\n"
-            f"Follower trước: {follow_before}"
+        # Gửi ảnh loading
+        loading_msg = bot.send_photo(
+            message.chat.id,
+            photo="https://i.imgur.com/9p6ZiSb.png",  # fix lại link hình
+            caption=(
+                f"<blockquote>⏳ Đang gửi buff follow cho @{username}...\n"
+                f"Follower trước: {follow_before}</blockquote>"
+            ),
+            parse_mode='HTML'
         )
 
         # Gửi request buff
-        requests.get(buff_url, timeout=10)
+        requests.get(buff_url, timeout=999)
 
-        # Chờ server cập nhật
+        # Chờ một chút (1-2s cho server cập nhật)
         time.sleep(2)
 
-        # Lấy số follow sau
-        res_after = requests.get(info_url, timeout=10).json()
+        # Lấy lại số follow sau
+        res_after = requests.get(info_url, timeout=999).json()
         follow_after = res_after["followers"]
 
         tang = follow_after - follow_before
 
-        # Cập nhật lại tin nhắn
-        bot.edit_message_text(
+        # Cập nhật lại caption ảnh
+        bot.edit_message_caption(
             chat_id=message.chat.id,
             message_id=loading_msg.message_id,
-            text=(
-                f"✅ Đã buff follow cho @{username}!\n"
+            caption=(
+                f"<blockquote>✅ Đã buff follow cho @{username}!\n"
                 f"🔹 Follower trước: {follow_before}\n"
                 f"🔸 Follower sau: {follow_after}\n"
-                f"✨ Đã tăng: +{tang} follow"
-            )
+                f"✨ Đã tăng: +{tang} follow</blockquote>"
+            ),
+            parse_mode='HTML'
         )
 
     except Exception as e:
