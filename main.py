@@ -104,6 +104,57 @@ def handle_like(message):
         )
 
 #video
+@bot.message_handler(commands=['follow', 'fl', 'tiktok'])
+def handle_follow_command(message):
+    try:
+        parts = message.text.split(maxsplit=1)
+        if len(parts) < 2:
+            bot.reply_to(message, "⚠️ Vui lòng nhập username TikTok.")
+            return
+
+        username = parts[1].strip().replace("@", "")
+
+        info_url = f"http://145.223.80.56:5009/info_tiktok?username={username}"
+        buff_url = f"https://tiktok-follow-api-obiyeuem.onrender.com/follow?username={username}"
+
+        # Lấy số follow trước
+        res_before = requests.get(info_url, timeout=10).json()
+        follow_before = res_before["followers"]
+
+        # Gửi tin nhắn loading (văn bản)
+        loading_msg = bot.reply_to(
+            message,
+            f"⏳ Đang gửi buff follow cho @{username}...\n"
+            f"Follower trước: {follow_before}"
+        )
+
+        # Gửi request buff
+        requests.get(buff_url, timeout=10)
+
+        # Chờ server cập nhật
+        time.sleep(2)
+
+        # Lấy số follow sau
+        res_after = requests.get(info_url, timeout=10).json()
+        follow_after = res_after["followers"]
+
+        tang = follow_after - follow_before
+
+        # Cập nhật lại tin nhắn
+        bot.edit_message_text(
+            chat_id=message.chat.id,
+            message_id=loading_msg.message_id,
+            text=(
+                f"✅ Đã buff follow cho @{username}!\n"
+                f"🔹 Follower trước: {follow_before}\n"
+                f"🔸 Follower sau: {follow_after}\n"
+                f"✨ Đã tăng: +{tang} follow"
+            )
+        )
+
+    except Exception as e:
+        bot.reply_to(message, f"🚨 Lỗi: {e}")
+
 #hmm
 @app.route(f"/{BOT_TOKEN}", methods=['POST'])
 def webhook():
