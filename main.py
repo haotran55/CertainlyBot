@@ -78,8 +78,8 @@ def handle_like(message):
         likes_given_by_bot = likes_after - likes_before
 
         reply = (
-            f"<blockquote>✅ BUFF LIKE THÀNH CÔNG\n"
-            f"👤 Người Chơi: {nickname}\n"
+            f"✅ BUFF LIKE THÀNH CÔNG\n"
+            f"<blockquote>👤 Người Chơi: {nickname}\n"
             f"🆔 UID: {uid}\n"
             f"📉 Like Trước: {likes_before}\n"
             f"📈 Like Sau: {likes_after}\n"
