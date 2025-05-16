@@ -5,6 +5,7 @@ import requests
 import telebot
 from telebot import TeleBot
 from flask import Flask, request
+from datetime import datetime, timedelta
 
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
 WEBHOOK_URL = os.environ.get("WEBHOOK_URL")
@@ -13,22 +14,44 @@ PORT = int(os.environ.get("PORT", 5000))
 bot = TeleBot(BOT_TOKEN)
 app = Flask(__name__)
 
-ALLOWED_GROUP_IDS = [-1002639856138, -1002557075563]  # nhóm được dùng bot
-ADMIN_IDS = [123456789]  # thay bằng user id admin thật
+ALLOWED_GROUP_IDS = [-1002639856138, -1002557075563]
+ADMIN_IDS = [123456789]  # Thay ID admin thật
 
 VIP_FILE = "vip_users.json"
-try:
-    with open(VIP_FILE, "r") as f:
-        VIP_USERS = json.load(f)
-except:
-    VIP_USERS = []
 
-def save_vip_users():
+def load_vip_users():
+    try:
+        with open(VIP_FILE, "r") as f:
+            data = json.load(f)
+            return {int(k): datetime.fromisoformat(v) for k, v in data.items()}
+    except:
+        return {}
+
+def save_vip_users(vip_dict):
+    data = {str(k): v.isoformat() for k, v in vip_dict.items()}
     with open(VIP_FILE, "w") as f:
-        json.dump(VIP_USERS, f)
+        json.dump(data, f)
+
+VIP_USERS = load_vip_users()
 
 def is_vip(user_id):
-    return user_id in VIP_USERS
+    now = datetime.utcnow()
+    if user_id in VIP_USERS:
+        if VIP_USERS[user_id] > now:
+            return True
+        else:
+            del VIP_USERS[user_id]
+            save_vip_users(VIP_USERS)
+            return False
+    return False
+
+def add_vip(user_id, days):
+    now = datetime.utcnow()
+    if user_id in VIP_USERS and VIP_USERS[user_id] > now:
+        VIP_USERS[user_id] += timedelta(days=days)
+    else:
+        VIP_USERS[user_id] = now + timedelta(days=days)
+    save_vip_users(VIP_USERS)
 
 def is_admin(user_id):
     return user_id in ADMIN_IDS
@@ -44,36 +67,34 @@ def webhook():
     bot.process_new_updates([update])
     return "OK", 200
 
-# Lệnh /like buff like cho UID nhập vào
 @bot.message_handler(commands=["like"])
 def cmd_like(message):
-    print(f"Nhận lệnh /like từ {message.from_user.id} - chat {message.chat.id}")
     if message.chat.id not in ALLOWED_GROUP_IDS:
-        bot.reply_to(message, "❌ Bot chỉ hoạt động trong nhóm cho phép.")
+        bot.reply_to(message, "<blockquote>❌ Bot chỉ hoạt động trong nhóm cho phép.</blockquote>", parse_mode="HTML")
         return
 
     parts = message.text.split()
     if len(parts) < 3:
-        bot.reply_to(message, "⚠️ Vui lòng nhập đúng cú pháp:\n/like <khu vực> <uid>")
+        bot.reply_to(message, "<blockquote>⚠️ Vui lòng nhập đúng cú pháp:\n/like &lt;khu vực&gt; &lt;uid&gt;</blockquote>", parse_mode="HTML")
         return
 
     region = parts[1]
     uid = parts[2]
 
-    loading_msg = bot.reply_to(message, f"⏳ Đang gửi lượt thích tới UID {uid}...")
+    loading_msg = bot.reply_to(message, f"<blockquote>⏳ Đang gửi lượt thích tới UID {uid}...</blockquote>", parse_mode="HTML")
 
     try:
         api_url = f"https://freefirelike-api.onrender.com/like?uid={uid}&server_name={region}&key=qqwweerrb"
         resp = requests.get(api_url, timeout=10)
         if resp.status_code != 200:
-            bot.edit_message_text("❌ Lỗi khi gửi lượt thích, thử lại sau.",
-                                  chat_id=loading_msg.chat.id, message_id=loading_msg.message_id)
+            bot.edit_message_text("<blockquote>❌ Lỗi khi gửi lượt thích, thử lại sau.</blockquote>",
+                                  chat_id=loading_msg.chat.id, message_id=loading_msg.message_id, parse_mode="HTML")
             return
 
         data = resp.json()
         if data.get("LikesGivenByAPI", 0) == 0:
-            bot.edit_message_text(f"💔 UID {uid} đã nhận đủ lượt thích hôm nay.",
-                                  chat_id=loading_msg.chat.id, message_id=loading_msg.message_id)
+            bot.edit_message_text(f"<blockquote>💔 UID {uid} đã nhận đủ lượt thích hôm nay.</blockquote>",
+                                  chat_id=loading_msg.chat.id, message_id=loading_msg.message_id, parse_mode="HTML")
             return
 
         nickname = data.get("PlayerNickname", "Unknown")
@@ -82,66 +103,57 @@ def cmd_like(message):
         likes_given = likes_after - likes_before
 
         reply = (
-            f"✅ BUFF LIKE THÀNH CÔNG\n"
+            f"<blockquote>✅ BUFF LIKE THÀNH CÔNG\n"
             f"👤 Người Chơi: {nickname}\n"
             f"🆔 UID: {uid}\n"
             f"📉 Like Trước: {likes_before}\n"
             f"📈 Like Sau: {likes_after}\n"
             f"👍 Like Đã Gửi: {likes_given}\n"
             f"───────────────\n"
-            f"Liên hệ: @HaoEsports01"
+            f"Liên hệ: @HaoEsports01</blockquote>"
         )
 
-        bot.edit_message_text(reply, chat_id=loading_msg.chat.id, message_id=loading_msg.message_id)
+        bot.edit_message_text(reply, chat_id=loading_msg.chat.id, message_id=loading_msg.message_id, parse_mode="HTML")
 
     except Exception as e:
-        bot.edit_message_text(f"❌ Đã xảy ra lỗi: {e}",
-                              chat_id=loading_msg.chat.id, message_id=loading_msg.message_id)
+        bot.edit_message_text(f"<blockquote>❌ Đã xảy ra lỗi: {e}</blockquote>",
+                              chat_id=loading_msg.chat.id, message_id=loading_msg.message_id, parse_mode="HTML")
 
-# Lệnh admin thêm user VIP
 @bot.message_handler(commands=["addvip"])
 def cmd_addvip(message):
-    print(f"Nhận lệnh /addvip từ {message.from_user.id}")
     if not is_admin(message.from_user.id):
-        bot.reply_to(message, "❌ Bạn không có quyền sử dụng lệnh này.")
+        bot.reply_to(message, "<blockquote>❌ Bạn không có quyền sử dụng lệnh này.</blockquote>", parse_mode="HTML")
         return
 
     parts = message.text.split()
-    if len(parts) != 2:
-        bot.reply_to(message, "⚠️ Cú pháp: /addvip <user_id>")
+    if len(parts) != 3:
+        bot.reply_to(message, "<blockquote>⚠️ Cú pháp: /addvip &lt;user_id&gt; &lt;số ngày&gt;</blockquote>", parse_mode="HTML")
         return
 
     try:
         user_id = int(parts[1])
+        days = int(parts[2])
+        if days <= 0:
+            bot.reply_to(message, "<blockquote>⚠️ Số ngày phải lớn hơn 0.</blockquote>", parse_mode="HTML")
+            return
     except:
-        bot.reply_to(message, "⚠️ User ID không hợp lệ.")
+        bot.reply_to(message, "<blockquote>⚠️ User ID hoặc số ngày không hợp lệ.</blockquote>", parse_mode="HTML")
         return
 
-    if user_id in VIP_USERS:
-        bot.reply_to(message, "⚠️ User đã là VIP.")
-        return
+    add_vip(user_id, days)
+    bot.reply_to(message, f"<blockquote>✅ Đã cấp VIP cho user {user_id} trong {days} ngày.</blockquote>", parse_mode="HTML")
 
-    VIP_USERS.append(user_id)
-    save_vip_users()
-    bot.reply_to(message, f"✅ Đã thêm user {user_id} vào danh sách VIP.")
-
-# Lệnh tự động buff like cho VIP (auto buff UID đã add)
 @bot.message_handler(commands=["autobuff"])
 def cmd_autobuff(message):
-    print(f"Nhận lệnh /autobuff từ {message.from_user.id}")
-
     if not is_vip(message.from_user.id):
-        bot.reply_to(message, "❌ Chỉ VIP mới dùng được lệnh này.")
+        bot.reply_to(message, "<blockquote>❌ Chỉ VIP mới dùng được lệnh này.</blockquote>", parse_mode="HTML")
         return
 
-    # Giả sử VIP có 1 danh sách UID cần buff tự động (bạn có thể lưu hoặc hardcode)
-    # Ví dụ ở đây bạn tự thêm UID trong list, hoặc từ file/DB
     auto_buff_list = [
         {"region": "vn", "uid": "8324665667"},
-        # Bạn thêm UID khác tại đây
     ]
 
-    bot.reply_to(message, f"⏳ Bắt đầu buff tự động cho {len(auto_buff_list)} UID...")
+    bot.reply_to(message, f"<blockquote>⏳ Bắt đầu buff tự động cho {len(auto_buff_list)} UID...</blockquote>", parse_mode="HTML")
 
     for acc in auto_buff_list:
         region = acc["region"]
@@ -158,9 +170,13 @@ def cmd_autobuff(message):
         except Exception as e:
             print(f"Buff {uid} lỗi: {e}")
 
-        time.sleep(2)  # delay để tránh spam quá nhanh
+        time.sleep(2)
 
-    bot.send_message(message.chat.id, "✅ Hoàn thành buff tự động!")
+    bot.send_message(message.chat.id, "<blockquote>✅ Hoàn thành buff tự động!</blockquote>", parse_mode="HTML")
+
+@bot.message_handler(commands=["test"])
+def cmd_test(message):
+    bot.reply_to(message, "<blockquote>✅ Lệnh test hoạt động bình thường!</blockquote>", parse_mode="HTML")
 
 if __name__ == "__main__":
     if not BOT_TOKEN or not WEBHOOK_URL:
