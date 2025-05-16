@@ -2,18 +2,55 @@ import os
 import threading
 import requests
 import telebot
-import requests
 from telebot import TeleBot
-from telebot.types import Message  # ✅ Import thêm dòng này
+from telebot.types import Message
 from flask import Flask, request
 from datetime import datetime
 from io import BytesIO
-import requests
-from io import BytesIO
+import json
+import time
 
 BOT_TOKEN = os.environ.get('BOT_TOKEN')
 bot = telebot.TeleBot(BOT_TOKEN)
 ALLOWED_GROUP_IDS = [-1002639856138, -1002557075563]
+
+# Danh sách admin (bạn sửa user_id admin thật vào đây)
+ADMIN_IDS = [
+    7658079324,  # Thay bằng ID admin thật
+]
+
+VIP_FILE = "vip_users.json"
+AUTO_BUFF_FILE = "auto_buff_list.json"
+
+VIP_USERS = []
+AUTO_BUFF_LIST = []
+
+def load_vip_users():
+    global VIP_USERS
+    try:
+        with open(VIP_FILE, "r") as f:
+            VIP_USERS = json.load(f)
+    except Exception:
+        VIP_USERS = []
+
+def save_vip_users():
+    with open(VIP_FILE, "w") as f:
+        json.dump(VIP_USERS, f, indent=2)
+
+def load_auto_buff_list():
+    global AUTO_BUFF_LIST
+    try:
+        with open(AUTO_BUFF_FILE, "r") as f:
+            AUTO_BUFF_LIST = json.load(f)
+    except Exception:
+        AUTO_BUFF_LIST = []
+
+def save_auto_buff_list():
+    with open(AUTO_BUFF_FILE, "w") as f:
+        json.dump(AUTO_BUFF_LIST, f, indent=2)
+
+load_vip_users()
+load_auto_buff_list()
 
 app = Flask(__name__)
 
@@ -21,13 +58,43 @@ app = Flask(__name__)
 def home():
     return "Bot đang hoạt động trên Render!"
 
+def is_vip(user_id):
+    return user_id in VIP_USERS
+
+def is_admin(user_id):
+    return user_id in ADMIN_IDS
+
+@bot.message_handler(commands=['addvip'])
+def handle_add_vip(message):
+    if not is_admin(message.from_user.id):
+        bot.reply_to(message, "❌ Bạn không có quyền dùng lệnh này.")
+        return
+    
+    parts = message.text.split()
+    if len(parts) != 2:
+        bot.reply_to(message, "⚠️ Cú pháp: /addvip <user_id>")
+        return
+    
+    try:
+        new_vip_id = int(parts[1])
+    except ValueError:
+        bot.reply_to(message, "⚠️ User ID phải là số nguyên.")
+        return
+    
+    if new_vip_id in VIP_USERS:
+        bot.reply_to(message, f"⚠️ User ID {new_vip_id} đã là VIP rồi.")
+        return
+    
+    VIP_USERS.append(new_vip_id)
+    save_vip_users()
+    bot.reply_to(message, f"✅ Đã thêm User ID {new_vip_id} vào danh sách VIP.")
+
 @bot.message_handler(commands=['like'])
 def handle_like(message):
     if message.chat.id not in ALLOWED_GROUP_IDS:
         bot.reply_to(message, "<blockquote>Bot chỉ hoạt động trong nhóm này.\nLink: https://t.me/HaoEsport01</blockquote>", parse_mode="HTML")
         return
-        
-
+    
     parts = message.text.split()
     if len(parts) < 3:
         bot.reply_to(message, "<blockquote>Vui lòng cung cấp khu vực và UID hợp lệ.\nVí dụ: /like vn 8324665667</blockquote>", parse_mode="HTML")
@@ -103,64 +170,121 @@ def handle_like(message):
             parse_mode="HTML"
         )
 
-import time
-@bot.message_handler(commands=['follow', 'fl', 'tiktok'])
-def handle_follow_command(message):
-    try:
-        parts = message.text.split(maxsplit=1)
-        if len(parts) < 2:
-            bot.reply_to(message, "⚠️ Vui lòng nhập username TikTok.")
+@bot.message_handler(commands=['autolike'])
+def handle_autolike(message):
+    if message.chat.id not in ALLOWED_GROUP_IDS:
+        bot.reply_to(message, "<blockquote>Bot chỉ hoạt động trong nhóm này.\nLink: https://t.me/HaoEsport01</blockquote>", parse_mode="HTML")
+        return
+
+    if not is_vip(message.from_user.id):
+        bot.reply_to(message, "<blockquote>❌ Lệnh này chỉ dành cho VIP. Vui lòng liên hệ admin để nâng cấp.</blockquote>", parse_mode="HTML")
+        return
+    
+    if not AUTO_BUFF_LIST:
+        bot.reply_to(message, "<blockquote>⚠️ Danh sách tự động buff hiện đang trống. Vui lòng thêm UID bằng lệnh /addautolike</blockquote>", parse_mode="HTML")
+        return
+    
+    loading_msg = bot.reply_to(message, "<blockquote>⏳ Đang tự động buff like, vui lòng chờ...</blockquote>", parse_mode="HTML")
+    
+    total_likes_sent = 0
+    
+    for account in AUTO_BUFF_LIST:
+        region = account["region"]
+        uid = account["uid"]
+        
+        try:
+            api_url = f"https://freefirelike-api.onrender.com/like?uid={uid}&server_name={region}&key=qqwweerrb"
+            response = requests.get(api_url, timeout=10)
+            
+            if response.status_code != 200:
+                continue
+            
+            data = response.json()
+            
+            if data.get("LikesGivenByAPI", 0) == 0:
+                continue
+            
+            likes_before = data.get("LikesbeforeCommand", 0)
+            likes_after = data.get("LikesafterCommand", 0)
+            likes_given_by_api = likes_after - likes_before
+            
+            total_likes_sent += likes_given_by_api
+            
+            time.sleep(2)
+        
+        except Exception:
+            continue
+    
+    bot.edit_message_text(
+        chat_id=loading_msg.chat.id,
+        message_id=loading_msg.message_id,
+        text=f"<blockquote>✅ Đã hoàn tất tự động buff like.\nTổng lượt like đã gửi: {total_likes_sent}\nLiên hệ: @HaoEsports01</blockquote>",
+        parse_mode="HTML"
+    )
+
+@bot.message_handler(commands=['addautolike'])
+def handle_add_autolike(message):
+    if not is_vip(message.from_user.id):
+        bot.reply_to(message, "<blockquote>❌ Lệnh này chỉ dành cho VIP. Vui lòng liên hệ admin để nâng cấp.</blockquote>", parse_mode="HTML")
+        return
+    
+    parts = message.text.split()
+    if len(parts) != 3:
+        bot.reply_to(message, "<blockquote>⚠️ Vui lòng nhập đúng định dạng:\n/addautolike <region> <uid>\nVí dụ: /addautolike vn 8324665667</blockquote>", parse_mode="HTML")
+        return
+    
+    region = parts[1].lower()
+    uid = parts[2]
+
+    for acc in AUTO_BUFF_LIST:
+        if acc["uid"] == uid and acc["region"] == region:
+            bot.reply_to(message, f"<blockquote>⚠️ UID {uid} khu vực {region} đã có trong danh sách tự động buff rồi.</blockquote>", parse_mode="HTML")
             return
+    
+    AUTO_BUFF_LIST.append({"region": region, "uid": uid})
+    save_auto_buff_list()
+    bot.reply_to(message, f"<blockquote>✅ Đã thêm UID {uid} khu vực {region} vào danh sách tự động buff.</blockquote>", parse_mode="HTML")
 
-        username = parts[1].strip().replace("@", "")
+@bot.message_handler(commands=['removeautolike'])
+def handle_remove_autolike(message):
+    if not is_vip(message.from_user.id):
+        bot.reply_to(message, "❌ Lệnh này chỉ dành cho VIP.")
+        return
+    
+    parts = message.text.split()
+    if len(parts) != 3:
+        bot.reply_to(message, "⚠️ Cú pháp: /removeautolike <region> <uid>")
+        return
+    
+    region = parts[1].lower()
+    uid = parts[2]
 
-        info_url = f"http://145.223.80.56:5009/info_tiktok?username={username}"
-        buff_url = f"https://tiktok-follow-api-obiyeuem.onrender.com/follow?username={username}"
+    for acc in AUTO_BUFF_LIST:
+        if acc["uid"] == uid and acc["region"] == region:
+            AUTO_BUFF_LIST.remove(acc)
+            save_auto_buff_list()
+            bot.reply_to(message, f"✅ Đã xóa UID {uid} khu vực {region} khỏi danh sách.")
+            return
+    
+    bot.reply_to(message, f"⚠️ Không tìm thấy UID {uid} khu vực {region} trong danh sách.")
 
-        # Lấy số follow trước
-        res_before = requests.get(info_url, timeout=999).json()
-        follow_before = res_before["followers"]
+@bot.message_handler(commands=['listautolike'])
+def handle_list_autolike(message):
+    if not is_vip(message.from_user.id):
+        bot.reply_to(message, "❌ Lệnh này chỉ dành cho VIP.")
+        return
+    
+    if not AUTO_BUFF_LIST:
+        bot.reply_to(message, "Danh sách tự động buff hiện đang trống.")
+        return
+    
+    text = "📋 Danh sách UID tự động buff:\n"
+    for i, acc in enumerate(AUTO_BUFF_LIST, 1):
+        text += f"{i}. Region: {acc['region']} - UID: {acc['uid']}\n"
+    bot.reply_to(message, text)
 
-        # Gửi ảnh loading
-        loading_msg = bot.send_photo(
-            message.chat.id,
-            photo="https://i.imgur.com/9p6ZiSb.png",  # fix lại link hình
-            caption=(
-                f"<blockquote>⏳ Đang gửi buff follow cho @{username}...\n"
-                f"Follower trước: {follow_before}</blockquote>"
-            ),
-            parse_mode='HTML'
-        )
+# Các lệnh /follow, webhook, chạy bot ... giữ nguyên
 
-        # Gửi request buff
-        requests.get(buff_url, timeout=999)
-
-        # Chờ một chút (1-2s cho server cập nhật)
-        time.sleep(2)
-
-        # Lấy lại số follow sau
-        res_after = requests.get(info_url, timeout=999).json()
-        follow_after = res_after["followers"]
-
-        tang = follow_after - follow_before
-
-        # Cập nhật lại caption ảnh
-        bot.edit_message_caption(
-            chat_id=message.chat.id,
-            message_id=loading_msg.message_id,
-            caption=(
-                f"<blockquote>✅ Đã buff follow cho @{username}!\n"
-                f"🔹 Follower trước: {follow_before}\n"
-                f"🔸 Follower sau: {follow_after}\n"
-                f"✨ Đã tăng: +{tang} follow</blockquote>"
-            ),
-            parse_mode='HTML'
-        )
-
-    except Exception as e:
-        bot.reply_to(message, f"🚨 Lỗi: {e}")
-
-#hmm
 @app.route(f"/{BOT_TOKEN}", methods=['POST'])
 def webhook():
     json_string = request.get_data().decode('utf-8')
@@ -168,15 +292,12 @@ def webhook():
     bot.process_new_updates([update])
     return 'ok', 200
 
-#cc
 if __name__ == "__main__":
     WEBHOOK_URL = os.environ.get("WEBHOOK_URL")
     if not WEBHOOK_URL:
         raise Exception("Thiếu biến môi trường WEBHOOK_URL")
 
-    # Xóa webhook cũ và thiết lập webhook mới
     bot.remove_webhook()
     bot.set_webhook(url=f"{WEBHOOK_URL}/{BOT_TOKEN}")
 
-    # Chạy Flask (webhook listener)
-    app.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
+    app.run(host="0
