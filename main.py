@@ -46,8 +46,9 @@ def cmd_like(message):
     try:
         api_url = f"https://freefirelike-api.onrender.com/like?uid={uid}&server_name={region}&key=qqwweerrb"
         resp = requests.get(api_url, timeout=10)
+        
         if resp.status_code != 200:
-            bot.edit_message_text("<blockquote>❌ Lỗi khi gửi lượt thích, thử lại sau.</blockquote>",
+            bot.edit_message_text("<blockquote>❌ Đã xảy ra lỗi. Vui lòng thử lại sau.</blockquote>",
                                   chat_id=loading_msg.chat.id, message_id=loading_msg.message_id, parse_mode="HTML")
             return
 
@@ -75,8 +76,11 @@ def cmd_like(message):
 
         bot.edit_message_text(reply, chat_id=loading_msg.chat.id, message_id=loading_msg.message_id, parse_mode="HTML")
 
-    except Exception as e:
-        bot.edit_message_text(f"<blockquote>❌ Đã xảy ra lỗi: {e}</blockquote>",
+    except requests.exceptions.Timeout:
+        bot.edit_message_text("<blockquote>❌ Máy chủ không phản hồi. Vui lòng thử lại sau.</blockquote>",
+                              chat_id=loading_msg.chat.id, message_id=loading_msg.message_id, parse_mode="HTML")
+    except Exception:
+        bot.edit_message_text("<blockquote>❌ Đã xảy ra lỗi. Vui lòng kiểm tra khu vực tài khoản hoặc thử lại sau.</blockquote>",
                               chat_id=loading_msg.chat.id, message_id=loading_msg.message_id, parse_mode="HTML")
 
 @bot.message_handler(commands=["admin"])
