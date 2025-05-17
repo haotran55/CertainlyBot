@@ -64,7 +64,7 @@ def like_handler(message: Message):
 
 
     try:
-        response = requests.get(urllike, timeout=15)
+        response = requests.get(urllike, timeout=12)
         response.raise_for_status()
         data = response.json()
     except requests.exceptions.RequestException:
@@ -82,11 +82,11 @@ def like_handler(message: Message):
         "<blockquote>"
         "✅ BUFF LIKE THÀNH CÔNG\n"
         f"╭👤 Name: {safe_get(data, 'PlayerNickname')}\n"
-        f"├🆔 UID: {safe_get(data, 'uid')}\n"
+        f"├🆔 UID: {safe_get(data, 'UID')}\n"
         f"├🌏 Region: {region}\n"
-        f"├📉 Like trước đó: {safe_get(data, 'likes_before')}\n"
-        f"├📈 Like sau khi gửi: {safe_get(data, 'likes_after')}\n"
-        f"╰👍 Like được gửi: {extract_number(data.get('likes_given'))}"
+        f"├📉 Like trước đó: {safe_get(data, 'LikesbeforeCommand')}\n"
+        f"├📈 Like sau khi gửi: {safe_get(data, 'LikesafterCommand')}\n"
+        f"╰👍 Like được gửi: {extract_number(data.get('LikesGivenByAPI'))}"
     )
 
     if status_code == 2:
