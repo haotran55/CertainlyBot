@@ -10,9 +10,12 @@ BOT_TOKEN = os.environ.get('BOT_TOKEN')
 bot = telebot.TeleBot(BOT_TOKEN)
 ALLOWED_GROUP_IDS = [-1002639856138]
 
-@app.route("/")
+app = Flask(__name__)
+
+@app.route('/')
 def home():
-    return "Bot đang chạy!"
+    return "Bot đang hoạt động trên Render!"
+
 
 user_last_like_time = {}
 
