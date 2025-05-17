@@ -18,84 +18,87 @@ def home():
     return "Bot đang hoạt động trên Render!"
 
 
-user_last_like_time = {}
-
-# thời gian chờ (giây)
-LIKE_COOLDOWN = 60
-
 @bot.message_handler(commands=['like'])
-def like_handler(message: Message):
-    user_id = message.from_user.id
-    current_time = time.time()
+def handle_like(message):
+    if message.chat.id not in ALLOWED_GROUP_IDS:
+        bot.reply_to(message, "<blockquote>Bot chỉ hoạt động trong nhóm này.\nLink: https://t.me/HaoEsport01</blockquote>", parse_mode="HTML")
+        return
+        
 
-    last_time = user_last_like_time.get(user_id, 0)
-    time_diff = current_time - last_time
-
-    if time_diff < LIKE_COOLDOWN:
-        wait_time = int(LIKE_COOLDOWN - time_diff)
-        bot.reply_to(message, f"<blockquote>⏳ Vui lòng chờ {wait_time} giây trước khi dùng lại lệnh này.</blockquote>", parse_mode="HTML")
+    parts = message.text.split()
+    if len(parts) < 3:
+        bot.reply_to(message, "<blockquote>Vui lòng cung cấp khu vực và UID hợp lệ.\nVí dụ: /like vn 8324665667</blockquote>", parse_mode="HTML")
         return
 
-    command_parts = message.text.split()
-    if len(command_parts) != 3:
-        bot.reply_to(message, "<blockquote>⚠️ Cách dùng đúng: /like {region} {uid}\nVí dụ: /like vn 1733997441</blockquote>", parse_mode="HTML")
-        return
+    region = parts[1]
+    uid = parts[2]
 
-    region = command_parts[1]
-    uid = command_parts[2]
-
-    user_last_like_time[user_id] = current_time  # cập nhật thời gian sử dụng
-
-    urllike = f"https://freefirelike-api.onrender.com/like?uid={uid}&server_name={region}&key=qqwweerrb"
-
-    def safe_get(data, key):
-        value = data.get(key)
-        return value if value not in [None, ""] else "Không xác định"
-
-    def extract_number(text):
-        if not text:
-            return "Không xác định"
-        for part in text.split():
-            if part.isdigit():
-                return part
-        return "Không xác định"
-
-    loading_msg = bot.reply_to(message, "⏳", parse_mode="HTML")
-
+    loading_msg = bot.reply_to(message, f"<blockquote>Đang gửi lượt thích tới {uid}, vui lòng đợi...</blockquote>", parse_mode="HTML")
 
     try:
-        response = requests.get(urllike, timeout=12)
-        response.raise_for_status()
+        api_url = f"https://freefirelike-api.onrender.com/like?uid={uid}&server_name={region}&key=qqwweerrb"
+        response = requests.get(api_url, timeout=10)
+
+        if response.status_code != 200:
+            bot.edit_message_text(
+                chat_id=loading_msg.chat.id,
+                message_id=loading_msg.message_id,
+                text="<blockquote>Đã xảy ra lỗi. Vui lòng kiểm tra khu vực tài khoản hoặc thử lại sau.</blockquote>",
+                parse_mode="HTML"
+            )
+            return
+
         data = response.json()
-    except requests.exceptions.RequestException:
-        bot.edit_message_text("<blockquote>❌ Server đang quá tải, vui lòng thử lại sau.</blockquote>",
-                              chat_id=loading_msg.chat.id, message_id=loading_msg.message_id, parse_mode="HTML")
-        return
-    except ValueError:
-        bot.edit_message_text("<blockquote>❌ Phản hồi từ server không hợp lệ.</blockquote>",
-                              chat_id=loading_msg.chat.id, message_id=loading_msg.message_id, parse_mode="HTML")
-        return
 
-    status_code = data.get("status")
+        if "LikesGivenByAPI" not in data or "LikesbeforeCommand" not in data or "LikesafterCommand" not in data:
+            bot.edit_message_text(
+                chat_id=loading_msg.chat.id,
+                message_id=loading_msg.message_id,
+                text="<blockquote>Đã xảy ra lỗi. Vui lòng kiểm tra khu vực tài khoản hoặc thử lại sau.</blockquote>",
+                parse_mode="HTML"
+            )
+            return
 
-    reply_text = (
-        "<blockquote>"
-        "✅ BUFF LIKE THÀNH CÔNG\n"
-        f"╭👤 Name: {safe_get(data, 'PlayerNickname')}\n"
-        f"├🆔 UID: {safe_get(data, 'UID')}\n"
-        f"├🌏 Region: {region}\n"
-        f"├📉 Like trước đó: {safe_get(data, 'LikesbeforeCommand')}\n"
-        f"├📈 Like sau khi gửi: {safe_get(data, 'LikesafterCommand')}\n"
-        f"╰👍 Like được gửi: {extract_number(data.get('LikesGivenByAPI'))}"
-    )
+        if data["LikesGivenByAPI"] == 0:
+            bot.edit_message_text(
+                chat_id=loading_msg.chat.id,
+                message_id=loading_msg.message_id,
+                text=f"<blockquote>💔 UID {uid} đã nhận đủ lượt thích hôm nay. Vui lòng thử UID khác.</blockquote>",
+                parse_mode="HTML"
+            )
+            return
 
-    if status_code == 2:
-        reply_text += "\n⚠️ Giới hạn like hôm nay, mai hãy thử lại sau."
+        nickname = data.get("PlayerNickname", "Unknown")
+        uid = data.get("UID", "Unknown")
+        likes_before = data["LikesbeforeCommand"]
+        likes_after = data["LikesafterCommand"]
+        likes_given_by_bot = likes_after - likes_before
 
-    reply_text += "</blockquote>"
+        reply = (
+            f"✅ BUFF LIKE THÀNH CÔNG\n"
+            f"<blockquote>👤 Người Chơi: {nickname}\n"
+            f"🆔 UID: {uid}\n"
+            f"📉 Like Trước: {likes_before}\n"
+            f"📈 Like Sau: {likes_after}\n"
+            f"👍 Like Đã Gửi: {likes_given_by_bot}\n"
+            f"───────────────────\n"
+            f"Liên Hệ: @HaoEsports01</blockquote>"
+        )
 
-    bot.edit_message_text(reply_text, chat_id=loading_msg.chat.id, message_id=loading_msg.message_id, parse_mode="HTML")
+        bot.edit_message_text(
+            chat_id=loading_msg.chat.id,
+            message_id=loading_msg.message_id,
+            text=reply,
+            parse_mode="HTML"
+        )
 
+    except Exception:
+        bot.edit_message_text(
+            chat_id=loading_msg.chat.id,
+            message_id=loading_msg.message_id,
+            text="<blockquote>Đã xảy ra lỗi. Vui lòng kiểm tra khu vực tài khoản hoặc thử lại sau.</blockquote>",
+            parse_mode="HTML"
+        )
 
 @bot.message_handler(commands=["admin"])
 def cmd_test(message):
