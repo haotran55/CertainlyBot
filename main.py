@@ -2,6 +2,7 @@ import os
 import time
 import requests
 import telebot
+from telebot.types import Message
 from telebot import TeleBot
 from flask import Flask, request
 from datetime import datetime, timedelta
