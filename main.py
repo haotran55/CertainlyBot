@@ -36,7 +36,7 @@ def handle_like(message):
     loading_msg = bot.reply_to(message, f"<blockquote>Đang gửi lượt thích tới {uid}, vui lòng đợi...</blockquote>", parse_mode="HTML")
 
     try:
-        api_url = f"https://freefirelike-api.onrender.com/like?uid={uid}&server_name={region}&key=qethjhxxn"
+        api_url = f"http://160.250.137.144:5001/like?uid={uid}&server_name={region}&key=qqwweerrb"
         response = requests.get(api_url, timeout=10)
 
         if response.status_code != 200:
