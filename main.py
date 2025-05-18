@@ -20,18 +20,14 @@ def home():
 
 @bot.message_handler(commands=['like'])
 def handle_like(message):
-    user_id = message.from_user.id
+    
 
     # ✅ Giới hạn nhóm sử dụng
     if message.chat.id not in ALLOWED_GROUP_IDS:
         bot.reply_to(message, "<blockquote>Bot chỉ hoạt động trong nhóm này.\nLink: https://t.me/HaoEsport01</blockquote>", parse_mode="HTML")
         return
 
-    # ✅ Kiểm tra người dùng đã vượt KEY chưa
-    expire_time = active_keys.get(user_id)
-    if not expire_time or time.time() > expire_time:
-        bot.reply_to(message, "<blockquote>⛔ Bạn chưa vượt KEY hoặc KEY đã hết hạn.\n👉 Dùng lệnh /getkey để lấy và xác thực.</blockquote>", parse_mode="HTML")
-        return
+    # ✅ Kiểm tra người dùng đã vượt KEY chư
 
     # ✅ Kiểm tra cú pháp
     parts = message.text.split()
@@ -109,98 +105,6 @@ def handle_like(message):
             parse_mode="HTML"
         )
 
-
-@bot.message_handler(commands=['checkkey'])
-def check_key(message):
-    user_id = message.from_user.id
-    expire_time = active_keys.get(user_id)
-
-    if expire_time:
-        remaining_seconds = int(expire_time - time.time())
-        if remaining_seconds > 0:
-            hours = remaining_seconds // 3600
-            minutes = (remaining_seconds % 3600) // 60
-            seconds = remaining_seconds % 60
-            bot.reply_to(message, f"⏳ Key của bạn sẽ hết hạn sau: {hours} giờ {minutes} phút {seconds} giây.")
-        else:
-            bot.reply_to(message, "❌ Key của bạn đã hết hạn.")
-            del active_keys[user_id]  # Xoá luôn key hết hạn
-    else:
-        bot.reply_to(message, "❌ Bạn chưa nhập key hoặc key đã hết hạn.")
-
-
-import datetime
-import time
-import requests
-
-# Lưu các key hợp lệ và thời gian hết hạn (user_id: expire_timestamp)
-active_keys = {}  # Ex: {123456789: 1716043211.0}
-
-@bot.message_handler(commands=['getkey'])
-def startkey(message):
-    user_id = message.from_user.id
-    today_day = datetime.date.today().day
-
-    # Tạo key
-    key = "HaoEsports" + str(user_id * today_day - 2007)
-
-    # Tạo link key
-    api_token = '67c1fe72a448b83a9c7e7340'
-    key_url = f"http://haoesports2010.liveblog365.com/key.php?r={key}"
-
-    try:
-        # Gọi API rút gọn link
-        response = requests.get(f'https://link4m.co/api-shorten/v2?api={api_token}&url={key_url}')
-        response.raise_for_status()
-        url_data = response.json()
-
-        # Nếu có link rút gọn
-        if 'shortenedUrl' in url_data:
-            url_key = url_data['shortenedUrl']
-
-            # Tính thời gian hết hạn sau 5 giờ (18000 giây)
-            expire_timestamp = time.time() + 18000
-            active_keys[user_id] = expire_timestamp
-
-            # Gửi link key cho người dùng
-            text = (
-                f'🔑 Link lấy KEY hợp lệ ngày {datetime.date.today()} là:\n{url_key}\n\n'
-                '⏳ KEY sẽ hết hạn sau 5 giờ.\n'
-                '✅ Sau khi lấy KEY, dùng lệnh:\n'
-                '`/key HaoEsportsxxx` để xác thực\n'
-                '📌 Hoặc dùng /muavip để không cần vượt key\n'
-            )
-            bot.reply_to(message, text, parse_mode='Markdown')
-        else:
-            bot.reply_to(message, '⚠️ Không thể tạo link rút gọn. Vui lòng thử lại sau.')
-    except requests.RequestException:
-        bot.reply_to(message, '❌ Lỗi kết nối khi tạo link key.')
-
-import time  # <--- dùng time thay vì datetime
-
-# Tạo dict lưu key và thời gian hết hạn (timestamp)
-active_keys = {}  # {user_id: expire_timestamp}
-
-@bot.message_handler(commands=['key'])
-def key(message):
-    if len(message.text.split()) != 2:
-        bot.reply_to(message, 'Key Đã Vượt Là? đã vượt thì nhập /key chưa vượt thì /muavip nhé')
-        return
-
-    user_id = message.from_user.id
-    key_input = message.text.split()[1]
-    today_day = datetime.date.today().day
-    expected_key = "HaoEsports" + str(user_id * today_day - 2007)
-
-    if key_input == expected_key:
-        expire_timestamp = time.time() + 18000  # 5 giờ = 18000 giây
-        active_keys[user_id] = expire_timestamp
-
-        text_message = f'<blockquote>[ KEY HỢP LỆ ] NGƯỜI DÙNG CÓ ID: [ {user_id} ] ĐƯỢC PHÉP DÙNG LỆNH  [/like] TRONG VÒNG 5 GIỜ</blockquote>'
-        video_url = 'https://v16m-default.tiktokcdn.com/ccf79902a33306cfe044872ad94b2619/6809d4ec/video/tos/alisg/tos-alisg-pve-0037c001/oo4jREIYzDasfQ44IKcR5FAQGeARLDge8CsQOI/?a=0&bti=OUBzOTg7QGo6OjZAL3AjLTAzYCMxNDNg&ch=0&cr=0&dr=0&er=0&lr=all&net=0&cd=0%7C0%7C0%7C0&cv=1&br=1580&bt=790&cs=0&ds=6&ft=EeF4ntZWD03Q12NvQaxQWIxRSfYFpq_45SY&mime_type=video_mp4&qs=0&rc=OTQ1NmQ3ZGZlaDc7Zjg5aUBpM2ltO245cjU6MzMzODczNEAxMDFhYy4yXi0xXjBhMzNjYSNicmlfMmQ0NDFhLS1kMWBzcw%3D%3D&vvpl=1&l=20250424080617D39FC2B3B674FA0853C2&btag=e000b8000'  # giữ nguyên
-        bot.send_video(message.chat.id, video_url, caption=text_message, parse_mode='HTML')
-    else:
-        bot.reply_to(message, 'KEY KHÔNG HỢP LỆ.')
 
 
 @bot.message_handler(commands=["admin"])
