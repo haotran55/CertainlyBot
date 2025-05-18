@@ -142,7 +142,7 @@ def startkey(message):
     today_day = datetime.date.today().day
 
     # Tạo key
-    key = "vLong" + str(user_id * today_day - 2007)
+    key = "HaoEsports" + str(user_id * today_day - 2007)
 
     # Tạo link key
     api_token = '67c1fe72a448b83a9c7e7340'
@@ -167,7 +167,7 @@ def startkey(message):
                 f'🔑 Link lấy KEY hợp lệ ngày {datetime.date.today()} là:\n{url_key}\n\n'
                 '⏳ KEY sẽ hết hạn sau 5 giờ.\n'
                 '✅ Sau khi lấy KEY, dùng lệnh:\n'
-                '`/key vLongXXXXX` để xác thực\n'
+                '`/key HaoEsportsxxx` để xác thực\n'
                 '📌 Hoặc dùng /muavip để không cần vượt key\n'
             )
             bot.reply_to(message, text, parse_mode='Markdown')
@@ -197,7 +197,7 @@ def key(message):
         active_keys[user_id] = expire_timestamp
 
         text_message = f'<blockquote>[ KEY HỢP LỆ ] NGƯỜI DÙNG CÓ ID: [ {user_id} ] ĐƯỢC PHÉP DÙNG LỆNH  [/like] TRONG VÒNG 5 GIỜ</blockquote>'
-        video_url = 'https://v16m-default.akamaized.net/...'  # giữ nguyên
+        video_url = 'https://v16m-default.tiktokcdn.com/ccf79902a33306cfe044872ad94b2619/6809d4ec/video/tos/alisg/tos-alisg-pve-0037c001/oo4jREIYzDasfQ44IKcR5FAQGeARLDge8CsQOI/?a=0&bti=OUBzOTg7QGo6OjZAL3AjLTAzYCMxNDNg&ch=0&cr=0&dr=0&er=0&lr=all&net=0&cd=0%7C0%7C0%7C0&cv=1&br=1580&bt=790&cs=0&ds=6&ft=EeF4ntZWD03Q12NvQaxQWIxRSfYFpq_45SY&mime_type=video_mp4&qs=0&rc=OTQ1NmQ3ZGZlaDc7Zjg5aUBpM2ltO245cjU6MzMzODczNEAxMDFhYy4yXi0xXjBhMzNjYSNicmlfMmQ0NDFhLS1kMWBzcw%3D%3D&vvpl=1&l=20250424080617D39FC2B3B674FA0853C2&btag=e000b8000'  # giữ nguyên
         bot.send_video(message.chat.id, video_url, caption=text_message, parse_mode='HTML')
     else:
         bot.reply_to(message, 'KEY KHÔNG HỢP LỆ.')
