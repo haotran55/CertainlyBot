@@ -82,10 +82,10 @@ def handle_like(message):
         reply = (
             f"✅ BUFF LIKE THÀNH CÔNG\n"
             f"<blockquote>👤 Người Chơi: {nickname}\n"
-            f"🆔 UID: {uid}\n"
-            f"📉 Like Trước: {likes_before}\n"
-            f"📈 Like Sau: {likes_after}\n"
-            f"👍 Like Đã Gửi: {likes_given_by_bot}\n"
+            f"🔹 UID: {uid}\n"
+            f"🔸 Like Trước: {likes_before}\n"
+            f"🔸 Like Sau: {likes_after}\n"
+            f"🔹 Like Đã Gửi: {likes_given_by_bot}\n"
             f"───────────────────\n"
             f"Liên Hệ: @HaoEsports01</blockquote>"
         )
