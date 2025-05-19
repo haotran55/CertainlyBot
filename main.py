@@ -106,6 +106,83 @@ def handle_like(message):
         )
 
 
+API_BASE = "https://ffwlxd-info.vercel.app/player-info"
+
+def format_timestamp(ts):
+    try:
+        return datetime.utcfromtimestamp(int(ts)).strftime('%Y-%m-%d %H:%M:%S')
+    except:
+        return "N/A"
+
+@bot.message_handler(commands=['info'])
+def get_ff_info(message):
+    args = message.text.strip().split()
+    if len(args) != 3:
+        bot.reply_to(message, "<blockquote>❗ Dùng đúng cú pháp:\n/info &lt;region&gt; &lt;uid&gt;\nVí dụ: /info sg 1341742864</blockquote>")
+        return
+
+    region = args[1].lower()
+    uid = args[2]
+    url = f"{API_BASE}?region={region}&uid={uid}"
+
+    try:
+        res = requests.get(url)
+        data = res.json()
+
+        if "AccountInfo" not in data:
+            bot.reply_to(message, "<blockquote>⚠️ Không tìm thấy tài khoản. UID hoặc Region không hợp lệ.</blockquote>")
+            return
+
+        info = data["AccountInfo"]
+        credit = data.get("creditScoreInfo", {})
+        pet = data.get("petInfo", {})
+        social = data.get("socialinfo", {})
+        guild = data.get("GuildInfo", {})
+
+        msg = (
+            "<b>✅THÔNG TIN TÀI KHOẢN</b>\n\n"
+            "<blockquote>"
+            f"🔰 <b>Nickname:</b> {info.get('AccountName', 'N/A')}\n"
+            f"🆔 <b>UID:</b> {uid}\n"
+            f"🗺️ <b>Region:</b> {info.get('AccountRegion', 'N/A')}\n"
+            f"⭐ <b>Level:</b> {info.get('AccountLevel', 'N/A')}\n"
+            f"🎯 <b>EXP:</b> {info.get('AccountEXP', 'N/A')}\n"
+            f"❤️ <b>Likes:</b> {info.get('AccountLikes', 'N/A')}\n"
+            f"🏆 <b>BR Max Rank:</b> {info.get('BrMaxRank', 'N/A')}\n"
+            f"⚔️ <b>CS Max Rank:</b> {info.get('CsMaxRank', 'N/A')}\n"
+            f"📦 <b>Elite Pass:</b> {'✅' if info.get('hasElitePass') else '❌'}\n"
+            f"🕒 <b>Tạo lúc:</b> {format_timestamp(info.get('AccountCreateTime', '0'))}\n"
+            f"📲 <b>Đăng nhập cuối:</b> {format_timestamp(info.get('AccountLastLogin', '0'))}\n"
+            f"🎮 <b>Version:</b> {info.get('ReleaseVersion', 'N/A')}\n"
+        )
+
+        if guild.get("GuildName"):
+            msg += (
+                f"\n🏰 <b>Guild:</b> {guild.get('GuildName')}\n"
+                f"👥 <b>Thành viên:</b> {guild.get('GuildMember', 'N/A')}/{guild.get('GuildCapacity', 'N/A')}\n"
+                f"📶 <b>Guild Level:</b> {guild.get('GuildLevel', 'N/A')}\n"
+            )
+
+        if "creditScore" in credit:
+            msg += f"\n💳 <b>Credit Score:</b> {credit['creditScore']}\n"
+
+        if "id" in pet:
+            msg += (
+                f"\n🐾 <b>Pet ID:</b> {pet['id']}\n"
+                f"🔢 <b>Pet Level:</b> {pet['level']}\n"
+                f"📈 <b>Pet EXP:</b> {pet['exp']}\n"
+            )
+
+        if social.get("AccountSignature"):
+            msg += f"\n✍️ <b>Signature:</b> {social['AccountSignature']}\n"
+
+        msg += "</blockquote>\n✅ <i>API by @HaoEsports</i>"
+
+        bot.reply_to(message, msg)
+
+    except Exception:
+        bot.reply_to(message, "<blockquote>🚫 Lỗi khi truy cập dữ liệu. Vui lòng thử lại sau.</blockquote>")
+
 
 @bot.message_handler(commands=["admin"])
 def cmd_test(message):
