@@ -109,9 +109,93 @@ def handle_like(message):
 
 
 
+@bot.message_handler(commands=['checkban'])
+def checkban_user(message):
+    args = message.text.split()
+    if len(args) < 2:
+        bot.reply_to(message, "Vui lòng nhập UID. Ví dụ: /checkban 12345678")
+        return
+
+    uid = args[1]
+    url = f"https://check-band-p-3uv9.vercel.app/haoesports-region/ban-info?uid={uid}"
+
+    try:
+        # Gửi tin nhắn đang xử lý
+        sent = bot.reply_to(message, "⏳ Đang kiểm tra UID...")
+
+        response = requests.get(url)
+        data = response.json()
+
+        nickname = data.get('nickname', 'Không có dữ liệu')
+        uid = data.get('uid', 'Không Có Uid')
+        region = data.get('region', 'Không xác định')
+        ban_status = data.get('ban_status', 'Không rõ')
+        ban_period = data.get('ban_period')
+        copyright_ = data.get('copyright')
+
+        reply = (
+            "<blockquote>"
+            f"✅ <b>Thông tin người chơi:</b>\n"
+            f"• 👤 Nickname: <code>{nickname}</code>\n"
+            f"• 🆔 ID: <code>{uid}</code>\n"
+            f"• 🌎 Khu vực: <code>{region}</code>\n"
+            f"• 🚫 Trạng thái ban: <code>{ban_status}</code>\n"
+            f"• ⏳ Thời gian ban: <code>{ban_period if ban_period else 'Không bị ban'}</code>\n"
+            f"• ©️ Bản quyền: <code>{copyright_}</code>"
+            "</blockquote>"
+        )
+
+        bot.edit_message_text(
+            chat_id=sent.chat.id,
+            message_id=sent.message_id,
+            text=reply,
+            parse_mode='HTML'
+        )
+
+    except Exception as e:
+        bot.edit_message_text(
+            chat_id=sent.chat.id,
+            message_id=sent.message_id,
+            text=f"Đã xảy ra lỗi: {e}"
+        )
+
+import requests
+from io import BytesIO
+
+def get_random_video():
+    try:
+        res = requests.get("https://api.ffcommunity.site/randomvideo.php", timeout=5)
+        data = res.json()
+        return data.get("url")
+    except:
+        return None
+
+@bot.message_handler(commands=['video'])
+def random_video(message):
+    if message.chat.id not in ALLOWED_GROUP_IDS:
+        bot.reply_to(message, "Bot Chỉ Hoạt Động Trong Nhóm Này.\nLink: https://t.me/tranhao1166")
+        return
+
+    video_url = get_random_video()
+    if video_url:
+        try:
+            bot.send_chat_action(message.chat.id, "upload_video")
+            res = requests.get(video_url, stream=True, timeout=10)
+            if res.status_code == 200:
+                video_file = BytesIO(res.content)
+                video_file.name = "video.mp4"
+                bot.send_video(message.chat.id, video=video_file, caption="Video gái xinh By @tranhao116")
+            else:
+                bot.send_message(message.chat.id, "Không thể tải video từ nguồn.")
+        except Exception as e:
+            print("Lỗi gửi video:", e)
+            bot.send_message(message.chat.id, "Lỗi khi gửi video.")
+    else:
+        bot.send_message(message.chat.id, "Không lấy được video, thử lại sau nhé!")
+        
 @bot.message_handler(commands=["admin"])
 def cmd_test(message):
-    bot.reply_to(message, "<blockquote>✅ Liên Hệ: @HaoEsports01!</blockquote>", parse_mode="HTML")
+    bot.reply_to(message, "<blockquote>✅ Liên Hệ: @tranhao116!</blockquote>", parse_mode="HTML")
 
 @app.route(f"/{BOT_TOKEN}", methods=['POST'])
 def webhook():
