@@ -28,15 +28,6 @@ def handle_like(message):
         return
 
     # ✅ Kiểm tra người dùng đã tham gia các nhóm bắt buộc chưa
-    for group_id in REQUIRED_GROUP_IDS:
-        try:
-            chat_member = bot.get_chat_member(group_id, user_id)
-            if chat_member.status in ['left', 'kicked']:
-                bot.reply_to(message, f"<blockquote>❌ Bạn chưa tham gia nhóm bắt buộc: https://t.me/c/{str(group_id)[4:]}\nVui lòng tham gia nhóm trước khi dùng lệnh.</blockquote>", parse_mode="HTML")
-                return
-        except Exception as e:
-            bot.reply_to(message, "<blockquote>Đã xảy ra lỗi khi kiểm tra thành viên nhóm. Vui lòng thử lại sau.</blockquote>", parse_mode="HTML")
-            return
 
     # ✅ Kiểm tra cú pháp
     parts = message.text.split()
