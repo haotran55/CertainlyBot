@@ -45,13 +45,13 @@ def handle_like(message):
 
     try:
         api_url = f"http://160.250.137.144:5001/like?uid={uid}&server_name={region}&key=qqwweerrb"
-        response = requests.get(api_url, timeout=10)
+        response = requests.get(api_url, timeout=15)
 
         if response.status_code != 200:
             bot.edit_message_text(
                 chat_id=loading_msg.chat.id,
                 message_id=loading_msg.message_id,
-                text="<blockquote>Đã xảy ra lỗi. Vui lòng kiểm tra khu vực tài khoản hoặc thử lại sau.</blockquote>",
+                text="<blockquote>Nhập Sai Hoặc Api Bị Lỗi.</blockquote>",
                 parse_mode="HTML"
             )
             return
@@ -83,14 +83,13 @@ def handle_like(message):
         likes_given_by_bot = likes_after - likes_before
 
         reply = (
-            f"✅ BUFF LIKE THÀNH CÔNG\n"
             f"<blockquote>👤 Người Chơi: {nickname}\n"
-            f"🔹 UID: {uid}\n"
-            f"🔸 Like Trước: {likes_before}\n"
-            f"🔸 Like Sau: {likes_after}\n"
-            f"🔹 Like Đã Gửi: {likes_given_by_bot}\n"
+            f"🆔 UID: {uid}\n"
+            f"📉 Like Trước: {likes_before}\n"
+            f"📈 Like Sau: {likes_after}\n"
+            f"✨ Like Đã Gửi: {likes_given_by_bot}\n"
             f"───────────────────\n"
-            f"Liên Hệ: @HaoEsports01</blockquote>"
+            f"Thuê Api Liên Hệ: @HaoEsports01</blockquote>"
         )
 
         bot.edit_message_text(
@@ -104,7 +103,7 @@ def handle_like(message):
         bot.edit_message_text(
             chat_id=loading_msg.chat.id,
             message_id=loading_msg.message_id,
-            text="<blockquote>Đã xảy ra lỗi. Vui lòng kiểm tra khu vực tài khoản hoặc thử lại sau.</blockquote>",
+            text="<blockquote>Api Đang Bị Lỗi Vui Lòng Thử Lại Sau.</blockquote>",
             parse_mode="HTML"
         )
 
