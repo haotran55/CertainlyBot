@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 
 BOT_TOKEN = os.environ.get('BOT_TOKEN')
 bot = telebot.TeleBot(BOT_TOKEN)
-ALLOWED_GROUP_IDS = [-1002639856138, -1002631911391]
+ALLOWED_GROUP_IDS = [-1002631911391]
 
 app = Flask(__name__)
 
@@ -24,7 +24,7 @@ def handle_like(message):
 
     # ✅ Giới hạn nhóm sử dụng lệnh
     if message.chat.id not in ALLOWED_GROUP_IDS:
-        bot.reply_to(message, "<blockquote>Bot chỉ hoạt động trong nhóm này.\nLink: https://t.me/HaoEsport01</blockquote>", parse_mode="HTML")
+        bot.reply_to(message, "<blockquote>Bot chỉ hoạt động trong nhóm này.\nLink: https://t.me/tranhao1166</blockquote>", parse_mode="HTML")
         return
 
     # ✅ Kiểm tra người dùng đã tham gia các nhóm bắt buộc chưa
