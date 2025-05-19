@@ -39,7 +39,7 @@ def handle_like(message):
     region = parts[1]
     uid = parts[2]
 
-    loading_msg = bot.reply_to(message, f"<blockquote>Đang gửi lượt thích tới {uid}, vui lòng đợi...</blockquote>", parse_mode="HTML")
+    loading_msg = bot.reply_to(message, f"<blockquote>⏳Đang gửi lượt thích tới {uid}, vui lòng đợi...</blockquote>", parse_mode="HTML")
 
     # ... phần code gửi yêu cầu API và xử lý kết quả như bạn đã viết ...
 
@@ -51,7 +51,7 @@ def handle_like(message):
             bot.edit_message_text(
                 chat_id=loading_msg.chat.id,
                 message_id=loading_msg.message_id,
-                text="<blockquote>Nhập Sai Hoặc Api Bị Lỗi.</blockquote>",
+                text="<blockquote>Đang lỗi hoặc đang bảo trì vui lòng thử lại sau 💔.&</blockquote>",
                 parse_mode="HTML"
             )
             return
@@ -62,7 +62,7 @@ def handle_like(message):
             bot.edit_message_text(
                 chat_id=loading_msg.chat.id,
                 message_id=loading_msg.message_id,
-                text="<blockquote>Đã xảy ra lỗi. Vui lòng kiểm tra khu vực tài khoản hoặc thử lại sau.</blockquote>",
+                text="<blockquote>Đang lỗi hoặc đang bảo trì vui lòng thử lại sau 💔.</blockquote>",
                 parse_mode="HTML"
             )
             return
@@ -84,12 +84,12 @@ def handle_like(message):
 
         reply = (
             f"<blockquote>👤 Người Chơi: {nickname}\n"
-            f"🆔 UID: {uid}\n"
-            f"📉 Like Trước: {likes_before}\n"
-            f"📈 Like Sau: {likes_after}\n"
+            f"🔹 UID: {uid}\n"
+            f"♦️ Like Trước: {likes_before}\n"
+            f"🔹 Like Sau: {likes_after}\n"
             f"✨ Like Đã Gửi: {likes_given_by_bot}\n"
             f"───────────────────\n"
-            f"Thuê Api Liên Hệ: @HaoEsports01</blockquote>"
+            f"Thuê Api Liên Hệ: @tranhao116</blockquote>"
         )
 
         bot.edit_message_text(
@@ -103,7 +103,7 @@ def handle_like(message):
         bot.edit_message_text(
             chat_id=loading_msg.chat.id,
             message_id=loading_msg.message_id,
-            text="<blockquote>Api Đang Bị Lỗi Vui Lòng Thử Lại Sau.</blockquote>",
+            text="<blockquote>Đang lỗi hoặc đang bảo trì vui lòng thử lại sau 💔.</blockquote>",
             parse_mode="HTML"
         )
 
