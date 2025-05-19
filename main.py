@@ -142,7 +142,7 @@ def checkban_user(message):
             f"• 🌎 Khu vực: <code>{region}</code>\n"
             f"• 🚫 Trạng thái ban: <code>{ban_status}</code>\n"
             f"• ⏳ Thời gian ban: <code>{ban_period if ban_period else 'Không bị ban'}</code>\n"
-            f"• ©️ Bản quyền: <code>{copyright_}</code>"
+            f"• ©️ Liên Hệ: <code>{copyright_}</code>"
             "</blockquote>"
         )
 
