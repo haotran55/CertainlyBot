@@ -81,9 +81,7 @@ def handle_like(message):
             f"Player UID: {uid}\n"
             f"Likes before Command: {likes_before}\n"
             f"Likes after Command: {likes_after}\n"
-            f"Likes given by bot: {likes_given_by_bot}\n"
-            f"───────────────────\n"
-            f"owner - @tranhao116"
+            f"Likes given by bot: {likes_given_by_bot}"
         )
 
         bot.edit_message_text(
