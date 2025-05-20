@@ -19,29 +19,23 @@ def home():
     return "Bot đang hoạt động trên Render!"
 
 
-@bot.message_handler(commands=['like'])
+@bot.message_handler(commands=['like','Like'])
 def handle_like(message):
     user_id = message.from_user.id
 
-    # ✅ Giới hạn nhóm sử dụng lệnh
     if message.chat.id not in ALLOWED_GROUP_IDS:
-        bot.reply_to(message, "<blockquote>Bot chỉ hoạt động trong nhóm này.\nLink: https://t.me/tranhao1166</blockquote>", parse_mode="HTML")
+        bot.reply_to(message, "Bot chỉ hoạt động trong nhóm này.\nLink: https://t.me/tranhao1166", parse_mode="HTML")
         return
 
-    # ✅ Kiểm tra người dùng đã tham gia các nhóm bắt buộc chưa
-
-    # ✅ Kiểm tra cú pháp
     parts = message.text.split()
     if len(parts) < 3:
-        bot.reply_to(message, "<blockquote>Vui lòng cung cấp khu vực và UID hợp lệ.\nVí dụ: /like vn 8324665667</blockquote>", parse_mode="HTML")
+        bot.reply_to(message, "Please provide a valid region and UID. Example: /like sg 10000001", parse_mode="HTML")
         return
 
     region = parts[1]
     uid = parts[2]
 
-    loading_msg = bot.reply_to(message, f"<blockquote>⏳Đang gửi lượt thích tới {uid}, vui lòng đợi...</blockquote>", parse_mode="HTML")
-
-    # ... phần code gửi yêu cầu API và xử lý kết quả như bạn đã viết ...
+    loading_msg = bot.reply_to(message, f"⏳Sending likes to {uid}, please wait...", parse_mode="HTML")
 
     try:
         api_url = f"http://160.250.137.144:5001/like?uid={uid}&server_name={region}&key=qqwweerrb"
@@ -51,7 +45,7 @@ def handle_like(message):
             bot.edit_message_text(
                 chat_id=loading_msg.chat.id,
                 message_id=loading_msg.message_id,
-                text="<blockquote>Đang lỗi hoặc đang bảo trì vui lòng thử lại sau 💔.&</blockquote>",
+                text="An error occurred. Please check account region or try again later🥲.",
                 parse_mode="HTML"
             )
             return
@@ -62,7 +56,7 @@ def handle_like(message):
             bot.edit_message_text(
                 chat_id=loading_msg.chat.id,
                 message_id=loading_msg.message_id,
-                text="<blockquote>Đang lỗi hoặc đang bảo trì vui lòng thử lại sau 💔.</blockquote>",
+                text="An error occurred. Please check account region or try again later🥲.",
                 parse_mode="HTML"
             )
             return
@@ -71,7 +65,7 @@ def handle_like(message):
             bot.edit_message_text(
                 chat_id=loading_msg.chat.id,
                 message_id=loading_msg.message_id,
-                text=f"<blockquote>💔 UID {uid} đã nhận đủ lượt thích hôm nay. Vui lòng thử UID khác.</blockquote>",
+                text=f"💔 UID {uid} has already received Max Likes for Today 💔. Please Try a different UID.",
                 parse_mode="HTML"
             )
             return
@@ -83,13 +77,13 @@ def handle_like(message):
         likes_given_by_bot = likes_after - likes_before
 
         reply = (
-            f"<blockquote>👤 Người Chơi: {nickname}\n"
-            f"🔹 UID: {uid}\n"
-            f"♦️ Like Trước: {likes_before}\n"
-            f"🔹 Like Sau: {likes_after}\n"
-            f"✨ Like Đã Gửi: {likes_given_by_bot}\n"
+            f"Player Nickname: {nickname}\n"
+            f"Player UID: {uid}\n"
+            f"Likes before Command: {likes_before}\n"
+            f"Likes after Command: {likes_after}\n"
+            f"Likes given by bot: {likes_given_by_bot}\n"
             f"───────────────────\n"
-            f"Thuê Api Liên Hệ: @tranhao116</blockquote>"
+            f"owner - @tranhao116"
         )
 
         bot.edit_message_text(
@@ -103,10 +97,9 @@ def handle_like(message):
         bot.edit_message_text(
             chat_id=loading_msg.chat.id,
             message_id=loading_msg.message_id,
-            text="<blockquote>Đang lỗi hoặc đang bảo trì vui lòng thử lại sau 💔.</blockquote>",
+            text="Đang lỗi hoặc đang bảo trì vui lòng thử lại sau 💔.",
             parse_mode="HTML"
         )
-
 
 
 @bot.message_handler(commands=['checkban'])
