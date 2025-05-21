@@ -105,54 +105,46 @@ def handle_like(message):
 
 
 
-@bot.message_handler(commands=['checkban'])
+@bot.message_handler(commands=['isbanned','Isbanned'])
 def checkban_user(message):
     args = message.text.split()
     if len(args) < 2:
-        bot.reply_to(message, "Vui lòng nhập UID. Ví dụ: /checkban 12345678")
+        bot.reply_to(message, "Please provide a UID to check. Syntax: /isbanned <uid>")
         return
 
     uid = args[1]
-    url = f"https://check-band-p-3uv9.vercel.app/haoesports-region/ban-info?uid={uid}"
+    url = f"https://ban-info.vercel.app/bancheck?uid={uid}&key=tanhao1167"
 
     try:
         # Gửi tin nhắn đang xử lý
-        sent = bot.reply_to(message, "⏳ Đang kiểm tra UID...")
+        loading_msg = bot.reply_to(message, "⏳ Checking UID...")
 
         response = requests.get(url)
         data = response.json()
 
-        nickname = data.get('nickname', 'Không có dữ liệu')
-        uid = data.get('uid', 'Không Có Uid')
-        region = data.get('region', 'Không xác định')
-        ban_status = data.get('ban_status', 'Không rõ')
-        ban_period = data.get('ban_period')
-        copyright_ = data.get('copyright')
+        status = data.get('status', 'Không xác định')
+        uid = data.get('uid', 'Không xác định')
+        
 
         reply = (
-            "<blockquote>"
-            f"✅ <b>Thông tin người chơi:</b>\n"
-            f"• 👤 Nickname: <code>{nickname}</code>\n"
-            f"• 🆔 ID: <code>{uid}</code>\n"
-            f"• 🌎 Khu vực: <code>{region}</code>\n"
-            f"• 🚫 Trạng thái ban: <code>{ban_status}</code>\n"
-            f"• ⏳ Thời gian ban: <code>{ban_period if ban_period else 'Không bị ban'}</code>\n"
-            f"• ©️ Liên Hệ: <code>{copyright_}</code>"
-            "</blockquote>"
+            f"🔹 UID: {uid}\n"
+            f"✅ Status: {status}\n"
+            f"🎉 group: @tranhao1166"
         )
 
         bot.edit_message_text(
-            chat_id=sent.chat.id,
-            message_id=sent.message_id,
+            chat_id=loading_msg.chat.id,
+            message_id=loading_msg.message_id,
             text=reply,
-            parse_mode='HTML'
+            parse_mode="HTML"
         )
 
-    except Exception as e:
+    except Exception:
         bot.edit_message_text(
-            chat_id=sent.chat.id,
-            message_id=sent.message_id,
-            text=f"Đã xảy ra lỗi: {e}"
+            chat_id=loading_msg.chat.id,
+            message_id=loading_msg.message_id,
+            text="Đang lỗi hoặc đang bảo trì vui lòng thử lại sau 💔.",
+            parse_mode="HTML"
         )
 
 import requests
