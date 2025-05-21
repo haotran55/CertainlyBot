@@ -19,33 +19,12 @@ def home():
     return "Bot đang hoạt động trên Render!"
 
 
-def is_user_member(user_id):
-    try:
-        member = bot.get_chat_member(REQUIRED_CHANNEL, user_id)
-        return member.status in ["member", "administrator", "creator"]
-    except:
-        return False
-
-
-from telebot.types import ChatMember
-import requests
-
-REQUIRED_CHANNEL = "@freesourceff"  # Thay bằng username kênh công khai hoặc chat_id (ví dụ: -1001234567890)
 
 @bot.message_handler(commands=['like','Like'])
 def handle_like(message):
     user_id = message.from_user.id
 
     # Kiểm tra người dùng đã tham gia kênh chưa
-    try:
-        member = bot.get_chat_member(REQUIRED_CHANNEL, user_id)
-        if member.status not in ['member', 'administrator', 'creator']:
-            bot.reply_to(message, f"Bạn cần tham gia kênh {REQUIRED_CHANNEL} để sử dụng lệnh này.", parse_mode="HTML")
-            return
-    except Exception as e:
-        bot.reply_to(message, f"Không thể kiểm tra thành viên, vui lòng thử lại sau.\nChi tiết lỗi: {e}")
-        return
-
     # Kiểm tra nhóm được phép
     if message.chat.id not in ALLOWED_GROUP_IDS:
         bot.reply_to(message, "Bot chỉ hoạt động trong nhóm này.\nLink: https://t.me/tranhao1166", parse_mode="HTML")
