@@ -18,6 +18,15 @@ app = Flask(__name__)
 def home():
     return "Bot đang hoạt động trên Render!"
 
+REQUIRED_CHANNEL = "@freesourceff"  # Thay bằng tên hoặc ID kênh thực tế
+
+def is_user_member(user_id):
+    try:
+        member = bot.get_chat_member(REQUIRED_CHANNEL, user_id)
+        return member.status in ["member", "administrator", "creator"]
+    except:
+        return False
+
 
 @bot.message_handler(commands=['like','Like'])
 def handle_like(message):
@@ -25,6 +34,10 @@ def handle_like(message):
 
     if message.chat.id not in ALLOWED_GROUP_IDS:
         bot.reply_to(message, "Bot chỉ hoạt động trong nhóm này.\nLink: https://t.me/tranhao1166", parse_mode="HTML")
+        return
+
+    if not is_user_member(user_id):
+        bot.reply_to(message, "Bạn cần tham gia kênh trước khi sử dụng lệnh này:\nhttps://t.me/freesourceff", parse_mode="HTML")
         return
 
     parts = message.text.split()
