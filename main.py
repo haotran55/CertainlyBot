@@ -18,7 +18,6 @@ app = Flask(__name__)
 def home():
     return "Bot đang hoạt động trên Render!"
 
-REQUIRED_CHANNEL = "@freesourceff"  # Thay bằng tên hoặc ID kênh thực tế
 
 def is_user_member(user_id):
     try:
@@ -28,18 +27,31 @@ def is_user_member(user_id):
         return False
 
 
+from telebot.types import ChatMember
+import requests
+
+REQUIRED_CHANNEL = "@freesourceff"  # Thay bằng username kênh công khai hoặc chat_id (ví dụ: -1001234567890)
+
 @bot.message_handler(commands=['like','Like'])
 def handle_like(message):
     user_id = message.from_user.id
 
+    # Kiểm tra người dùng đã tham gia kênh chưa
+    try:
+        member = bot.get_chat_member(REQUIRED_CHANNEL, user_id)
+        if member.status not in ['member', 'administrator', 'creator']:
+            bot.reply_to(message, f"Bạn cần tham gia kênh {REQUIRED_CHANNEL} để sử dụng lệnh này.", parse_mode="HTML")
+            return
+    except Exception as e:
+        bot.reply_to(message, f"Không thể kiểm tra thành viên, vui lòng thử lại sau.\nChi tiết lỗi: {e}")
+        return
+
+    # Kiểm tra nhóm được phép
     if message.chat.id not in ALLOWED_GROUP_IDS:
         bot.reply_to(message, "Bot chỉ hoạt động trong nhóm này.\nLink: https://t.me/tranhao1166", parse_mode="HTML")
         return
 
-    if not is_user_member(user_id):
-        bot.reply_to(message, "Bạn cần tham gia kênh trước khi sử dụng lệnh này:\nhttps://t.me/freesourceff", parse_mode="HTML")
-        return
-
+    # Kiểm tra định dạng lệnh
     parts = message.text.split()
     if len(parts) < 3:
         bot.reply_to(message, "Please provide a valid region and UID. Example: /like sg 10000001", parse_mode="HTML")
@@ -111,6 +123,7 @@ def handle_like(message):
             text="Đang lỗi hoặc đang bảo trì vui lòng thử lại sau 💔.",
             parse_mode="HTML"
         )
+
 
 
 @bot.message_handler(commands=['checkban'])
