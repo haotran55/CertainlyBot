@@ -129,7 +129,7 @@ def checkban_user(message):
         reply = (
             f"🔹 UID: {uid}\n"
             f"✅ Status: {status}\n"
-            f"🎉 group: @tranhao1166"
+            f"🎉 group: https://t.me/tranhao1166"
         )
 
         bot.edit_message_text(
