@@ -42,7 +42,7 @@ def handle_like(message):
     loading_msg = bot.reply_to(message, f"⏳Sending likes to {uid}, please wait...", parse_mode="HTML")
 
     try:
-        api_url = f"http://160.250.137.144:5001/like?uid={uid}&server_name={region}&key=qqwweerrb"
+        api_url = f"https://haotran.vercel.app/like?uid={uid}&server_name={region}"
         response = requests.get(api_url, timeout=15)
 
         if response.status_code != 200:
