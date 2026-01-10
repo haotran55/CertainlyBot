@@ -42,7 +42,7 @@ def handle_like(message):
     loading_msg = bot.reply_to(message, f"⏳Sending likes to {uid}, please wait...", parse_mode="HTML")
 
     try:
-        api_url = f"http://127.0.0.1:5000/like?uid={uid}&server_name={region}"
+        api_url = f"https://like-free-fire-nine.vercel.app/like?uid={uid}&server_name={region}"
         response = requests.get(api_url, timeout=15)
 
         if response.status_code != 200:
