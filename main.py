@@ -150,14 +150,27 @@ def checkban_user(message):
 
 import requests
 from io import BytesIO
+import threading
+import time
 
 def get_random_video():
     try:
-        res = requests.get("https://quanghauquanlybottele.x10.mx/videogai.php", timeout=5)
+        # Tăng timeout để tránh lỗi kết nối chậm
+        res = requests.get("https://quanghauquanlybottele.x10.mx/videogai.php", timeout=10)
         data = res.json()
-        return data.get("url")
-    except:
+        # Sửa lại đúng key "video_url" từ API
+        return data.get("video_url")
+    except Exception as e:
+        print(f"Lỗi API: {e}")
         return None
+
+def delete_message_after_time(chat_id, message_id, delay):
+    """Hàm chạy ngầm để xóa tin nhắn sau một khoảng thời gian"""
+    time.sleep(delay)
+    try:
+        bot.delete_message(chat_id, message_id)
+    except Exception as e:
+        print(f"Không thể xóa tin nhắn: {e}")
 
 @bot.message_handler(commands=['video'])
 def random_video(message):
@@ -169,16 +182,27 @@ def random_video(message):
     if video_url:
         try:
             bot.send_chat_action(message.chat.id, "upload_video")
-            res = requests.get(video_url, stream=True, timeout=10)
+            res = requests.get(video_url, stream=True, timeout=20)
+            
             if res.status_code == 200:
                 video_file = BytesIO(res.content)
                 video_file.name = "video.mp4"
-                bot.send_video(message.chat.id, video=video_file, caption="Video gái xinh By @tranhao116")
+                
+                # Gửi video và nhận lại thông tin tin nhắn đã gửi
+                sent_msg = bot.send_video(
+                    message.chat.id, 
+                    video=video_file, 
+                    caption="Video gái xinh By @tranhao116\n(Video này sẽ tự xóa sau 5 phút)"
+                )
+                
+                # Tạo một luồng (thread) riêng để đếm ngược 5 phút (300 giây) rồi xóa
+                threading.Thread(target=delete_message_after_time, args=(message.chat.id, sent_msg.message_id, 300)).start()
+                
             else:
                 bot.send_message(message.chat.id, "Không thể tải video từ nguồn.")
         except Exception as e:
             print("Lỗi gửi video:", e)
-            bot.send_message(message.chat.id, "Lỗi khi gửi video.")
+            bot.send_message(message.chat.id, "Lỗi khi xử lý video.")
     else:
         bot.send_message(message.chat.id, "Không lấy được video, thử lại sau nhé!")
         
