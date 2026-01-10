@@ -153,7 +153,7 @@ from io import BytesIO
 
 def get_random_video():
     try:
-        res = requests.get("https://api.ffcommunity.site/randomvideo.php", timeout=5)
+        res = requests.get("https://quanghauquanlybottele.x10.mx/videogai.php", timeout=5)
         data = res.json()
         return data.get("url")
     except:
