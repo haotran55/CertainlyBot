@@ -153,59 +153,68 @@ from io import BytesIO
 import threading
 import time
 
-def get_random_video():
+
+API_URL = "https://quanghauquanlybottele.x10.mx/videogai.php"
+
+# 2. Hàm lấy link video từ API
+def get_random_video_url():
     try:
-        # Tăng timeout để tránh lỗi kết nối chậm
-        res = requests.get("https://quanghauquanlybottele.x10.mx/videogai.php", timeout=10)
-        data = res.json()
-        # Sửa lại đúng key "video_url" từ API
-        return data.get("video_url")
+        # Gửi yêu cầu đến API với timeout 7 giây để tránh treo bot
+        response = requests.get(API_URL, timeout=7)
+        if response.status_code == 200:
+            data = response.json()
+            # Lấy key 'url' từ JSON trả về
+            return data.get("url")
+        return None
     except Exception as e:
-        print(f"Lỗi API: {e}")
+        print(f"Lỗi khi gọi API: {e}")
         return None
 
-def delete_message_after_time(chat_id, message_id, delay):
-    """Hàm chạy ngầm để xóa tin nhắn sau một khoảng thời gian"""
-    time.sleep(delay)
-    try:
-        bot.delete_message(chat_id, message_id)
-    except Exception as e:
-        print(f"Không thể xóa tin nhắn: {e}")
-
+# 3. Xử lý lệnh /video
 @bot.message_handler(commands=['video'])
-def random_video(message):
+def handle_random_video(message):
+    # Kiểm tra quyền hoạt động trong nhóm
     if message.chat.id not in ALLOWED_GROUP_IDS:
-        bot.reply_to(message, "Bot Chỉ Hoạt Động Trong Nhóm Này.\nLink: https://t.me/tranhao1166")
+        error_msg = "⚠️ Bot chỉ hoạt động trong nhóm được cho phép.\nLink: https://t.me/tranhao1166"
+        bot.reply_to(message, error_msg)
         return
 
-    video_url = get_random_video()
+    # Thông báo cho người dùng là bot đang xử lý (tạo cảm giác mượt mà)
+    sent_status = bot.reply_to(message, "⏳ Đang lấy video, đợi xíu nhé...")
+    
+    username = message.from_user.username
+    display_name = f"@{username}" if username else message.from_user.first_name
+
+    # Lấy URL video
+    video_url = get_random_video_url()
+
     if video_url:
         try:
-            bot.send_chat_action(message.chat.id, "upload_video")
-            res = requests.get(video_url, stream=True, timeout=20)
+            # Gửi video trực tiếp bằng URL
+            bot.send_video(
+                chat_id=message.chat.id,
+                video=video_url,
+                caption=f"✅ Video của bạn đây!\n👤 Yêu cầu bởi: {display_name}",
+                reply_to_message_id=message.message_id
+            )
+            # Xóa tin nhắn "Đang lấy video" sau khi gửi xong cho sạch nhóm
+            bot.delete_message(message.chat.id, sent_status.message_id)
             
-            if res.status_code == 200:
-                video_file = BytesIO(res.content)
-                video_file.name = "video.mp4"
-                
-                # Gửi video và nhận lại thông tin tin nhắn đã gửi
-                sent_msg = bot.send_video(
-                    message.chat.id, 
-                    video=video_file, 
-                    caption="Video gái xinh By @tranhao116\n(Video này sẽ tự xóa sau 5 phút)"
-                )
-                
-                # Tạo một luồng (thread) riêng để đếm ngược 5 phút (300 giây) rồi xóa
-                threading.Thread(target=delete_message_after_time, args=(message.chat.id, sent_msg.message_id, 300)).start()
-                
-            else:
-                bot.send_message(message.chat.id, "Không thể tải video từ nguồn.")
         except Exception as e:
-            print("Lỗi gửi video:", e)
-            bot.send_message(message.chat.id, "Lỗi khi xử lý video.")
+            print(f"Lỗi Telegram gửi video: {e}")
+            bot.edit_message_text(
+                "❌ Lỗi: Không thể gửi video này (có thể file quá nặng hoặc lỗi định dạng).",
+                message.chat.id, 
+                sent_status.message_id
+            )
     else:
-        bot.send_message(message.chat.id, "Không lấy được video, thử lại sau nhé!")
-        
+        bot.edit_message_text(
+            "❌ Hiện tại không lấy được video từ server. Thử lại sau nhé!",
+            message.chat.id, 
+            sent_status.message_id
+        )
+
+# 4. Chạ
 @bot.message_handler(commands=["admin"])
 def cmd_test(message):
     bot.reply_to(message, "<blockquote>✅ Liên Hệ: @tranhao116!</blockquote>", parse_mode="HTML")
