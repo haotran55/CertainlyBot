@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 
 BOT_TOKEN = os.environ.get('BOT_TOKEN')
 bot = telebot.TeleBot(BOT_TOKEN)
-ALLOWED_GROUP_IDS = [-1002639856138, -1002282514761]
+ALLOWED_GROUP_IDS = [-1003329703456, -1002282514761]
 
 app = Flask(__name__)
 
