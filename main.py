@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 
 BOT_TOKEN = os.environ.get('BOT_TOKEN')
 bot = telebot.TeleBot(BOT_TOKEN)
-ALLOWED_GROUP_IDS = [-1003329703456, -1002282514761]
+ALLOWED_GROUP_IDS = [-1003616607301, -1002282514761]
 
 app = Flask(__name__)
 
@@ -86,7 +86,7 @@ def handle_like(message):
             f"Likes before Command: {likes_before}\n"
             f"Likes after Command: {likes_after}\n"
             f"Likes given by bot: {likes_given_by_bot}\n"
-            f"Group: https://t.me/tranhao1166"
+            f"Group: https://t.me/FreeFireEsporrts"
         )
 
         bot.edit_message_text(
@@ -130,7 +130,7 @@ def checkban_user(message):
         reply = (
             f"🔹 UID: {uid}\n"
             f"✅ Status: {status}\n"
-            f"🎉 group: https://t.me/tranhao1166"
+            f"🎉 group: https://t.me/FreeFireEsporrts"
         )
 
         bot.edit_message_text(
@@ -217,7 +217,7 @@ def handle_random_video(message):
 # 4. Chạ
 @bot.message_handler(commands=["admin"])
 def cmd_test(message):
-    bot.reply_to(message, "<blockquote>✅ Liên Hệ: @tranhao116!</blockquote>", parse_mode="HTML")
+    bot.reply_to(message, "<blockquote>✅ Liên Hệ: @nhathaov</blockquote>", parse_mode="HTML")
 
 @app.route(f"/{BOT_TOKEN}", methods=['POST'])
 def webhook():
