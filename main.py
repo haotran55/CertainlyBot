@@ -148,71 +148,108 @@ def checkban_user(message):
             parse_mode="HTML"
         )
 
-import requests
-from io import BytesIO
-import threading
-import time
+@bot.message_handler(commands=['info'])
+def get_info(message):
+    args = message.text.split()
 
-
-API_URL = "https://quanghauquanlybottele.x10.mx/videogai.php"
-
-# 2. Hàm lấy link video từ API
-def get_random_video_url():
-    try:
-        # Gửi yêu cầu đến API với timeout 7 giây để tránh treo bot
-        response = requests.get(API_URL, timeout=7)
-        if response.status_code == 200:
-            data = response.json()
-            # Lấy key 'url' từ JSON trả về
-            return data.get("url")
-        return None
-    except Exception as e:
-        print(f"Lỗi khi gọi API: {e}")
-        return None
-
-# 3. Xử lý lệnh /video
-@bot.message_handler(commands=['video'])
-def handle_random_video(message):
-    # Kiểm tra quyền hoạt động trong nhóm
-    if message.chat.id not in ALLOWED_GROUP_IDS:
-        error_msg = "⚠️ Bot chỉ hoạt động trong nhóm được cho phép.\nLink: https://t.me/tranhao1166"
-        bot.reply_to(message, error_msg)
+    if len(args) < 2:
+        bot.reply_to(message, "Lỗi: Thiếu UID. Cú pháp: <code>/info 8324665667</code>")
         return
 
-    # Thông báo cho người dùng là bot đang xử lý (tạo cảm giác mượt mà)
-    sent_status = bot.reply_to(message, "⏳ Đang lấy video, đợi xíu nhé...")
-    
-    username = message.from_user.username
-    display_name = f"@{username}" if username else message.from_user.first_name
+    uid = args[1]
 
-    # Lấy URL video
-    video_url = get_random_video_url()
+    # Gửi loading
+    loading_msg = bot.reply_to(message, "🔍 <b>Đang lấy thông tin tài khoản...</b>")
 
-    if video_url:
-        try:
-            # Gửi video trực tiếp bằng URL
-            bot.send_video(
-                chat_id=message.chat.id,
-                video=video_url,
-                caption=f"✅ Video của bạn đây!\n👤 Yêu cầu bởi: {display_name}",
-                reply_to_message_id=message.message_id
-            )
-            # Xóa tin nhắn "Đang lấy video" sau khi gửi xong cho sạch nhóm
-            bot.delete_message(message.chat.id, sent_status.message_id)
-            
-        except Exception as e:
-            print(f"Lỗi Telegram gửi video: {e}")
+    url = f"https://free-gtet.vercel.app/info?uid={uid}"
+
+    try:
+        response = requests.get(url, timeout=20)
+
+        if response.status_code != 200:
             bot.edit_message_text(
-                "❌ Lỗi: Không thể gửi video này (có thể file quá nặng hoặc lỗi định dạng).",
-                message.chat.id, 
-                sent_status.message_id
+                "❌ Không thể kết nối API.",
+                chat_id=message.chat.id,
+                message_id=loading_msg.message_id
             )
-    else:
-        bot.edit_message_text(
-            "❌ Hiện tại không lấy được video từ server. Thử lại sau nhé!",
-            message.chat.id, 
-            sent_status.message_id
+            return
+
+        data = response.json()
+
+        if "AccountInfo" not in data:
+            bot.edit_message_text(
+                "❌ Không tìm thấy dữ liệu cho UID này.",
+                chat_id=message.chat.id,
+                message_id=loading_msg.message_id
+            )
+            return
+
+        acc = data["AccountInfo"]
+        clan = data.get("clanBasicInfo", {})
+        social = data.get("socialInfo", {})
+        credit = data.get("creditScoreInfo", {})
+
+        ep_status = "Co" if acc.get("Tài khoản có ElitePass") else "Khong"
+
+        text = (
+            "<b>THÔNG TIN TÀI KHOẢN FREE FIRE</b>\n"
+            "----------------------------------\n"
+            "<b>Tên nhân vật:</b> <code>{name}</code>\n"
+            "<b>ID người chơi:</b> <code>{uid_val}</code>\n"
+            "<b>Khu vực:</b> <b>{region}</b>\n"
+            "<b>Cấp độ:</b> <b>{level}</b>\n"
+            "<b>Kinh nghiệm:</b> <b>{exp}</b>\n"
+            "<b>Lượt thích:</b> <b>{likes}</b>\n"
+            "<b>Chữ ký:</b> <i>{sig}</i>\n\n"
+
+            "<b>THÔNG SỐ XẾP HẠNG</b>\n"
+            "<b>Rank Tử Chiến:</b> <b>{cs_rank}</b> (Points: <b>{cs_pts}</b>)\n"
+            "<b>Rank Sinh Tồn:</b> <b>{br_rank}</b> (Points: <b>{br_pts}</b>)\n\n"
+
+            "<b>THÔNG TIN QUÂN ĐOÀN</b>\n"
+            "<b>Tên quân đoàn:</b> <b>{clan_name}</b>\n"
+            "<b>ID quân đoàn:</b> <code>{clan_id}</code>\n"
+            "<b>Cấp độ QĐ:</b> <b>{clan_lvl}</b>\n\n"
+
+            "<b>CHI TIẾT KHÁC</b>\n"
+            "<b>Elite Pass:</b> <b>{ep}</b>\n"
+            "<b>Điểm uy tín:</b> <b>{credit_score}</b>\n"
+            "<b>Phiên bản:</b> <b>{version}</b>\n"
+            "----------------------------------"
+        ).format(
+            name=acc.get('AccountNickname', 'N/A'),
+            uid_val=acc.get('AccountID', uid),
+            region=acc.get('AccountRegion', 'N/A'),
+            level=acc.get('AccountLevel', 0),
+            exp=acc.get('exp', 0),
+            likes=acc.get('AccountLiked', 0),
+            sig=social.get('signature', 'Trong'),
+            cs_rank=acc.get('CsRank', 0),
+            cs_pts=acc.get('CsRankingPoints', 0),
+            br_rank=acc.get('AccountRank', 0),
+            br_pts=acc.get('AccountRankingPoints', 0),
+            clan_name=clan.get('clanName', 'Khong co'),
+            clan_id=clan.get('clanId', 'N/A'),
+            clan_lvl=clan.get('clanLevel', 0),
+            ep=ep_status,
+            credit_score=credit.get('creditScore', 'N/A'),
+            version=data.get('releaseVersion', 'N/A')
         )
+
+        # Xóa loading
+        bot.delete_message(message.chat.id, loading_msg.message_id)
+
+        # Gửi kết quả
+        bot.send_message(message.chat.id, text)
+
+    except Exception as e:
+        print("Error:", e)
+        bot.edit_message_text(
+            "❌ Có lỗi hệ thống xảy ra.",
+            chat_id=message.chat.id,
+            message_id=loading_msg.message_id
+        )
+
 
 # 4. Chạ
 @bot.message_handler(commands=["admin"])
