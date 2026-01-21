@@ -106,47 +106,70 @@ def handle_like(message):
 
 
 
-@bot.message_handler(commands=['isbanned','Isbanned'])
-def checkban_user(message):
+@bot.message_handler(commands=['level'])
+def get_level(message):
     args = message.text.split()
+
     if len(args) < 2:
-        bot.reply_to(message, "Please provide a UID to check. Syntax: /isbanned <uid>")
+        bot.reply_to(message, "Thiếu UID. Cú pháp: <code>/level 8324665667</code>")
         return
 
     uid = args[1]
-    url = f"https://ban-info.vercel.app/bancheck?uid={uid}&key=tanhao1167"
+
+    loading = bot.reply_to(message, "🔍 <b>Đang lấy level tài khoản...</b>")
+
+    url = f"https://free-gtet.vercel.app/info?uid={uid}"
 
     try:
-        # Gửi tin nhắn đang xử lý
-        loading_msg = bot.reply_to(message, "⏳ Checking UID...")
+        response = requests.get(url, timeout=20)
 
-        response = requests.get(url)
+        if response.status_code != 200:
+            bot.edit_message_text(
+                "❌ Không thể kết nối API.",
+                message.chat.id,
+                loading.message_id
+            )
+            return
+
         data = response.json()
 
-        status = data.get('status', 'Không xác định')
-        uid = data.get('uid', 'Không xác định')
-        
+        if "AccountInfo" not in data:
+            bot.edit_message_text(
+                "❌ Không tìm thấy tài khoản.",
+                message.chat.id,
+                loading.message_id
+            )
+            return
 
-        reply = (
-            f"🔹 UID: {uid}\n"
-            f"✅ Status: {status}\n"
-            f"🎉 group: https://t.me/FreeFireEsporrts"
+        acc = data["AccountInfo"]
+
+        name = acc.get("AccountNickname", "N/A")
+        level = acc.get("AccountLevel", 0)
+        region = acc.get("AccountRegion", "N/A")
+
+        text = (
+            "<b>THÔNG TIN LEVEL TÀI KHOẢN</b>\n"
+            "-------------------------\n"
+            f"<b>Tên:</b> <code>{name}</code>\n"
+            f"<b>Level:</b> <b>{level}</b>\n"
+            f"<b>Region:</b> <b>{region}</b>\n"
+            "-------------------------"
         )
 
+        # Xóa loading
+        bot.delete_message(message.chat.id, loading.message_id)
+
+        # Gửi kết quả
+        bot.send_message(message.chat.id, text)
+
+    except Exception as e:
+        print("Error:", e)
         bot.edit_message_text(
-            chat_id=loading_msg.chat.id,
-            message_id=loading_msg.message_id,
-            text=reply,
-            parse_mode="HTML"
+            "❌ Có lỗi hệ thống.",
+            message.chat.id,
+            loading.message_id
         )
 
-    except Exception:
-        bot.edit_message_text(
-            chat_id=loading_msg.chat.id,
-            message_id=loading_msg.message_id,
-            text="Đang lỗi hoặc đang bảo trì vui lòng thử lại sau 💔.",
-            parse_mode="HTML"
-        )
 
 @bot.message_handler(commands=['info'])
 def get_info(message):
