@@ -20,26 +20,35 @@ def home():
 
 
 
-@bot.message_handler(commands=['like','Like'])
+@bot.message_handler(commands=['like', 'Like'])
 def handle_like(message):
     user_id = message.from_user.id
 
-    # Kiểm tra người dùng đã tham gia kênh chưa
-    # Kiểm tra nhóm được phép
+    # Check allowed group
     if message.chat.id not in ALLOWED_GROUP_IDS:
-        bot.reply_to(message, "Bot chỉ hoạt động trong nhóm này.\nLink: https://t.me/tranhao1166", parse_mode="HTML")
+        bot.reply_to(
+            message,
+            "This bot only works in the authorized group.\nJoin here: https://t.me/FreeFireEsporrts"
+        )
         return
 
-    # Kiểm tra định dạng lệnh
+    # Check command format
     parts = message.text.split()
     if len(parts) < 3:
-        bot.reply_to(message, "Please provide a valid region and UID. Example: /like sg 10000001", parse_mode="HTML")
+        bot.reply_to(
+            message,
+            "Invalid format.\nUsage: /like <region> <uid>\nExample: /like sg 10000001"
+        )
         return
 
     region = parts[1]
     uid = parts[2]
 
-    loading_msg = bot.reply_to(message, f"⏳Sending likes to {uid}, please wait...", parse_mode="HTML")
+    # Send loading message
+    loading_msg = bot.reply_to(
+        message,
+        f"⏳ Sending likes to UID {uid}...\nPlease wait."
+    )
 
     try:
         api_url = f"https://like-free-fire-nine.vercel.app/like?uid={uid}&server_name={region}"
@@ -47,61 +56,66 @@ def handle_like(message):
 
         if response.status_code != 200:
             bot.edit_message_text(
+                "❌ Failed to process request.\nPlease check the region or try again later.",
                 chat_id=loading_msg.chat.id,
-                message_id=loading_msg.message_id,
-                text="An error occurred. Please check account region or try again later🥲.",
-                parse_mode="HTML"
+                message_id=loading_msg.message_id
             )
             return
 
         data = response.json()
 
-        if "LikesGivenByAPI" not in data or "LikesbeforeCommand" not in data or "LikesafterCommand" not in data:
+        required_keys = [
+            "LikesGivenByAPI",
+            "LikesbeforeCommand",
+            "LikesafterCommand"
+        ]
+
+        if not all(key in data for key in required_keys):
             bot.edit_message_text(
+                "❌ Invalid response from server.\nPlease try again later.",
                 chat_id=loading_msg.chat.id,
-                message_id=loading_msg.message_id,
-                text="An error occurred. Please check account region or try again later🥲.",
-                parse_mode="HTML"
+                message_id=loading_msg.message_id
             )
             return
 
         if data["LikesGivenByAPI"] == 0:
             bot.edit_message_text(
+                f"💔 UID {uid} has already reached the daily like limit.\nPlease try another UID.",
                 chat_id=loading_msg.chat.id,
-                message_id=loading_msg.message_id,
-                text=f"💔 UID {uid} has already received Max Likes for Today 💔. Please Try a different UID.",
-                parse_mode="HTML"
+                message_id=loading_msg.message_id
             )
             return
 
         nickname = data.get("PlayerNickname", "Unknown")
-        uid = data.get("UID", "Unknown")
+        uid = data.get("UID", uid)
         likes_before = data["LikesbeforeCommand"]
         likes_after = data["LikesafterCommand"]
-        likes_given_by_bot = likes_after - likes_before
+        likes_given = likes_after - likes_before
 
         reply = (
-            f"Player Nickname: {nickname}\n"
-            f"Player UID: {uid}\n"
-            f"Likes before Command: {likes_before}\n"
-            f"Likes after Command: {likes_after}\n"
-            f"Likes given by bot: {likes_given_by_bot}\n"
-            f"Group: https://t.me/FreeFireEsporrts"
+            "❤️ LIKE SUCCESSFULLY SENT\n"
+            "━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"Player Name : {nickname}\n"
+            f"Player UID  : {uid}\n"
+            f"Likes Before: {likes_before}\n"
+            f"Likes After : {likes_after}\n"
+            f"Likes Added : {likes_given}\n"
+            "━━━━━━━━━━━━━━━━━━━━━━\n"
+            "Group: https://t.me/FreeFireEsporrts"
         )
 
         bot.edit_message_text(
+            reply,
             chat_id=loading_msg.chat.id,
-            message_id=loading_msg.message_id,
-            text=reply,
-            parse_mode="HTML"
+            message_id=loading_msg.message_id
         )
 
-    except Exception:
+    except Exception as e:
+        print("Error:", e)
         bot.edit_message_text(
+            "❌ The system is currently under maintenance.\nPlease try again later.",
             chat_id=loading_msg.chat.id,
-            message_id=loading_msg.message_id,
-            text="Đang lỗi hoặc đang bảo trì vui lòng thử lại sau 💔.",
-            parse_mode="HTML"
+            message_id=loading_msg.message_id
         )
 
 
@@ -111,12 +125,18 @@ def get_level(message):
     args = message.text.split()
 
     if len(args) < 2:
-        bot.reply_to(message, "Thiếu UID. Cú pháp: <code>/level 8324665667</code>")
+        bot.reply_to(
+            message,
+            "Missing UID.\nUsage: /level 8324665667"
+        )
         return
 
     uid = args[1]
 
-    loading = bot.reply_to(message, "🔍 <b>Đang lấy level tài khoản...</b>")
+    loading = bot.reply_to(
+        message,
+        "🔍 Loading account level information..."
+    )
 
     url = f"https://free-gtet.vercel.app/info?uid={uid}"
 
@@ -125,7 +145,7 @@ def get_level(message):
 
         if response.status_code != 200:
             bot.edit_message_text(
-                "❌ Không thể kết nối API.",
+                "❌ Failed to connect to the API.",
                 message.chat.id,
                 loading.message_id
             )
@@ -135,7 +155,7 @@ def get_level(message):
 
         if "AccountInfo" not in data:
             bot.edit_message_text(
-                "❌ Không tìm thấy tài khoản.",
+                "❌ Account not found.",
                 message.chat.id,
                 loading.message_id
             )
@@ -148,24 +168,24 @@ def get_level(message):
         region = acc.get("AccountRegion", "N/A")
 
         text = (
-            "<b>THÔNG TIN LEVEL TÀI KHOẢN</b>\n"
-            "-------------------------\n"
-            f"<b>Tên:</b> <code>{name}</code>\n"
-            f"<b>Level:</b> <b>{level}</b>\n"
-            f"<b>Region:</b> <b>{region}</b>\n"
-            "-------------------------"
+            "📊 ACCOUNT LEVEL INFORMATION\n"
+            "----------------------------\n"
+            f"Name   : {name}\n"
+            f"Level  : {level}\n"
+            f"Region : {region}\n"
+            "----------------------------"
         )
 
-        # Xóa loading
+        # Remove loading message
         bot.delete_message(message.chat.id, loading.message_id)
 
-        # Gửi kết quả
+        # Send result
         bot.send_message(message.chat.id, text)
 
     except Exception as e:
         print("Error:", e)
         bot.edit_message_text(
-            "❌ Có lỗi hệ thống.",
+            "❌ A system error occurred.",
             message.chat.id,
             loading.message_id
         )
@@ -176,13 +196,19 @@ def get_info(message):
     args = message.text.split()
 
     if len(args) < 2:
-        bot.reply_to(message, "Lỗi: Thiếu UID. Cú pháp: <code>/info 8324665667</code>")
+        bot.reply_to(
+            message,
+            "Missing UID.\nUsage: /info 8324665667"
+        )
         return
 
     uid = args[1]
 
-    # Gửi loading
-    loading_msg = bot.reply_to(message, "🔍 <b>Đang lấy thông tin tài khoản...</b>")
+    # Send loading message
+    loading_msg = bot.reply_to(
+        message,
+        "🔍 Loading account information..."
+    )
 
     url = f"https://free-gtet.vercel.app/info?uid={uid}"
 
@@ -191,7 +217,7 @@ def get_info(message):
 
         if response.status_code != 200:
             bot.edit_message_text(
-                "❌ Không thể kết nối API.",
+                "❌ Failed to connect to the API.",
                 chat_id=message.chat.id,
                 message_id=loading_msg.message_id
             )
@@ -201,77 +227,65 @@ def get_info(message):
 
         if "AccountInfo" not in data:
             bot.edit_message_text(
-                "❌ Không tìm thấy dữ liệu cho UID này.",
+                "❌ Account data not found.",
                 chat_id=message.chat.id,
                 message_id=loading_msg.message_id
             )
             return
 
-        acc = data["AccountInfo"]
+        acc = data.get("AccountInfo", {})
         clan = data.get("clanBasicInfo", {})
         social = data.get("socialInfo", {})
         credit = data.get("creditScoreInfo", {})
 
-        ep_status = "Co" if acc.get("Tài khoản có ElitePass") else "Khong"
+        ep_status = "Yes" if acc.get("Tài khoản có ElitePass") else "No"
 
         text = (
-            "<b>THÔNG TIN TÀI KHOẢN FREE FIRE</b>\n"
-            "----------------------------------\n"
-            "<b>Tên nhân vật:</b> <code>{name}</code>\n"
-            "<b>ID người chơi:</b> <code>{uid_val}</code>\n"
-            "<b>Khu vực:</b> <b>{region}</b>\n"
-            "<b>Cấp độ:</b> <b>{level}</b>\n"
-            "<b>Kinh nghiệm:</b> <b>{exp}</b>\n"
-            "<b>Lượt thích:</b> <b>{likes}</b>\n"
-            "<b>Chữ ký:</b> <i>{sig}</i>\n\n"
-
-            "<b>THÔNG SỐ XẾP HẠNG</b>\n"
-            "<b>Rank Tử Chiến:</b> <b>{cs_rank}</b> (Points: <b>{cs_pts}</b>)\n"
-            "<b>Rank Sinh Tồn:</b> <b>{br_rank}</b> (Points: <b>{br_pts}</b>)\n\n"
-
-            "<b>THÔNG TIN QUÂN ĐOÀN</b>\n"
-            "<b>Tên quân đoàn:</b> <b>{clan_name}</b>\n"
-            "<b>ID quân đoàn:</b> <code>{clan_id}</code>\n"
-            "<b>Cấp độ QĐ:</b> <b>{clan_lvl}</b>\n\n"
-
-            "<b>CHI TIẾT KHÁC</b>\n"
-            "<b>Elite Pass:</b> <b>{ep}</b>\n"
-            "<b>Điểm uy tín:</b> <b>{credit_score}</b>\n"
-            "<b>Phiên bản:</b> <b>{version}</b>\n"
-            "----------------------------------"
-        ).format(
-            name=acc.get('AccountNickname', 'N/A'),
-            uid_val=acc.get('AccountID', uid),
-            region=acc.get('AccountRegion', 'N/A'),
-            level=acc.get('AccountLevel', 0),
-            exp=acc.get('exp', 0),
-            likes=acc.get('AccountLiked', 0),
-            sig=social.get('signature', 'Trong'),
-            cs_rank=acc.get('CsRank', 0),
-            cs_pts=acc.get('CsRankingPoints', 0),
-            br_rank=acc.get('AccountRank', 0),
-            br_pts=acc.get('AccountRankingPoints', 0),
-            clan_name=clan.get('clanName', 'Khong co'),
-            clan_id=clan.get('clanId', 'N/A'),
-            clan_lvl=clan.get('clanLevel', 0),
-            ep=ep_status,
-            credit_score=credit.get('creditScore', 'N/A'),
-            version=data.get('releaseVersion', 'N/A')
+            "🎮 FREE FIRE ACCOUNT INFORMATION\n"
+            "━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"Name        : {acc.get('AccountNickname', 'N/A')}\n"
+            f"Player ID   : {acc.get('AccountID', uid)}\n"
+            f"Region      : {acc.get('AccountRegion', 'N/A')}\n"
+            f"Level       : {acc.get('AccountLevel', 0)}\n"
+            f"Experience  : {acc.get('exp', 0)}\n"
+            f"Likes       : {acc.get('AccountLiked', 0)}\n"
+            f"Signature   : {social.get('signature', 'Empty')}\n"
+            "\n"
+            "🏆 RANK INFORMATION\n"
+            "━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"Clash Squad : {acc.get('CsRank', 0)} "
+            f"(Points: {acc.get('CsRankingPoints', 0)})\n"
+            f"Battle Royale: {acc.get('AccountRank', 0)} "
+            f"(Points: {acc.get('AccountRankingPoints', 0)})\n"
+            "\n"
+            "👥 CLAN INFORMATION\n"
+            "━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"Clan Name   : {clan.get('clanName', 'None')}\n"
+            f"Clan ID     : {clan.get('clanId', 'N/A')}\n"
+            f"Clan Level  : {clan.get('clanLevel', 0)}\n"
+            "\n"
+            "📌 OTHER DETAILS\n"
+            "━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"Elite Pass  : {ep_status}\n"
+            f"Credit Score: {credit.get('creditScore', 'N/A')}\n"
+            f"Version     : {data.get('releaseVersion', 'N/A')}\n"
+            "━━━━━━━━━━━━━━━━━━━━━━"
         )
 
-        # Xóa loading
+        # Remove loading message
         bot.delete_message(message.chat.id, loading_msg.message_id)
 
-        # Gửi kết quả
+        # Send result
         bot.send_message(message.chat.id, text)
 
     except Exception as e:
         print("Error:", e)
         bot.edit_message_text(
-            "❌ Có lỗi hệ thống xảy ra.",
+            "❌ A system error occurred.",
             chat_id=message.chat.id,
             message_id=loading_msg.message_id
         )
+        
 
 
 # 4. Chạ
