@@ -47,7 +47,7 @@ def handle_like(message):
     # Send loading message
     loading_msg = bot.reply_to(
         message,
-        f"⏳ Sending likes to UID {uid}...\nPlease wait."
+        f"⏳ Sending likes to UID {uid} Please wait."
     )
 
     try:
@@ -93,22 +93,30 @@ def handle_like(message):
         likes_given = likes_after - likes_before
 
         reply = (
-            "❤️ LIKE SUCCESSFULLY SENT\n"
-            "━━━━━━━━━━━━━━━━━━━━━━\n"
-            f"Player Name : {nickname}\n"
-            f"Player UID  : {uid}\n"
-            f"Likes Before: {likes_before}\n"
-            f"Likes After : {likes_after}\n"
-            f"Likes Added : {likes_given}\n"
-            "━━━━━━━━━━━━━━━━━━━━━━\n"
-            "Group: https://t.me/FreeFireEsporrts"
+            "<blockquote>"
+            "✨ <b>SENT SUCCESSFULLY</b>\n"
+            "━━━━━━━━━━━━━━━━━━\n"
+            f"👤 <b>Nickname</b> : <code>{nickname}</code>\n"
+            f"🆔 <b>UID</b>      : <code>{uid}</code>\n\n"
+            f"📊 <b>LIKE STATUS</b>\n"
+            f"┣ 📈 Before : <code>{likes_before}</code>\n"
+            f"┣ 📉 After  : <code>{likes_after}</code>\n"
+            f"┗ ❤️ Added  : <b>+{likes_given}</b>\n"
+             "━━━━━━━━━━━━━━━━━━\n"
+             "🔗 <b>Group</b> : <a href='https://t.me/FreeFireEsporrts'>FreeFire Esports</a>"
+             "</blockquote>"
         )
+
 
         bot.edit_message_text(
             reply,
             chat_id=loading_msg.chat.id,
-            message_id=loading_msg.message_id
+            message_id=loading_msg.message_id,
+            parse_mode="HTML",
+            disable_web_page_preview=True
         )
+
+
 
     except Exception as e:
         print("Error:", e)
