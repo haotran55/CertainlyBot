@@ -19,6 +19,9 @@ def home():
     return "Bot đang hoạt động trên Render!"
 
 
+import requests
+import json
+from requests.exceptions import Timeout, RequestException
 
 @bot.message_handler(commands=['like', 'Like'])
 def handle_like(message):
@@ -28,7 +31,8 @@ def handle_like(message):
     if message.chat.id not in ALLOWED_GROUP_IDS:
         bot.reply_to(
             message,
-            "This bot only works in the authorized group.\nJoin here: https://t.me/FreeFireEsporrts"
+            "🚫 This bot only works in the authorized group.\n"
+            "👉 https://t.me/FreeFireEsporrts"
         )
         return
 
@@ -37,26 +41,39 @@ def handle_like(message):
     if len(parts) < 3:
         bot.reply_to(
             message,
-            "Invalid format.\nUsage: /like vn 10000001"
+            "❌ Invalid format\n"
+            "<b>Usage:</b> <code>/like vn 10000001</code>",
+            parse_mode="HTML"
         )
         return
 
-    region = parts[1]
+    region = parts[1].lower()
     uid = parts[2]
 
-    # Send loading message
     loading_msg = bot.reply_to(
         message,
-        f"⏳ Sending likes to UID {uid}"
+        f"⏳ Sending likes to UID <code>{uid}</code>...",
+        parse_mode="HTML"
     )
 
+    api_url = f"https://like-free-fire-nine.vercel.app/like?uid={uid}&server_name={region}"
+
     try:
-        api_url = f"https://like-free-fire-nine.vercel.app/like?uid={uid}&server_name={region}"
         response = requests.get(api_url, timeout=15)
 
+        # Status code lỗi
         if response.status_code != 200:
             bot.edit_message_text(
-                "❌ Failed to process request.\nPlease check the region or try again later.",
+                f"❌ API Error ({response.status_code})\nPlease try again later.",
+                chat_id=loading_msg.chat.id,
+                message_id=loading_msg.message_id
+            )
+            return
+
+        # Check JSON
+        if "application/json" not in response.headers.get("Content-Type", ""):
+            bot.edit_message_text(
+                "❌ API returned invalid data (not JSON).",
                 chat_id=loading_msg.chat.id,
                 message_id=loading_msg.message_id
             )
@@ -70,9 +87,9 @@ def handle_like(message):
             "LikesafterCommand"
         ]
 
-        if not all(key in data for key in required_keys):
+        if not all(k in data for k in required_keys):
             bot.edit_message_text(
-                "❌ Invalid response from server Please try again later.",
+                "❌ Invalid API response.\nPlease try again later.",
                 chat_id=loading_msg.chat.id,
                 message_id=loading_msg.message_id
             )
@@ -80,9 +97,10 @@ def handle_like(message):
 
         if data["LikesGivenByAPI"] == 0:
             bot.edit_message_text(
-                f"💔 UID {uid} has already reached the daily like limit.\nPlease try another UID.",
+                f"💔 UID <code>{uid}</code> has reached daily like limit.",
                 chat_id=loading_msg.chat.id,
-                message_id=loading_msg.message_id
+                message_id=loading_msg.message_id,
+                parse_mode="HTML"
             )
             return
 
@@ -93,16 +111,13 @@ def handle_like(message):
         likes_given = likes_after - likes_before
 
         reply = (
-            " ╭✅ <b>API Success:\n"
-            f"├👤 <b>Account: {nickname}\n"
-            f"├🆔 <b>UID: {uid}\n"
-            f"├❤️ <b>Likes Added: {likes_given}\n"
-            f"├📈 <b>Likes Before: {likes_before}\n"
-            f"╰📉 <b>Likes After: {likes_after}\n"
+            "╭✅ <b>LIKE SUCCESS</b>\n"
+            f"├👤 <b>Account:</b> {nickname}\n"
+            f"├🆔 <b>UID:</b> <code>{uid}</code>\n"
+            f"├❤️ <b>Likes Added:</b> {likes_given}\n"
+            f"├📈 <b>Before:</b> {likes_before}\n"
+            f"╰📉 <b>After:</b> {likes_after}"
         )
-
-
-
 
         bot.edit_message_text(
             reply,
@@ -112,12 +127,25 @@ def handle_like(message):
             disable_web_page_preview=True
         )
 
+    except Timeout:
+        bot.edit_message_text(
+            "⏳ API timeout.\nPlease try again later.",
+            chat_id=loading_msg.chat.id,
+            message_id=loading_msg.message_id
+        )
 
+    except RequestException as e:
+        print("Request error:", e)
+        bot.edit_message_text(
+            "🌐 Cannot connect to API.\nPlease try again later.",
+            chat_id=loading_msg.chat.id,
+            message_id=loading_msg.message_id
+        )
 
     except Exception as e:
-        print("Error:", e)
+        print("Unknown error:", e)
         bot.edit_message_text(
-            "❌ The system is currently under maintenance.\nPlease try again later.",
+            "❌ Unexpected system error.",
             chat_id=loading_msg.chat.id,
             message_id=loading_msg.message_id
         )
