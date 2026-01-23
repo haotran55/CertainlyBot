@@ -111,13 +111,15 @@ def handle_like(message):
         likes_given = likes_after - likes_before
 
         reply = (
-            f"<b>╭Player Name: {nickname}<b>\n"
-            f"<b>├Player UID: {uid}<b>\n"
-            f"<b>├Likes Given: {likes_given}<b>\n"
-            f"<b>├Likes Before: {likes_before}<b>\n"
-            f"<b>├Likes After: {likes_after}<b>\n"
-            " <b>╰Contact: @nhathaov<b>"
+           f"<b>╭ Player Name:</b> {nickname}\n"
+           f"<b>├ Player UID:</b> {uid}\n"
+           f"<b>├ Likes Given:</b> {likes_given}\n"
+           f"<b>├ Likes Before:</b> {likes_before}\n"
+           f"<b>├ Likes After:</b> {likes_after}\n"
+           f"<b>╰ Contact:</b> @nhathaov"
         )
+
+
 
         bot.edit_message_text(
             reply,
