@@ -111,7 +111,7 @@ def handle_like(message):
         likes_given = likes_after - likes_before
 
         reply = (
-            "╭✅ <b>LIKE SUCCESS</b>\n"
+            " ╭✅ <b>LIKE SUCCESS</b>\n"
             f"├👤 <b>Account:</b> {nickname}\n"
             f"├🆔 <b>UID:</b> <code>{uid}</code>\n"
             f"├❤️ <b>Likes Added:</b> {likes_given}\n"
@@ -123,8 +123,7 @@ def handle_like(message):
             reply,
             chat_id=loading_msg.chat.id,
             message_id=loading_msg.message_id,
-            parse_mode="HTML",
-            disable_web_page_preview=True
+            parse_mode="HTML"
         )
 
     except Timeout:
