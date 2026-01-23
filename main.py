@@ -37,7 +37,7 @@ def handle_like(message):
     if len(parts) < 3:
         bot.reply_to(
             message,
-            "Invalid format.\nUsage: /like <region> <uid>\nExample: /like sg 10000001"
+            "Invalid format.\nUsage: /like vn 10000001"
         )
         return
 
@@ -47,7 +47,7 @@ def handle_like(message):
     # Send loading message
     loading_msg = bot.reply_to(
         message,
-        f"⏳ Sending likes to UID {uid} Please wait."
+        f"⏳ Sending likes to UID {uid}"
     )
 
     try:
@@ -72,7 +72,7 @@ def handle_like(message):
 
         if not all(key in data for key in required_keys):
             bot.edit_message_text(
-                "❌ Invalid response from server.\nPlease try again later.",
+                "❌ Invalid response from server Please try again later.",
                 chat_id=loading_msg.chat.id,
                 message_id=loading_msg.message_id
             )
@@ -93,19 +93,15 @@ def handle_like(message):
         likes_given = likes_after - likes_before
 
         reply = (
-            "<blockquote>"
-            "✨ <b>SENT SUCCESSFULLY</b>\n"
-            "━━━━━━━━━━━━━━━━━━\n"
-            f"👤 <b>Nickname</b> : <code>{nickname}</code>\n"
-            f"🆔 <b>UID</b>      : <code>{uid}</code>\n\n"
-            f"📊 <b>LIKE STATUS</b>\n"
-            f"┣ 📈 Before : <code>{likes_before}</code>\n"
-            f"┣ 📉 After  : <code>{likes_after}</code>\n"
-            f"┗ ❤️ Added  : <b>+{likes_given}</b>\n"
-             "━━━━━━━━━━━━━━━━━━\n"
-             "🔗 <b>Group</b> : <a href='https://t.me/FreeFireEsporrts'>FreeFire Esports</a>"
-             "</blockquote>"
+            " ╭✅ <b>API Success:\n"
+            f"├👤 <b>Account: {nickname}\n"
+            f"├🆔 <b>UID: {uid}\n"
+            f"├❤️ <b>Likes Added: {likes_given}\n"
+            f"├📈 <b>Likes Before: {likes_before}\n"
+            f"╰📉 <b>Likes After: {likes_after}\n"
         )
+
+
 
 
         bot.edit_message_text(
