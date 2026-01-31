@@ -20,7 +20,6 @@ def home():
 
 
 import requests
-import json
 from requests.exceptions import Timeout, RequestException
 
 @bot.message_handler(commands=['like', 'Like'])
@@ -61,7 +60,7 @@ def handle_like(message):
     try:
         response = requests.get(api_url, timeout=15)
 
-        # Status code lỗi
+        # Check status code
         if response.status_code != 200:
             bot.edit_message_text(
                 f"❌ API Error ({response.status_code})\nPlease try again later.",
@@ -97,7 +96,7 @@ def handle_like(message):
 
         if data["LikesGivenByAPI"] == 0:
             bot.edit_message_text(
-                f"💔 UID <code>{uid}</code> has reached daily like limit.",
+                f"<blockquote>💔 UID <code>{uid}</code> has reached daily like limit.</blockquote>",
                 chat_id=loading_msg.chat.id,
                 message_id=loading_msg.message_id,
                 parse_mode="HTML"
@@ -111,15 +110,18 @@ def handle_like(message):
         likes_given = likes_after - likes_before
 
         reply = (
-           f"<b>╭ Player Name:</b> {nickname}\n"
-           f"<b>├ Player UID:</b> {uid}\n"
-           f"<b>├ Likes Given:</b> {likes_given}\n"
-           f"<b>├ Likes Before:</b> {likes_before}\n"
-           f"<b>├ Likes After:</b> {likes_after}\n"
-           f"<b>╰ Contact:</b> @nhathaov"
+            "<blockquote>"
+            "🎮 <b>LIKE SUCCESS</b>\n"
+            "──────────────\n"
+            f"👤 <b>Name:</b> {nickname}\n"
+            f"🆔 <b>UID:</b> {uid}\n"
+            f"❤️ <b>Likes Given:</b> {likes_given}\n"
+            f"📈 <b>Before:</b> {likes_before}\n"
+            f"📉 <b>After:</b> {likes_after}\n"
+            "──────────────\n"
+            "📩 <b>Contact:</b> @nhathaov"
+            "</blockquote>"
         )
-
-
 
         bot.edit_message_text(
             reply,
@@ -130,25 +132,28 @@ def handle_like(message):
 
     except Timeout:
         bot.edit_message_text(
-            "⏳ API timeout.\nPlease try again later.",
+            "<blockquote>⏳ API timeout.\nPlease try again later.</blockquote>",
             chat_id=loading_msg.chat.id,
-            message_id=loading_msg.message_id
+            message_id=loading_msg.message_id,
+            parse_mode="HTML"
         )
 
     except RequestException as e:
         print("Request error:", e)
         bot.edit_message_text(
-            "🌐 Cannot connect to API.\nPlease try again later.",
+            "<blockquote>🌐 Cannot connect to API.\nPlease try again later.</blockquote>",
             chat_id=loading_msg.chat.id,
-            message_id=loading_msg.message_id
+            message_id=loading_msg.message_id,
+            parse_mode="HTML"
         )
 
     except Exception as e:
         print("Unknown error:", e)
         bot.edit_message_text(
-            "❌ Unexpected system error.",
+            "<blockquote>❌ Unexpected system error.</blockquote>",
             chat_id=loading_msg.chat.id,
-            message_id=loading_msg.message_id
+            message_id=loading_msg.message_id,
+            parse_mode="HTML"
         )
 
 
