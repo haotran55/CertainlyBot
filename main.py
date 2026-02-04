@@ -15,9 +15,13 @@ bot = telebot.TeleBot(BOT_TOKEN)
 
 app = Flask(__name__)
 
-@app.route('/')
-def home():
-    return "Bot đang hoạt động trên Render!"
+@app.route(f"/{BOT_TOKEN}", methods=["POST"])
+def webhook():
+    json_str = request.get_data().decode("UTF-8")
+    update = telebot.types.Update.de_json(json_str)
+    bot.process_new_updates([update])
+    return "OK", 200
+
 
 
 import requests
