@@ -3,6 +3,7 @@ import random
 import time
 import requests
 import telebot
+import threading
 from telebot.types import Message
 from telebot import TeleBot
 from flask import Flask, request
@@ -10,7 +11,7 @@ from datetime import datetime, timedelta
 
 BOT_TOKEN = os.environ.get('BOT_TOKEN')
 bot = telebot.TeleBot(BOT_TOKEN)
-ALLOWED_GROUP_IDS = [-1003616607301, -1002282514761]
+
 
 app = Flask(__name__)
 
@@ -25,15 +26,6 @@ from requests.exceptions import Timeout, RequestException
 @bot.message_handler(commands=['like', 'Like'])
 def handle_like(message):
     user_id = message.from_user.id
-
-    # Check allowed group
-    if message.chat.id not in ALLOWED_GROUP_IDS:
-        bot.reply_to(
-            message,
-            "🚫 This bot only works in the authorized group.\n"
-            "👉 https://t.me/FreeFireEsporrts"
-        )
-        return
 
     # Check command format
     parts = message.text.split()
@@ -157,186 +149,182 @@ def handle_like(message):
         )
 
 
+VIDEO_URL = "https://api.tiktokv.com/aweme/v1/play/?file_id=2fab7e5637e64628a0e0d98f3f6028a0&is_play_url=1&item_id=7508799426123549957&line=0&signaturev3=dmlkZW9faWQ7ZmlsZV9pZDtpdGVtX2lkLjQ1MWYyY2Y5YzhlMzRjMGYzNGM0NTVlYmY3NmFkYzdl&source=FEED&video_id=v09044g40000d0q9pb7og65v3lr1sqc0&name=taivideo.vn - Geto Kenjaku Desktop live wallpaper geto getosuguru kenjaku jujutsukaisen desktoplivewallpapers anim.mp4"
 
-@bot.message_handler(commands=['level'])
-def get_level(message):
-    args = message.text.split()
+@bot.message_handler(content_types=['new_chat_members'])
+def welcome_new_member(message):
+    chat_id = message.chat.id
 
-    if len(args) < 2:
-        bot.reply_to(
-            message,
-            "Missing UID.\nUsage: /level 8324665667"
-        )
-        return
+    for user in message.new_chat_members:
+        first = user.first_name
+        username = f"@{user.username}" if user.username else "None"
+        user_id = user.id
 
-    uid = args[1]
+        caption = f"""
+<pre>
+👋 Hello, welcome {first} to Support!
 
-    loading = bot.reply_to(
-        message,
-        "🔍 Loading account level information..."
-    )
+Name      : {first}
+Username  : {username}
+ID        : {user_id}
 
-    url = f"https://free-gtet.vercel.app/info?uid={uid}"
+👍 GET LIKES IN FREE FIRE ACCOUNT
+├── Format : /like {{region}} {{Uid}}
+├── Example: /like ind 12345678
+└── ✅ All Regions Supported
 
-    try:
-        response = requests.get(url, timeout=20)
+🚨 More Coming Soon
+Keep Support 😊
 
-        if response.status_code != 200:
-            bot.edit_message_text(
-                "❌ Failed to connect to the API.",
-                message.chat.id,
-                loading.message_id
-            )
-            return
+• I hope you understand everything clearly. 🗿
+• Thanks for using this group! 😁
+</pre>
+"""
 
-        data = response.json()
-
-        if "AccountInfo" not in data:
-            bot.edit_message_text(
-                "❌ Account not found.",
-                message.chat.id,
-                loading.message_id
-            )
-            return
-
-        acc = data["AccountInfo"]
-
-        name = acc.get("AccountNickname", "N/A")
-        level = acc.get("AccountLevel", 0)
-        region = acc.get("AccountRegion", "N/A")
-
-        text = (
-            "📊 ACCOUNT LEVEL INFORMATION\n"
-            "----------------------------\n"
-            f"Name   : {name}\n"
-            f"Level  : {level}\n"
-            f"Region : {region}\n"
-            "----------------------------"
-        )
-
-        # Remove loading message
-        bot.delete_message(message.chat.id, loading.message_id)
-
-        # Send result
-        bot.send_message(message.chat.id, text)
-
-    except Exception as e:
-        print("Error:", e)
-        bot.edit_message_text(
-            "❌ A system error occurred.",
-            message.chat.id,
-            loading.message_id
-        )
-
-
-@bot.message_handler(commands=['info'])
-def get_info(message):
-    args = message.text.split()
-
-    if len(args) < 2:
-        bot.reply_to(
-            message,
-            "Missing UID.\nUsage: /info 8324665667"
-        )
-        return
-
-    uid = args[1]
-
-    # Send loading message
-    loading_msg = bot.reply_to(
-        message,
-        "🔍 Loading account information..."
-    )
-
-    url = f"https://free-gtet.vercel.app/info?uid={uid}"
-
-    try:
-        response = requests.get(url, timeout=20)
-
-        if response.status_code != 200:
-            bot.edit_message_text(
-                "❌ Failed to connect to the API.",
-                chat_id=message.chat.id,
-                message_id=loading_msg.message_id
-            )
-            return
-
-        data = response.json()
-
-        if "AccountInfo" not in data:
-            bot.edit_message_text(
-                "❌ Account data not found.",
-                chat_id=message.chat.id,
-                message_id=loading_msg.message_id
-            )
-            return
-
-        acc = data.get("AccountInfo", {})
-        clan = data.get("clanBasicInfo", {})
-        social = data.get("socialInfo", {})
-        credit = data.get("creditScoreInfo", {})
-
-        ep_status = "Yes" if acc.get("Tài khoản có ElitePass") else "No"
-
-        text = (
-            "🎮 FREE FIRE ACCOUNT INFORMATION\n"
-            "━━━━━━━━━━━━━━━━━━━━━━\n"
-            f"Name        : {acc.get('AccountNickname', 'N/A')}\n"
-            f"Player ID   : {acc.get('AccountID', uid)}\n"
-            f"Region      : {acc.get('AccountRegion', 'N/A')}\n"
-            f"Level       : {acc.get('AccountLevel', 0)}\n"
-            f"Experience  : {acc.get('exp', 0)}\n"
-            f"Likes       : {acc.get('AccountLiked', 0)}\n"
-            f"Signature   : {social.get('signature', 'Empty')}\n"
-            "\n"
-            "🏆 RANK INFORMATION\n"
-            "━━━━━━━━━━━━━━━━━━━━━━\n"
-            f"Clash Squad : {acc.get('CsRank', 0)} "
-            f"(Points: {acc.get('CsRankingPoints', 0)})\n"
-            f"Battle Royale: {acc.get('AccountRank', 0)} "
-            f"(Points: {acc.get('AccountRankingPoints', 0)})\n"
-            "\n"
-            "👥 CLAN INFORMATION\n"
-            "━━━━━━━━━━━━━━━━━━━━━━\n"
-            f"Clan Name   : {clan.get('clanName', 'None')}\n"
-            f"Clan ID     : {clan.get('clanId', 'N/A')}\n"
-            f"Clan Level  : {clan.get('clanLevel', 0)}\n"
-            "\n"
-            "📌 OTHER DETAILS\n"
-            "━━━━━━━━━━━━━━━━━━━━━━\n"
-            f"Elite Pass  : {ep_status}\n"
-            f"Credit Score: {credit.get('creditScore', 'N/A')}\n"
-            f"Version     : {data.get('releaseVersion', 'N/A')}\n"
-            "━━━━━━━━━━━━━━━━━━━━━━"
-        )
-
-        # Remove loading message
-        bot.delete_message(message.chat.id, loading_msg.message_id)
-
-        # Send result
-        bot.send_message(message.chat.id, text)
-
-    except Exception as e:
-        print("Error:", e)
-        bot.edit_message_text(
-            "❌ A system error occurred.",
-            chat_id=message.chat.id,
-            message_id=loading_msg.message_id
+        bot.send_video(
+            chat_id,
+            VIDEO_URL,
+            caption=caption
         )
         
 
 
-# 4. Chạ
-@bot.message_handler(commands=["admin"])
-def cmd_test(message):
-    bot.reply_to(message, "<blockquote>✅ Liên Hệ: @nhathaov</blockquote>", parse_mode="HTML")
+@bot.message_handler(commands=['id', 'info'])
+def get_user_info(message):
+    # Nếu reply thì lấy user được reply
+    if message.reply_to_message:
+        user = message.reply_to_message.from_user
+    else:
+        user = message.from_user
 
-@app.route(f"/{BOT_TOKEN}", methods=['POST'])
-def webhook():
-    json_string = request.get_data().decode('utf-8')
-    update = telebot.types.Update.de_json(json_string)
-    bot.process_new_updates([update])
-    return 'ok', 200
+    user_id = user.id
+    first_name = user.first_name or "None"
+    last_name = user.last_name or ""
+    username = f"@{user.username}" if user.username else "None"
+    language = user.language_code or "Unknown"
+    is_bot = user.is_bot
+
+    info_text = f"""
+<pre>
+📌 TELEGRAM USER INFO
+├─ 🆔 ID: {user_id}
+├─ 👤 Name: {first_name} {last_name}
+├─ 🔗 Username: {username}
+├─ 🌐 Language: {language}
+└─ 🤖 Is Bot: {is_bot}
+</pre>
+"""
+
+    # Lấy ảnh đại diện
+    photos = bot.get_user_profile_photos(user_id, limit=1)
+
+    if photos.total_count > 0:
+        file_id = photos.photos[0][-1].file_id
+        bot.send_photo(
+            message.chat.id,
+            photo=file_id,
+            caption=info_text,
+            parse_mode="HTML"
+        )
+    else:
+        bot.send_message(
+            message.chat.id,
+            info_text + "\n<pre>(User has no profile picture.The user has no photo.)</pre>",
+            parse_mode="HTML"
+        )
+   
+
+import telebot
+from datetime import datetime
+import pytz
+
+COUNTRY_TIMEZONES = {
+    # Việt Nam
+    "viet nam": "Asia/Ho_Chi_Minh",
+    "vietnam": "Asia/Ho_Chi_Minh",
+
+    # Ấn Độ
+    "an do": "Asia/Kolkata",
+    "india": "Asia/Kolkata",
+
+    # Nepal
+    "nepal": "Asia/Kathmandu",
+
+    # Nhật Bản
+    "nhat ban": "Asia/Tokyo",
+    "japan": "Asia/Tokyo",
+
+    # Hàn Quốc
+    "han quoc": "Asia/Seoul",
+    "korea": "Asia/Seoul",
+    "south korea": "Asia/Seoul",
+
+    # Trung Quốc
+    "trung quoc": "Asia/Shanghai",
+    "china": "Asia/Shanghai",
+
+    # Thái Lan
+    "thai lan": "Asia/Bangkok",
+    "thailand": "Asia/Bangkok",
+
+    # Mỹ
+    "my": "America/New_York",
+    "usa": "America/New_York",
+    "united states": "America/New_York",
+
+    # Anh
+    "anh": "Europe/London",
+    "uk": "Europe/London",
+    "england": "Europe/London",
+
+    # Pháp
+    "phap": "Europe/Paris",
+    "france": "Europe/Paris"
+}
+
+
+@bot.message_handler(commands=['time'])
+def time_by_country_name(message):
+    args = message.text.split(maxsplit=1)
+
+    if len(args) < 2:
+        bot.reply_to(
+            message,
+            "<pre>❌ Use: /time viet nam | india | nepal ...</pre>",
+            parse_mode="HTML"
+        )
+        return
+
+    country_name = args[1].lower().strip()
+
+    if country_name not in COUNTRY_TIMEZONES:
+        bot.reply_to(
+            message,
+            "<pre>❌ This country was not found.</pre>",
+            parse_mode="HTML"
+        )
+        return
+
+    tz_name = COUNTRY_TIMEZONES[country_name]
+    tz = pytz.timezone(tz_name)
+    now = datetime.now(tz)
+
+    text = f"""
+<pre>
+🌍 WORLD TIME
+
+🌐 Country : {country_name.title()}
+🕒 Time    : {now.strftime('%H:%M:%S')}
+📅 Date    : {now.strftime('%d-%m-%Y')}
+⏰ Zone    : {tz_name}
+</pre>
+"""
+
+    bot.reply_to(message, text, parse_mode="HTML")
+
+
+        
+
 
 #cc
 if __name__ == "__main__":
