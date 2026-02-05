@@ -35,7 +35,7 @@ def handle_like(message):
     if len(parts) < 3:
         bot.reply_to(
             message,
-            "❌ Invalid format\n<b>Usage:</b> <code>/like vn 10000001</code>"
+            "❌ Invalid format\n<b>Usage:</b> <code>/like sg 10000001</code>"
         )
         return
 
@@ -47,7 +47,7 @@ def handle_like(message):
         f"⏳ Sending likes to UID <code>{uid}</code>..."
     )
 
-    api_url = f"https://like-free-fire-nine.vercel.app/like?uid={uid}&server_name={region}"
+    api_url = f"https://like-free-firee.vercel.app/like?uid={uid}&server_name={region}"
 
     try:
         r = requests.get(api_url, timeout=15)
