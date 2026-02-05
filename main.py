@@ -28,23 +28,26 @@ def webhook():
     return "OK", 200
 
 # ================== /LIKE COMMAND ==================
-@bot.message_handler(commands=['like', 'Like'])
+@bot.message_handler(commands=["like"])
 def handle_like(message):
     parts = message.text.split()
 
+    # Check format
     if len(parts) < 3:
         bot.reply_to(
             message,
-            "❌ Invalid format\n<b>Usage:</b> <code>/like sg 10000001</code>"
+            "❌ <b>Invalid format</b>\n"
+            "📌 <b>Usage:</b> <code>/like sg 10000001</code>"
         )
         return
 
     region = parts[1].lower()
     uid = parts[2]
 
+    # Loading message
     loading = bot.reply_to(
         message,
-        f"⏳ Sending likes to UID <code>{uid}</code>..."
+        f"⏳ <b>Sending likes...</b>\n🆔 UID: <code>{uid}</code>"
     )
 
     api_url = f"https://like-free-firee.vercel.app/like?uid={uid}&server_name={region}"
@@ -54,7 +57,7 @@ def handle_like(message):
 
         if r.status_code != 200:
             bot.edit_message_text(
-                "❌ API error. Try again later.",
+                "❌ <b>API error</b>\n⏱ Try again later.",
                 loading.chat.id,
                 loading.message_id
             )
@@ -62,27 +65,42 @@ def handle_like(message):
 
         data = r.json()
 
+        # Check daily limit
         if data.get("LikesGivenByAPI", 0) == 0:
             bot.edit_message_text(
-                f"<blockquote>💔 UID <code>{uid}</code> reached daily limit.</blockquote>",
+                "💔 <b>Daily limit reached</b>\n"
+                f"🆔 UID: <code>{uid}</code>",
                 loading.chat.id,
                 loading.message_id
             )
             return
 
-        reply = f"""
-<blockquote>
-🎮 <b>LIKE SUCCESS</b>
-──────────────
-👤 Name : {data.get("PlayerNickname","Unknown")}
-🆔 UID  : {data.get("UID", uid)}
-❤️ Likes Given : {data["LikesafterCommand"] - data["LikesbeforeCommand"]}
-📈 Before : {data["LikesbeforeCommand"]}
-📉 After  : {data["LikesafterCommand"]}
-──────────────
-📩 Contact : @nhathaov
-</blockquote>
-"""
+        likes_before = data.get("LikesbeforeCommand", 0)
+        likes_after = data.get("LikesafterCommand", 0)
+        likes_added = likes_after - likes_before
+
+        reply = (
+            " ✅ <b>Likes Sent</b>\n"
+            f"👤 <b>Nickname:</b> {data.get('PlayerNickname', 'Unknown')}\n"
+            f"🆔 <b>UID:</b> <code>{data.get('UID', uid)}</code>\n"
+            f"❤️ <b>Likes Given:</b> {likes_added}\n"
+            f"📈 <b>Likes Before:</b> {likes_before}\n"
+            f"📉 <b>Likes After:</b> {likes_after}"
+        )
+
+        bot.edit_message_text(
+            reply,
+            loading.chat.id,
+            loading.message_id
+        )
+
+    except Exception as e:
+        print("Like error:", e)
+        bot.edit_message_text(
+            "❌ <b>System error</b>\n⚠️ Please try again later.",
+            loading.chat.id,
+            loading.message_id
+        )
         bot.edit_message_text(reply, loading.chat.id, loading.message_id)
 
     except Exception as e:
