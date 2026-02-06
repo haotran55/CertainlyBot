@@ -28,26 +28,48 @@ def webhook():
     return "OK", 200
 
 # ================== /LIKE COMMAND ==================
+
+ALLOWED_GROUP_ID = -1003616607301
+
+
 @bot.message_handler(commands=["like"])
 def handle_like(message):
+    # ❌ Ignore private messages
+    if message.chat.type == "private":
+        return
+
+    # ❌ Chỉ cho phép group được chỉ định
+    if message.chat.id != ALLOWED_GROUP_ID:
+        return
+
     parts = message.text.split()
 
-    # Check format
+    # ❌ Sai cú pháp
     if len(parts) < 3:
         bot.reply_to(
             message,
-            "❌ <b>Invalid format</b>\n"
-            "📌 <b>Usage:</b> <code>/like sg 10000001</code>"
+            "<b>Usage:</b> <code>/like sg 123456789</code>",
+            parse_mode="HTML"
         )
         return
 
     region = parts[1].lower()
     uid = parts[2]
 
-    # Loading message
+    # ❌ UID không hợp lệ
+    if not uid.isdigit():
+        bot.reply_to(
+            message,
+            "<b>UID must be numbers only.</b>",
+            parse_mode="HTML"
+        )
+        return
+
+    # ⏳ Loading message
     loading = bot.reply_to(
         message,
-        f"⏳ <b>Sending likes...</b>\n🆔 UID: <code>{uid}</code>"
+        "⏳ <b>Sending likes...</b>",
+        parse_mode="HTML"
     )
 
     api_url = f"https://like-free-firee.vercel.app/like?uid={uid}&server_name={region}"
@@ -57,33 +79,35 @@ def handle_like(message):
 
         if r.status_code != 200:
             bot.edit_message_text(
-                "❌ <b>API error</b>\n⏱ Try again later.",
+                "<b>API is overloaded. Try again later.</b>",
                 loading.chat.id,
-                loading.message_id
+                loading.message_id,
+                parse_mode="HTML"
             )
             return
 
         data = r.json()
 
-        # Check daily limit
+        # ❌ Max likes
         if data.get("LikesGivenByAPI", 0) == 0:
             bot.edit_message_text(
-                "💔 <b>Daily limit reached</b>\n"
-                f"🆔 UID: <code>{uid}</code>",
+                "💔 <b>Player reached max likes today.</b>",
                 loading.chat.id,
-                loading.message_id
+                loading.message_id,
+                parse_mode="HTML"
             )
             return
 
+        nickname = data.get("PlayerNickname", "Unknown")
         likes_before = data.get("LikesbeforeCommand", 0)
         likes_after = data.get("LikesafterCommand", 0)
-        likes_added = likes_after - likes_before
+        likes_given = max(likes_after - likes_before, 0)
 
         reply = (
             " ✅ <b>Likes Sent</b>\n"
-            f"👤 <b>Nickname:</b> {data.get('PlayerNickname', 'Unknown')}\n"
-            f"🆔 <b>UID:</b> <code>{data.get('UID', uid)}</code>\n"
-            f"❤️ <b>Likes Given:</b> {likes_added}\n"
+            f"👤 <b>Nickname:</b> {nickname}\n"
+            f"🆔 <b>UID:</b> <code>{uid}</code>\n"
+            f"❤️ <b>Likes Given:</b> {likes_given}\n"
             f"📈 <b>Likes Before:</b> {likes_before}\n"
             f"📉 <b>Likes After:</b> {likes_after}"
         )
@@ -91,25 +115,26 @@ def handle_like(message):
         bot.edit_message_text(
             reply,
             loading.chat.id,
-            loading.message_id
+            loading.message_id,
+            parse_mode="HTML"
         )
 
-    except Exception as e:
-        print("Like error:", e)
+    except requests.exceptions.RequestException:
         bot.edit_message_text(
-            "❌ <b>System error</b>\n⚠️ Please try again later.",
+            "<b>Network error. Please try again.</b>",
             loading.chat.id,
-            loading.message_id
+            loading.message_id,
+            parse_mode="HTML"
         )
-        bot.edit_message_text(reply, loading.chat.id, loading.message_id)
 
-    except Exception as e:
-        print("Like error:", e)
+    except Exception:
         bot.edit_message_text(
-            "<blockquote>❌ System error. Try again later.</blockquote>",
+            "<b>Unexpected error occurred.</b>",
             loading.chat.id,
-            loading.message_id
-        )
+            loading.message_id,
+            parse_mode="HTML"
+    )
+        
 
 # ================== WELCOME NEW MEMBER ==================
 VIDEO_URL = "https://api.tiktokv.com/aweme/v1/play/?file_id=2fab7e5637e64628a0e0d98f3f6028a0&is_play_url=1&item_id=7508799426123549957&line=0&signaturev3=dmlkZW9faWQ7ZmlsZV9pZDtpdGVtX2lkLjQ1MWYyY2Y5YzhlMzRjMGYzNGM0NTVlYmY3NmFkYzdl&source=FEED&video_id=v09044g40000d0q9pb7og65v3lr1sqc0&name=taivideo.vn - Geto Kenjaku Desktop live wallpaper geto getosuguru kenjaku jujutsukaisen desktoplivewallpapers anim.mp4"
@@ -153,49 +178,6 @@ def user_info(message):
     else:
         bot.send_message(message.chat.id, info)
 
-# ================== /TIME COMMAND ==================
-COUNTRY_TIMEZONES = {
-    "viet nam": "Asia/Ho_Chi_Minh",
-    "vietnam": "Asia/Ho_Chi_Minh",
-    "india": "Asia/Kolkata",
-    "nepal": "Asia/Kathmandu",
-    "japan": "Asia/Tokyo",
-    "korea": "Asia/Seoul",
-    "china": "Asia/Shanghai",
-    "thailand": "Asia/Bangkok",
-    "usa": "America/New_York",
-    "uk": "Europe/London",
-    "france": "Europe/Paris"
-}
-
-@bot.message_handler(commands=['time'])
-def time_cmd(message):
-    args = message.text.split(maxsplit=1)
-
-    if len(args) < 2:
-        bot.reply_to(message, "<pre>❌ Use: /time viet nam | india | japan</pre>")
-        return
-
-    key = args[1].lower()
-    if key not in COUNTRY_TIMEZONES:
-        bot.reply_to(message, "<pre>❌ Country not found.</pre>")
-        return
-
-    tz = pytz.timezone(COUNTRY_TIMEZONES[key])
-    now = datetime.now(tz)
-
-    bot.reply_to(
-        message,
-        f"""
-<pre>
-🌍 WORLD TIME
-Country : {key.title()}
-Time    : {now.strftime('%H:%M:%S')}
-Date    : {now.strftime('%d-%m-%Y')}
-Zone    : {COUNTRY_TIMEZONES[key]}
-</pre>
-"""
-    )
 
 # ================== START APP ==================
 if __name__ == "__main__":
