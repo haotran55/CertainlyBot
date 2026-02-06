@@ -152,7 +152,7 @@ def handle_visit(message):
         r = requests.get(
             "https://visit-amotvts.vercel.app/visit",
             params={"region": region, "uid": uid},
-            timeout=28
+            timeout=60
         )
         r.raise_for_status()  # bắt HTTP error
         data = r.json()
