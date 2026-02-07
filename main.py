@@ -134,19 +134,35 @@ def handle_like(message):
             loading.message_id,
             parse_mode="HTML"
     )
+
+from collections import defaultdict
+
+visit_limits = defaultdict(int)
+MAX_VISITS = 4
         
 @bot.message_handler(commands=["visit"])
 def handle_visit(message):
+    user_id = message.from_user.id
+
+    # 🚫 Check giới hạn
+    if visit_limits[user_id] >= MAX_VISITS:
+        bot.reply_to(
+            message,
+            "🚫 <b>You have reached the limit of 5 visits.</b>\nPlease try again later.",
+            parse_mode="HTML"
+        )
+        return
+
     parts = message.text.split()
     if len(parts) != 3:
-        bot.reply_to(message, "Please double check the UID or Region. ")
+        bot.reply_to(message, "Please double check the UID or Region.")
         return
 
     region = parts[1]
     uid = parts[2]
 
     # ⏳ Message loading
-    loading = bot.reply_to(message, "⏳ <b>Sending Visits in Progress</b>")
+    loading = bot.reply_to(message, "⏳ <b>Sending Visits in Progress</b>", parse_mode="HTML")
 
     try:
         r = requests.get(
@@ -154,19 +170,21 @@ def handle_visit(message):
             params={"region": region, "uid": uid},
             timeout=60
         )
-        r.raise_for_status()  # bắt HTTP error
+        r.raise_for_status()
         data = r.json()
 
         if data.get("success", 0) == 0:
             bot.edit_message_text(
-                "❌ <b>API Handling Failed </b>",
+                "❌ <b>API Handling Failed</b>",
                 loading.chat.id,
                 loading.message_id,
                 parse_mode="HTML"
             )
             return
 
-        # ✅ Thành công
+        # ✅ Thành công → tăng số lần dùng
+        visit_limits[user_id] += 1
+
         bot.edit_message_text(
             "✅ <b>Visit Success</b>\n\n"
             f"👤 <b>Nickname:</b> {data.get('nickname')}\n"
@@ -174,14 +192,14 @@ def handle_visit(message):
             f"🌍 <b>Region:</b> {data.get('region')}\n"
             f"⭐ <b>Level:</b> {data.get('level')}\n"
             f"❤️ <b>Likes:</b> {data.get('likes')}\n"
-            f"📈 <b>Success:</b> {data.get('success')}",
+            f"📈 <b>Success:</b> {data.get('success')}\n\n"
+            f"🔢 <b>Remaining:</b> {MAX_VISITS - visit_limits[user_id]}",
             loading.chat.id,
             loading.message_id,
             parse_mode="HTML"
         )
 
     except requests.exceptions.RequestException:
-        # ❌ Lỗi mạng, timeout, API sập
         bot.edit_message_text(
             "<b>❌ Network error. Please try again.</b>",
             loading.chat.id,
@@ -190,13 +208,13 @@ def handle_visit(message):
         )
 
     except Exception:
-        # ❌ Lỗi không xác định
         bot.edit_message_text(
             "<b>⚠️ Unexpected error occurred.</b>",
             loading.chat.id,
             loading.message_id,
             parse_mode="HTML"
         )
+        
 # ================== WELCOME NEW MEMBER ==================
 VIDEO_URL = "https://api.tiktokv.com/aweme/v1/play/?file_id=2fab7e5637e64628a0e0d98f3f6028a0&is_play_url=1&item_id=7508799426123549957&line=0&signaturev3=dmlkZW9faWQ7ZmlsZV9pZDtpdGVtX2lkLjQ1MWYyY2Y5YzhlMzRjMGYzNGM0NTVlYmY3NmFkYzdl&source=FEED&video_id=v09044g40000d0q9pb7og65v3lr1sqc0&name=taivideo.vn - Geto Kenjaku Desktop live wallpaper geto getosuguru kenjaku jujutsukaisen desktoplivewallpapers anim.mp4"
 
