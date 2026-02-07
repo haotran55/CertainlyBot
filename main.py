@@ -32,7 +32,7 @@ def webhook():
 ALLOWED_GROUP_ID = -1003616607301
 
 
-@bot.message_handler(commands=["like"])
+@bot.message_handler(commands=["likes"])
 def handle_like(message):
     # ❌ Ignore private messages
     if message.chat.type == "private":
@@ -45,16 +45,15 @@ def handle_like(message):
     parts = message.text.split()
 
     # ❌ Sai cú pháp
-    if len(parts) < 3:
+    if len(parts) != 2:
         bot.reply_to(
             message,
-            "<b>Usage:</b> <code>/like sg 123456789</code>",
+            "<b>Usage:</b> <code>/likes 123456789</code>",
             parse_mode="HTML"
         )
         return
 
-    region_input = parts[1].lower()
-    uid = parts[2]
+    uid = parts[1]
 
     # ❌ UID không hợp lệ
     if not uid.isdigit():
@@ -89,7 +88,6 @@ def handle_like(message):
         raw = r.json()
         data = raw.get("result", {})
 
-        api_info = data.get("API", {})
         likes_info = data.get("Likes Info", {})
         user_info = data.get("User Info", {})
 
