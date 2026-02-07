@@ -71,7 +71,7 @@ def handle_like(message):
         parse_mode="HTML"
     )
 
-    api_url = f"https://andepzai.onrender.com/likes?keys=boara911&uid={uid}"
+    api_url = f"https://like-free-firee.vercel.app/like?uid={uid}&server_name=vn"
 
     try:
         r = requests.get(api_url, timeout=15)
@@ -85,13 +85,19 @@ def handle_like(message):
             )
             return
 
-        raw = r.json()
-        data = raw.get("result", {})
+        data = r.json()
 
-        likes_info = data.get("Likes Info", {})
-        user_info = data.get("User Info", {})
+        # ❌ API báo lỗi
+        if data.get("status") != 1:
+            bot.edit_message_text(
+                "❌ <b>Failed to send likes. UID may be invalid.</b>",
+                loading.chat.id,
+                loading.message_id,
+                parse_mode="HTML"
+            )
+            return
 
-        likes_given = likes_info.get("Likes Added", 0)
+        likes_given = data.get("LikesGivenByAPI", 0)
 
         # ❌ Hết lượt like hôm nay
         if likes_given == 0:
@@ -103,19 +109,14 @@ def handle_like(message):
             )
             return
 
-        nickname = user_info.get("Account Name", "Unknown")
-        account_level = user_info.get("Account Level", "N/A")
-        account_region = user_info.get("Account Region", "N/A")
-
-        likes_before = likes_info.get("Likes Before", 0)
-        likes_after = likes_info.get("Likes After", 0)
+        nickname = data.get("PlayerNickname", "Unknown")
+        likes_before = data.get("LikesbeforeCommand", 0)
+        likes_after = data.get("LikesafterCommand", 0)
 
         reply = (
             "✅ <b>Likes Sent Successfully</b>\n\n"
             f"👤 <b>Nickname:</b> {nickname}\n"
             f"🆔 <b>UID:</b> <code>{uid}</code>\n"
-            f"🌍 <b>Region:</b> {account_region}\n"
-            f"🎖 <b>Level:</b> {account_level}\n\n"
             f"❤️ <b>Likes Given:</b> {likes_given}\n"
             f"📈 <b>Likes Before:</b> {likes_before}\n"
             f"📉 <b>Likes After:</b> {likes_after}"
@@ -143,6 +144,7 @@ def handle_like(message):
             loading.message_id,
             parse_mode="HTML"
         )
+
 
 
 from collections import defaultdict
