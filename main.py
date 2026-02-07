@@ -53,7 +53,7 @@ def handle_like(message):
         )
         return
 
-    region = parts[1].lower()
+    region_input = parts[1].lower()
     uid = parts[2]
 
     # ❌ UID không hợp lệ
@@ -72,7 +72,7 @@ def handle_like(message):
         parse_mode="HTML"
     )
 
-    api_url = f"https://like-free-firee.vercel.app/like?uid={uid}&server_name={region}"
+    api_url = f"https://andepzai.onrender.com/likes?keys=boara911&uid={uid}"
 
     try:
         r = requests.get(api_url, timeout=15)
@@ -86,10 +86,17 @@ def handle_like(message):
             )
             return
 
-        data = r.json()
+        raw = r.json()
+        data = raw.get("result", {})
 
-        # ❌ Max likes
-        if data.get("LikesGivenByAPI", 0) == 0:
+        api_info = data.get("API", {})
+        likes_info = data.get("Likes Info", {})
+        user_info = data.get("User Info", {})
+
+        likes_given = likes_info.get("Likes Added", 0)
+
+        # ❌ Hết lượt like hôm nay
+        if likes_given == 0:
             bot.edit_message_text(
                 "💔 <b>Player reached max likes today.</b>",
                 loading.chat.id,
@@ -98,15 +105,19 @@ def handle_like(message):
             )
             return
 
-        nickname = data.get("PlayerNickname", "Unknown")
-        likes_before = data.get("LikesbeforeCommand", 0)
-        likes_after = data.get("LikesafterCommand", 0)
-        likes_given = max(likes_after - likes_before, 0)
+        nickname = user_info.get("Account Name", "Unknown")
+        account_level = user_info.get("Account Level", "N/A")
+        account_region = user_info.get("Account Region", "N/A")
+
+        likes_before = likes_info.get("Likes Before", 0)
+        likes_after = likes_info.get("Likes After", 0)
 
         reply = (
-            " ✅ <b>Likes Sent</b>\n"
+            "✅ <b>Likes Sent Successfully</b>\n\n"
             f"👤 <b>Nickname:</b> {nickname}\n"
             f"🆔 <b>UID:</b> <code>{uid}</code>\n"
+            f"🌍 <b>Region:</b> {account_region}\n"
+            f"🎖 <b>Level:</b> {account_level}\n\n"
             f"❤️ <b>Likes Given:</b> {likes_given}\n"
             f"📈 <b>Likes Before:</b> {likes_before}\n"
             f"📉 <b>Likes After:</b> {likes_after}"
@@ -127,13 +138,14 @@ def handle_like(message):
             parse_mode="HTML"
         )
 
-    except Exception:
+    except Exception as e:
         bot.edit_message_text(
-            "<b>Unexpected error occurred.</b>",
+            f"<b>Unexpected error:</b> {e}",
             loading.chat.id,
             loading.message_id,
             parse_mode="HTML"
-    )
+        )
+
 
 from collections import defaultdict
 from datetime import datetime, timedelta
