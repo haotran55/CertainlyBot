@@ -136,19 +136,34 @@ def handle_like(message):
     )
 
 from collections import defaultdict
+from datetime import datetime, timedelta
 
-visit_limits = defaultdict(int)
+visit_limits = defaultdict(lambda: {"count": 0, "reset_time": datetime.utcnow()})
 MAX_VISITS = 4
+RESET_AFTER = timedelta(days=1)
+
         
 @bot.message_handler(commands=["visit"])
 def handle_visit(message):
     user_id = message.from_user.id
+    user_data = visit_limits[user_id]
+    now = datetime.utcnow()
+
+    # 🔄 Reset nếu đã qua 24h
+    if now >= user_data["reset_time"]:
+        user_data["count"] = 0
+        user_data["reset_time"] = now + RESET_AFTER
 
     # 🚫 Check giới hạn
-    if visit_limits[user_id] >= MAX_VISITS:
+    if user_data["count"] >= MAX_VISITS:
+        remaining_time = user_data["reset_time"] - now
+        hours, remainder = divmod(int(remaining_time.total_seconds()), 3600)
+        minutes = remainder // 60
+
         bot.reply_to(
             message,
-            "🚫 <b>You have reached the limit of 5 visits.</b>\nPlease try again later.",
+            f"🚫 <b>You have used all 5 visits today.</b>\n"
+            f"⏳ Try again in {hours}h {minutes}m.",
             parse_mode="HTML"
         )
         return
@@ -161,7 +176,6 @@ def handle_visit(message):
     region = parts[1]
     uid = parts[2]
 
-    # ⏳ Message loading
     loading = bot.reply_to(message, "⏳ <b>Sending Visits in Progress</b>", parse_mode="HTML")
 
     try:
@@ -182,8 +196,9 @@ def handle_visit(message):
             )
             return
 
-        # ✅ Thành công → tăng số lần dùng
-        visit_limits[user_id] += 1
+        # ✅ Thành công → tăng lượt
+        user_data["count"] += 1
+        remaining = MAX_VISITS - user_data["count"]
 
         bot.edit_message_text(
             "✅ <b>Visit Success</b>\n\n"
@@ -193,7 +208,7 @@ def handle_visit(message):
             f"⭐ <b>Level:</b> {data.get('level')}\n"
             f"❤️ <b>Likes:</b> {data.get('likes')}\n"
             f"📈 <b>Success:</b> {data.get('success')}\n\n"
-            f"🔢 <b>Remaining:</b> {MAX_VISITS - visit_limits[user_id]}",
+            f"🔢 <b>Remaining today:</b> {remaining}/5",
             loading.chat.id,
             loading.message_id,
             parse_mode="HTML"
@@ -214,6 +229,7 @@ def handle_visit(message):
             loading.message_id,
             parse_mode="HTML"
         )
+
         
 # ================== WELCOME NEW MEMBER ==================
 VIDEO_URL = "https://api.tiktokv.com/aweme/v1/play/?file_id=2fab7e5637e64628a0e0d98f3f6028a0&is_play_url=1&item_id=7508799426123549957&line=0&signaturev3=dmlkZW9faWQ7ZmlsZV9pZDtpdGVtX2lkLjQ1MWYyY2Y5YzhlMzRjMGYzNGM0NTVlYmY3NmFkYzdl&source=FEED&video_id=v09044g40000d0q9pb7og65v3lr1sqc0&name=taivideo.vn - Geto Kenjaku Desktop live wallpaper geto getosuguru kenjaku jujutsukaisen desktoplivewallpapers anim.mp4"
