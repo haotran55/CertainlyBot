@@ -32,118 +32,108 @@ def webhook():
 ALLOWED_GROUP_ID = -1003616607301
 
 
-@bot.message_handler(commands=["likes"])
-def handle_like(message):
-    # ❌ Ignore private messages
+import time
+import requests
+from telebot.types import Message
+
+# 👉 PUT YOUR GROUP ID HERE
+ALLOWED_GROUP_ID = -1001234567890  # change this
+
+user_last_like_day = {}
+
+@bot.message_handler(commands=['likes'])
+def like_handler(message: Message):
+    # ❌ Ignore private chats
     if message.chat.type == "private":
         return
 
-    # ❌ Chỉ cho phép group được chỉ định
+    # ❌ Only allow specific group
     if message.chat.id != ALLOWED_GROUP_ID:
         return
 
-    parts = message.text.split()
+    user_id = message.from_user.id
+    current_day = time.strftime("%Y-%m-%d", time.gmtime())
 
-    # ❌ Sai cú pháp
+    # ⛔ Limit: once per day per user
+    if user_last_like_day.get(user_id) == current_day:
+        bot.reply_to(message, "⏳ You can only use this command once per day.")
+        return
+
+    parts = message.text.split()
     if len(parts) != 2:
-        bot.reply_to(
-            message,
-            "<b>Usage:</b> <code>/likes 123456789</code>",
-            parse_mode="HTML"
-        )
+        bot.reply_to(message, "Usage: /likes UID")
         return
 
     uid = parts[1]
-
-    # ❌ UID không hợp lệ
-    if not uid.isdigit():
-        bot.reply_to(
-            message,
-            "<b>UID must be numbers only.</b>",
-            parse_mode="HTML"
-        )
-        return
-
-    # ⏳ Loading message
-    loading = bot.reply_to(
-        message,
-        "⏳ <b>Sending likes...</b>",
-        parse_mode="HTML"
-    )
-
     api_url = f"https://like-free-firee.vercel.app/like?uid={uid}&server_name=vn"
 
     try:
-        r = requests.get(api_url, timeout=15)
+        loading_msg = bot.reply_to(message, "⏳ Sending likes, please wait...")
+    except:
+        return
 
-        if r.status_code != 200:
-            bot.edit_message_text(
-                "<b>API is overloaded. Try again later.</b>",
-                loading.chat.id,
-                loading.message_id,
-                parse_mode="HTML"
-            )
-            return
+    def safe_get(data, key):
+        value = data.get(key)
+        return str(value) if value not in [None, "", "null"] else "Unknown"
 
-        data = r.json()
+    def extract_number(text):
+        if isinstance(text, int):
+            return str(text)
+        for part in str(text).split():
+            if part.isdigit():
+                return part
+        return "Unknown"
 
-        # ❌ API báo lỗi
-        if data.get("status") != 1:
-            bot.edit_message_text(
-                "❌ <b>Failed to send likes. UID may be invalid.</b>",
-                loading.chat.id,
-                loading.message_id,
-                parse_mode="HTML"
-            )
-            return
-
-        likes_given = data.get("LikesGivenByAPI", 0)
-
-        # ❌ Hết lượt like hôm nay
-        if likes_given == 0:
-            bot.edit_message_text(
-                "💔 <b>Player reached max likes today.</b>",
-                loading.chat.id,
-                loading.message_id,
-                parse_mode="HTML"
-            )
-            return
-
-        nickname = data.get("PlayerNickname", "Unknown")
-        likes_before = data.get("LikesbeforeCommand", 0)
-        likes_after = data.get("LikesafterCommand", 0)
-
-        reply = (
-            "✅ <b>Likes Sent Successfully</b>\n\n"
-            f"👤 <b>Nickname:</b> {nickname}\n"
-            f"🆔 <b>UID:</b> <code>{uid}</code>\n"
-            f"❤️ <b>Likes Given:</b> {likes_given}\n"
-            f"📈 <b>Likes Before:</b> {likes_before}\n"
-            f"📉 <b>Likes After:</b> {likes_after}"
-        )
-
+    try:
+        response = requests.get(api_url, timeout=15)
+        data = response.json()
+    except:
         bot.edit_message_text(
-            reply,
-            loading.chat.id,
-            loading.message_id,
-            parse_mode="HTML"
+            "❌ Failed to connect to API. Try again later.",
+            chat_id=loading_msg.chat.id,
+            message_id=loading_msg.message_id
         )
+        return
 
-    except requests.exceptions.RequestException:
+    if not data or data.get("status") != 1:
         bot.edit_message_text(
-            "<b>Network error. Please try again.</b>",
-            loading.chat.id,
-            loading.message_id,
-            parse_mode="HTML"
+            "⚠️ Server is busy or under maintenance. Try again later.",
+            chat_id=loading_msg.chat.id,
+            message_id=loading_msg.message_id
         )
+        return
 
+    # ✅ Save usage day
+    user_last_like_day[user_id] = current_day
+
+    name = safe_get(data, 'PlayerNickname')
+    uid_str = safe_get(data, 'UID')
+    like_before = safe_get(data, 'LikesbeforeCommand')
+    like_after = safe_get(data, 'LikesafterCommand')
+    like_sent = extract_number(data.get('LikesGivenByAPI'))
+
+    reply_text = (
+        "✅ Likes Send Success\n"
+        f"👤 Name: {name}\n"
+        f"🆔 UID: {uid_str}\n"
+        f"🌏 Region: vn\n"
+        f"📉 Likes Before: {like_before}\n"
+        f"📈 Likes After: {like_after}\n"
+        f"👍 Likes Sent: {like_sent}"
+    )
+
+    if data.get("status") == 2:
+        reply_text += "\n⚠️ Daily like limit reached for this account."
+
+    try:
+        bot.edit_message_text(
+            reply_text,
+            chat_id=loading_msg.chat.id,
+            message_id=loading_msg.message_id
+        )
     except Exception as e:
-        bot.edit_message_text(
-            f"<b>Unexpected error:</b> {e}",
-            loading.chat.id,
-            loading.message_id,
-            parse_mode="HTML"
-        )
+        print(f"Error sending result: {e}")
+
 
 
 
