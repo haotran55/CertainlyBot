@@ -27,17 +27,12 @@ def webhook():
     bot.process_new_updates([update])
     return "OK", 200
 
-# ================== /LIKE COMMAND ==================
-
-ALLOWED_GROUP_ID = -1003616607301
-
-
 import time
 import requests
 from telebot.types import Message
 
 # 👉 PUT YOUR GROUP ID HERE
-ALLOWED_GROUP_ID = -1001234567890  # change this
+ALLOWED_GROUP_ID = -1003616607301  # change this
 
 user_last_like_day = {}
 
