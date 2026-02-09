@@ -27,12 +27,17 @@ def webhook():
     bot.process_new_updates([update])
     return "OK", 200
 
+# ================== /LIKE COMMAND ==================
+
+ALLOWED_GROUP_ID = -1003616607301
+
+
 import time
 import requests
 from telebot.types import Message
 
 # 👉 PUT YOUR GROUP ID HERE
-ALLOWED_GROUP_ID = -1003616607301  # change this
+ALLOWED_GROUP_ID = -1001234567890  # change this
 
 user_last_like_day = {}
 
@@ -92,7 +97,7 @@ def like_handler(message: Message):
 
     if not data or data.get("status") != 1:
         bot.edit_message_text(
-            "⚠️ Server is busy or under maintenance. Try again later.",
+            "Your likes have reached their maximum. Please try again tomorrow. 💔",
             chat_id=loading_msg.chat.id,
             message_id=loading_msg.message_id
         )
@@ -108,13 +113,13 @@ def like_handler(message: Message):
     like_sent = extract_number(data.get('LikesGivenByAPI'))
 
     reply_text = (
-        "✅ Likes Send Success\n"
+        "✅ Likes Send Success\n\n"
         f"👤 Name: {name}\n"
         f"🆔 UID: {uid_str}\n"
         f"🌏 Region: vn\n"
         f"📉 Likes Before: {like_before}\n"
         f"📈 Likes After: {like_after}\n"
-        f"👍 Likes Sent: {like_sent}"
+        f"✅ Likes Sent: {like_sent}"
     )
 
     if data.get("status") == 2:
@@ -129,146 +134,6 @@ def like_handler(message: Message):
     except Exception as e:
         print(f"Error sending result: {e}")
 
-
-
-
-from collections import defaultdict
-from datetime import datetime, timedelta
-
-visit_limits = defaultdict(lambda: {"count": 0, "reset_time": datetime.utcnow()})
-MAX_VISITS = 4
-RESET_AFTER = timedelta(days=1)
-
-        
-@bot.message_handler(commands=["visit"])
-def handle_visit(message):
-    user_id = message.from_user.id
-    user_data = visit_limits[user_id]
-    now = datetime.utcnow()
-
-    # 🔄 Reset nếu đã qua 24h
-    if now >= user_data["reset_time"]:
-        user_data["count"] = 0
-        user_data["reset_time"] = now + RESET_AFTER
-
-    # 🚫 Check giới hạn
-    if user_data["count"] >= MAX_VISITS:
-        remaining_time = user_data["reset_time"] - now
-        hours, remainder = divmod(int(remaining_time.total_seconds()), 3600)
-        minutes = remainder // 60
-
-        bot.reply_to(
-            message,
-            f"🚫 <b>You have used all 5 visits today.</b>\n"
-            f"⏳ Try again in {hours}h {minutes}m.",
-            parse_mode="HTML"
-        )
-        return
-
-    parts = message.text.split()
-    if len(parts) != 3:
-        bot.reply_to(message, "Please double check the UID or Region.")
-        return
-
-    region = parts[1]
-    uid = parts[2]
-
-    loading = bot.reply_to(message, "⏳ <b>Sending Visits in Progress</b>", parse_mode="HTML")
-
-    try:
-        r = requests.get(
-            "https://visit-amotvts.vercel.app/visit",
-            params={"region": region, "uid": uid},
-            timeout=60
-        )
-        r.raise_for_status()
-        data = r.json()
-
-        if data.get("success", 0) == 0:
-            bot.edit_message_text(
-                "❌ <b>API Handling Failed</b>",
-                loading.chat.id,
-                loading.message_id,
-                parse_mode="HTML"
-            )
-            return
-
-        # ✅ Thành công → tăng lượt
-        user_data["count"] += 1
-        remaining = MAX_VISITS - user_data["count"]
-
-        bot.edit_message_text(
-            "✅ <b>Visit Success</b>\n\n"
-            f"👤 <b>Nickname:</b> {data.get('nickname')}\n"
-            f"🆔 <b>UID:</b> <code>{data.get('uid')}</code>\n"
-            f"🌍 <b>Region:</b> {data.get('region')}\n"
-            f"⭐ <b>Level:</b> {data.get('level')}\n"
-            f"❤️ <b>Likes:</b> {data.get('likes')}\n"
-            f"📈 <b>Success:</b> {data.get('success')}\n\n"
-            f"🔢 <b>Remaining today:</b> {remaining}/5",
-            loading.chat.id,
-            loading.message_id,
-            parse_mode="HTML"
-        )
-
-    except requests.exceptions.RequestException:
-        bot.edit_message_text(
-            "<b>❌ Network error. Please try again.</b>",
-            loading.chat.id,
-            loading.message_id,
-            parse_mode="HTML"
-        )
-
-    except Exception:
-        bot.edit_message_text(
-            "<b>⚠️ Unexpected error occurred.</b>",
-            loading.chat.id,
-            loading.message_id,
-            parse_mode="HTML"
-        )
-
-        
-# ================== WELCOME NEW MEMBER ==================
-VIDEO_URL = "https://api.tiktokv.com/aweme/v1/play/?file_id=2fab7e5637e64628a0e0d98f3f6028a0&is_play_url=1&item_id=7508799426123549957&line=0&signaturev3=dmlkZW9faWQ7ZmlsZV9pZDtpdGVtX2lkLjQ1MWYyY2Y5YzhlMzRjMGYzNGM0NTVlYmY3NmFkYzdl&source=FEED&video_id=v09044g40000d0q9pb7og65v3lr1sqc0&name=taivideo.vn - Geto Kenjaku Desktop live wallpaper geto getosuguru kenjaku jujutsukaisen desktoplivewallpapers anim.mp4"
-
-@bot.message_handler(content_types=['new_chat_members'])
-def welcome(message):
-    for user in message.new_chat_members:
-        caption = f"""
-<pre>
-👋 Welcome {user.first_name}!
-
-👍 FREE FIRE LIKE BOT
-Format : /like {{region}} {{uid}}
-Example: /like vn 12345678
-
-🚀 More features coming soon
-Thanks for joining 😁
-</pre>
-"""
-        bot.send_video(message.chat.id, VIDEO_URL, caption=caption)
-
-# ================== /ID COMMAND ==================
-@bot.message_handler(commands=['id', 'info'])
-def user_info(message):
-    user = message.reply_to_message.from_user if message.reply_to_message else message.from_user
-
-    info = f"""
-<pre>
-📌 TELEGRAM USER INFO
-├ ID       : {user.id}
-├ Name     : {user.first_name or ""} {user.last_name or ""}
-├ Username : @{user.username if user.username else "None"}
-├ Language : {user.language_code}
-└ Is Bot   : {user.is_bot}
-</pre>
-"""
-
-    photos = bot.get_user_profile_photos(user.id, limit=1)
-    if photos.total_count > 0:
-        bot.send_photo(message.chat.id, photos.photos[0][-1].file_id, caption=info)
-    else:
-        bot.send_message(message.chat.id, info)
 
 
 # ================== START APP ==================
