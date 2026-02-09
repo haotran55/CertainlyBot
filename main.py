@@ -112,10 +112,9 @@ def like_handler(message: Message):
         "✅ Likes Sent Successfully\n\n"
         f"👤 Name: {name}\n"
         f"🆔 UID: {uid_str}\n"
-        f"🌏 Region: vn\n"
         f"📉 Likes Before: {like_before}\n"
         f"📈 Likes After: {like_after}\n"
-        f"✅ Likes Sent: {like_sent}"
+        f"❤️ Likes Sent: {like_sent}"
     )
 
     # ⚠️ Nếu API báo đã đạt giới hạn
