@@ -18,8 +18,7 @@ ALLOWED_GROUP_ID = -1003616607301  # đổi thành group của bạn
 bot = telebot.TeleBot(BOT_TOKEN, parse_mode="HTML")
 app = Flask(__name__)
 
-# Lưu ngày dùng lệnh của user (reset nếu server restart)
-user_last_like_day = {}
+# Lưu ngày dùng lệnh của user (reset nếu server return
 
 # ================== BASIC ROUTES ==================
 @app.route("/")
@@ -46,14 +45,6 @@ def like_handler(message: Message):
 
     # ❌ Chỉ cho phép trong group chỉ định
     if message.chat.id != ALLOWED_GROUP_ID:
-        return
-
-    user_id = message.from_user.id
-    current_day = time.strftime("%Y-%m-%d", time.gmtime())
-
-    # ⛔ Mỗi người 1 lần/ngày
-    if user_last_like_day.get(user_id) == current_day:
-        bot.reply_to(message, "⏳ You can only use this command once per day.")
         return
 
     parts = message.text.split()
@@ -109,8 +100,7 @@ def like_handler(message: Message):
         )
         return
 
-    # ✅ Lưu ngày đã dùng
-    user_last_like_day[user_id] = current_day
+    
 
     name = safe_get(data, 'PlayerNickname')
     uid_str = safe_get(data, 'UID')
