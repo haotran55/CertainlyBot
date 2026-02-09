@@ -1,19 +1,25 @@
 import os
+import time
 import requests
 import telebot
 from flask import Flask, request
-from datetime import datetime
-import pytz
+from telebot.types import Message
 
 # ================== CONFIG ==================
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
 WEBHOOK_URL = os.environ.get("WEBHOOK_URL")
 
 if not BOT_TOKEN or not WEBHOOK_URL:
-    raise Exception("❌ Thiếu BOT_TOKEN hoặc WEBHOOK_URL")
+    raise Exception("❌ Missing BOT_TOKEN or WEBHOOK_URL")
+
+# 👉 GROUP ĐƯỢC PHÉP DÙNG LỆNH
+ALLOWED_GROUP_ID = -1003616607301  # đổi thành group của bạn
 
 bot = telebot.TeleBot(BOT_TOKEN, parse_mode="HTML")
 app = Flask(__name__)
+
+# Lưu ngày dùng lệnh của user (reset nếu server restart)
+user_last_like_day = {}
 
 # ================== BASIC ROUTES ==================
 @app.route("/")
@@ -27,34 +33,25 @@ def webhook():
     bot.process_new_updates([update])
     return "OK", 200
 
-# ================== /LIKE COMMAND ==================
-
-ALLOWED_GROUP_ID = -1003616607301
-
-
-import time
-import requests
-from telebot.types import Message
-
-# 👉 PUT YOUR GROUP ID HERE
-ALLOWED_GROUP_ID = -1001234567890  # change this
-
-user_last_like_day = {}
-
+# ================== /LIKES COMMAND ==================
 @bot.message_handler(commands=['likes'])
 def like_handler(message: Message):
-    # ❌ Ignore private chats
+    # ❌ Bỏ qua tin nhắn private
     if message.chat.type == "private":
         return
 
-    # ❌ Only allow specific group
+    # ❌ Bỏ qua bot khác
+    if message.from_user.is_bot:
+        return
+
+    # ❌ Chỉ cho phép trong group chỉ định
     if message.chat.id != ALLOWED_GROUP_ID:
         return
 
     user_id = message.from_user.id
     current_day = time.strftime("%Y-%m-%d", time.gmtime())
 
-    # ⛔ Limit: once per day per user
+    # ⛔ Mỗi người 1 lần/ngày
     if user_last_like_day.get(user_id) == current_day:
         bot.reply_to(message, "⏳ You can only use this command once per day.")
         return
@@ -65,6 +62,12 @@ def like_handler(message: Message):
         return
 
     uid = parts[1]
+
+    # ❌ UID phải là số
+    if not uid.isdigit():
+        bot.reply_to(message, "❌ UID must contain numbers only.")
+        return
+
     api_url = f"https://like-free-firee.vercel.app/like?uid={uid}&server_name=vn"
 
     try:
@@ -95,15 +98,18 @@ def like_handler(message: Message):
         )
         return
 
-    if not data or data.get("status") != 1:
+    status = data.get("status")
+
+    # ❌ API lỗi thật sự
+    if not data or status not in [1, 2]:
         bot.edit_message_text(
-            "Your likes have reached their maximum. Please try again tomorrow. 💔",
+            "❌ Failed to process likes. Try again later.",
             chat_id=loading_msg.chat.id,
             message_id=loading_msg.message_id
         )
         return
 
-    # ✅ Save usage day
+    # ✅ Lưu ngày đã dùng
     user_last_like_day[user_id] = current_day
 
     name = safe_get(data, 'PlayerNickname')
@@ -113,7 +119,7 @@ def like_handler(message: Message):
     like_sent = extract_number(data.get('LikesGivenByAPI'))
 
     reply_text = (
-        "✅ Likes Send Success\n\n"
+        "✅ Likes Sent Successfully\n\n"
         f"👤 Name: {name}\n"
         f"🆔 UID: {uid_str}\n"
         f"🌏 Region: vn\n"
@@ -122,7 +128,8 @@ def like_handler(message: Message):
         f"✅ Likes Sent: {like_sent}"
     )
 
-    if data.get("status") == 2:
+    # ⚠️ Nếu API báo đã đạt giới hạn
+    if status == 2:
         reply_text += "\n⚠️ Daily like limit reached for this account."
 
     try:
@@ -134,11 +141,8 @@ def like_handler(message: Message):
     except Exception as e:
         print(f"Error sending result: {e}")
 
-
-
 # ================== START APP ==================
 if __name__ == "__main__":
     bot.remove_webhook()
-    bot.set_webhook(url=f"{WEBHOOK_URL}/{BOT_TOKEN}")
-
+    bot.set_webhook(url=f"{WEBHOOK_URL.rstrip('/')}/{BOT_TOKEN}")
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
