@@ -83,7 +83,7 @@ def like_handler(message: Message):
         data = response.json()
     except:
         bot.edit_message_text(
-            "❌ Failed to connect to API. Try again later.",
+            "API not responding, please try again later.",
             chat_id=loading_msg.chat.id,
             message_id=loading_msg.message_id
         )
@@ -94,7 +94,7 @@ def like_handler(message: Message):
     # ❌ API lỗi thật sự
     if not data or status not in [1, 2]:
         bot.edit_message_text(
-            "❌ Failed to process likes. Try again later.",
+            "Token is malfunctioning or failing to load. ",
             chat_id=loading_msg.chat.id,
             message_id=loading_msg.message_id
         )
