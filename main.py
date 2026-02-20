@@ -110,11 +110,12 @@ def like_handler(message: Message):
 
     reply_text = (
         "✅ Likes Sent Successfully\n\n"
-        f"👤 Name: {name}\n"
-        f"🆔 UID: {uid_str}\n"
-        f"📉 Likes Before: {like_before}\n"
-        f"📈 Likes After: {like_after}\n"
-        f"❤️ Likes Sent: {like_sent}"
+        f"┌👤 Name: {name}\n"
+        f"|🆔 UID: {uid_str}\n"
+        f"|📉 Likes Before: {like_before}\n"
+        f"|📈 Likes After: {like_after}\n"
+        f"└❤️ Likes Sent: {like_sent}\n"
+        "Contact: @nhathaov"
     )
 
     # ⚠️ Nếu API báo đã đạt giới hạn
