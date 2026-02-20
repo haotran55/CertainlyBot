@@ -107,15 +107,19 @@ def like_handler(message: Message):
     like_before = safe_get(data, 'LikesbeforeCommand')
     like_after = safe_get(data, 'LikesafterCommand')
     like_sent = extract_number(data.get('LikesGivenByAPI'))
+    level_st = safe_get(data, 'Level')
+    region_vcl = safe_get(data, 'Region')
 
     reply_text = (
         "✅ Likes Sent Successfully\n\n"
-        f"┌ 👤 Name: {name}\n"
-        f" | 🆔 UID: {uid_str}\n"
-        f" | 📉 Likes Before: {like_before}\n"
-        f" | 📈 Likes After: {like_after}\n"
-        f"└ ❤️ Likes Sent: {like_sent}\n"
-        "Contact: @nhathaov"
+        f"👤Name: {name}\n"
+        f"🆔UID: {uid_str}\n"
+        f"🔥Level: {level_st}\n"
+        f"🌍Region: {region_vcl}\n\n"
+        f"📉Likes Before: {like_before}\n"
+        f"📈Likes After: {like_after}\n"
+        f"❤️Likes Sent: {like_sent}\n\n"
+        "Buy Likes Contact: @nhathaov"
     )
 
     # ⚠️ Nếu API báo đã đạt giới hạn
